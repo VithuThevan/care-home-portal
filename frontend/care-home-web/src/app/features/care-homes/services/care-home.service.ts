@@ -15,7 +15,7 @@ export class CareHomeService {
     private readonly http = inject(HttpClient);
 
     private readonly apiUrl =
-        'http://localhost:5092/api/care-homes';
+        '/api/care-homes';
 
     getCareHomes(): Observable<CareHomeLocation[]> {
         return this.http.get<CareHomeLocation[]>(

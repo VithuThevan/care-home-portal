@@ -15,7 +15,7 @@ export class CompanyService {
   private readonly http = inject(HttpClient);
 
   private readonly apiUrl =
-    'http://localhost:5092/api/companies';
+    '/api/companies';
 
   getCompanies(): Observable<Company[]> {
     return this.http.get<Company[]>(this.apiUrl);

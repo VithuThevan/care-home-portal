@@ -17,7 +17,7 @@ export class ClientService {
     inject(HttpClient);
 
   private readonly apiUrl =
-    'http://localhost:5092/api/clients';
+    '/api/clients';
 
   getClients(
     search?: string,
