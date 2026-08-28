@@ -27,7 +27,7 @@ public class Client
     [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
 
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
 
     [Required]
     [MaxLength(30)]
@@ -37,9 +37,9 @@ public class Client
     [MaxLength(30)]
     public string Status { get; set; } = "Current";
 
-    public DateTime AdmissionDate { get; set; }
+    public DateOnly AdmissionDate { get; set; }
 
-    public DateTime? DischargeDate { get; set; }
+    public DateOnly? DischargeDate { get; set; }
 
     [MaxLength(100)]
     public string? DischargeReason { get; set; }

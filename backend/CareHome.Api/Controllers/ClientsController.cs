@@ -172,6 +172,15 @@ public class ClientsController : ControllerBase
             });
         }
 
+        var dateError = ValidateClientDates(
+            request.DateOfBirth,
+            request.AdmissionDate);
+
+        if (dateError is not null)
+        {
+            return dateError;
+        }
+
         var client = new Client
         {
             CareHomeId = request.CareHomeId,
@@ -294,14 +303,15 @@ public class ClientsController : ControllerBase
             });
         }
 
-        if (request.Status != "Current" &&
-            request.DischargeDate is null)
+        var dateError = ValidateClientDates(
+            request.DateOfBirth,
+            request.AdmissionDate,
+            request.DischargeDate,
+            request.Status);
+
+        if (dateError is not null)
         {
-            return BadRequest(new
-            {
-                message =
-                    "Discharge date is required when client is no longer current."
-            });
+            return dateError;
         }
 
         client.CareHomeId = request.CareHomeId;
@@ -332,11 +342,19 @@ public class ClientsController : ControllerBase
         client.AdmissionDate =
             request.AdmissionDate;
 
-        client.DischargeDate =
-            request.DischargeDate;
+        if (request.Status == "Current")
+        {
+            client.DischargeDate = null;
+            client.DischargeReason = null;
+        }
+        else
+        {
+            client.DischargeDate =
+                request.DischargeDate;
 
-        client.DischargeReason =
-            request.DischargeReason?.Trim();
+            client.DischargeReason =
+                request.DischargeReason?.Trim();
+        }
 
         client.Email =
             request.Email?.Trim();
@@ -371,5 +389,54 @@ public class ClientsController : ControllerBase
         await _dbContext.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    private IActionResult? ValidateClientDates(
+        DateOnly? dateOfBirth,
+        DateOnly admissionDate,
+        DateOnly? dischargeDate = null,
+        string? status = null)
+    {
+        if (admissionDate == default)
+        {
+            return BadRequest(new
+            {
+                message = "Admission date is required."
+            });
+        }
+
+        if (dateOfBirth.HasValue &&
+            dateOfBirth.Value > DateOnly.FromDateTime(DateTime.Today))
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Date of birth cannot be in the future."
+            });
+        }
+
+        if (status is not null &&
+            status != "Current" &&
+            dischargeDate is null)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Discharge date is required when client is no longer current."
+            });
+        }
+
+        if (status != "Current" &&
+            dischargeDate.HasValue &&
+            dischargeDate.Value < admissionDate)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Discharge date cannot be before admission date."
+            });
+        }
+
+        return null;
     }
 }

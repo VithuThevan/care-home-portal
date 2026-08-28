@@ -26,12 +26,12 @@ public class CreateClientRequest
     [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
 
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
 
     [Required]
     public string CareType { get; set; } = string.Empty;
 
-    public DateTime AdmissionDate { get; set; }
+    public DateOnly AdmissionDate { get; set; }
 
     public string? Email { get; set; }
 

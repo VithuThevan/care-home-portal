@@ -26,7 +26,7 @@ public class UpdateClientRequest
     [MaxLength(100)]
     public string LastName { get; set; } = string.Empty;
 
-    public DateTime? DateOfBirth { get; set; }
+    public DateOnly? DateOfBirth { get; set; }
 
     [Required]
     public string CareType { get; set; } = string.Empty;
@@ -34,9 +34,9 @@ public class UpdateClientRequest
     [Required]
     public string Status { get; set; } = "Current";
 
-    public DateTime AdmissionDate { get; set; }
+    public DateOnly AdmissionDate { get; set; }
 
-    public DateTime? DischargeDate { get; set; }
+    public DateOnly? DischargeDate { get; set; }
 
     public string? DischargeReason { get; set; }
 

@@ -135,15 +135,15 @@ export class ClientForm implements OnInit {
 
             lastName: client.lastName,
 
-            dateOfBirth: client.dateOfBirth?.substring(0, 10) ?? '',
+            dateOfBirth: client.dateOfBirth ?? '',
 
             careType: client.careType,
 
             status: client.status,
 
-            admissionDate: client.admissionDate.substring(0, 10),
+            admissionDate: client.admissionDate,
 
-            dischargeDate: client.dischargeDate?.substring(0, 10) ?? '',
+            dischargeDate: client.dischargeDate ?? '',
 
             dischargeReason: client.dischargeReason ?? '',
 

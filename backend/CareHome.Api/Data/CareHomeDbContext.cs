@@ -95,6 +95,15 @@ public class CareHomeDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(30);
 
+            entity.Property(x => x.DateOfBirth)
+                .HasColumnType("date");
+
+            entity.Property(x => x.AdmissionDate)
+                .HasColumnType("date");
+
+            entity.Property(x => x.DischargeDate)
+                .HasColumnType("date");
+
             entity.HasIndex(x => x.SageId)
                 .IsUnique();
 
