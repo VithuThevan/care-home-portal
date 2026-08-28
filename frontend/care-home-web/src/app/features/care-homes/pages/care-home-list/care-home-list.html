@@ -1,0 +1,147 @@
+<div class="page">
+
+    <div class="page-header">
+
+        <div>
+            <h1>Care Homes</h1>
+
+            <p>
+                Manage care home locations.
+            </p>
+        </div>
+
+        <a routerLink="/care-homes/new" class="primary-button">
+            Add Care Home
+        </a>
+
+    </div>
+
+
+    @if (isLoading) {
+
+    <p>
+        Loading care homes...
+    </p>
+
+    }
+
+
+    @if (errorMessage) {
+
+    <div class="error-message">
+        {{ errorMessage }}
+    </div>
+
+    }
+
+
+    @if (!isLoading) {
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Code</th>
+                    <th>Care Home</th>
+                    <th>Company</th>
+                    <th>Capacity</th>
+                    <th>Manager</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                @for (
+                careHome of careHomes;
+                track careHome.id
+                ) {
+
+                <tr>
+
+                    <td>
+                        {{ careHome.code }}
+                    </td>
+
+                    <td>
+                        {{ careHome.name }}
+                    </td>
+
+                    <td>
+                        {{ careHome.companyName }}
+                    </td>
+
+                    <td>
+                        {{ careHome.bedCapacity }}
+                    </td>
+
+                    <td>
+                        {{ careHome.managerName || '-' }}
+                    </td>
+
+                    <td>
+
+                        @if (careHome.isActive) {
+
+                        <span class="status active">
+                            Active
+                        </span>
+
+                        } @else {
+
+                        <span class="status inactive">
+                            Inactive
+                        </span>
+
+                        }
+
+                    </td>
+
+                    <td class="actions">
+
+                        <a [routerLink]="[
+                      '/care-homes',
+                      careHome.id,
+                      'edit'
+                    ]">
+                            Edit
+                        </a>
+
+
+                        @if (careHome.isActive) {
+
+                        <button type="button" (click)="deactivateCareHome(careHome)">
+                            Deactivate
+                        </button>
+
+                        }
+
+                    </td>
+
+                </tr>
+
+                } @empty {
+
+                <tr>
+                    <td colspan="7">
+                        No care homes found.
+                    </td>
+                </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    }
+
+</div>

@@ -1,0 +1,189 @@
+<div class="page">
+  <div class="form-container">
+    <h1>
+      @if (isEditMode) {
+        Edit Client
+      } @else {
+        Add Client
+      }
+    </h1>
+
+    @if (errorMessage) {
+      <div class="error-message">
+        {{ errorMessage }}
+      </div>
+    }
+
+    @if (isLoading) {
+      <p>Loading client...</p>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <h2>Location</h2>
+
+        <div class="form-field">
+          <label> Care Home </label>
+
+          <select formControlName="careHomeId">
+            <option [ngValue]="0">Select Care Home</option>
+
+            @for (careHome of careHomes; track careHome.id) {
+              <option [ngValue]="careHome.id">
+                {{ careHome.companyName }}
+                -
+                {{ careHome.name }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <h2>Client Identification</h2>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label> Sage ID </label>
+
+            <input type="text" formControlName="sageId" />
+          </div>
+
+          <div class="form-field">
+            <label> Client Reference Number </label>
+
+            <input type="text" formControlName="referenceNumber" />
+          </div>
+        </div>
+
+        <h2>Personal Details</h2>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label> Title </label>
+
+            <select formControlName="title">
+              <option value="">Select</option>
+
+              <option value="Mr">Mr</option>
+
+              <option value="Mrs">Mrs</option>
+
+              <option value="Miss">Miss</option>
+
+              <option value="Ms">Ms</option>
+
+              <option value="Dr">Dr</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label> First Name </label>
+
+            <input type="text" formControlName="firstName" />
+          </div>
+
+          <div class="form-field">
+            <label> Last Name </label>
+
+            <input type="text" formControlName="lastName" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label> Date of Birth </label>
+
+          <input type="date" formControlName="dateOfBirth" />
+        </div>
+
+        <h2>Care Details</h2>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label> Care Type </label>
+
+            <select formControlName="careType">
+              <option value="">Select</option>
+
+              <option value="Nursing">Nursing</option>
+
+              <option value="Residential">Residential</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label> Admission Date </label>
+
+            <input type="date" formControlName="admissionDate" />
+          </div>
+        </div>
+
+        @if (isEditMode) {
+          <div class="form-row">
+            <div class="form-field">
+              <label> Status </label>
+
+              <select formControlName="status">
+                <option value="Current">Current</option>
+
+                <option value="Left">Left</option>
+
+                <option value="Deceased">Deceased</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label> Discharge Date </label>
+
+              <input type="date" formControlName="dischargeDate" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label> Discharge Reason </label>
+
+            <input type="text" formControlName="dischargeReason" />
+          </div>
+        }
+
+        <h2>Contact Details</h2>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label> Email </label>
+
+            <input type="email" formControlName="email" />
+          </div>
+
+          <div class="form-field">
+            <label> Phone </label>
+
+            <input type="text" formControlName="phone" />
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label> Notes </label>
+
+          <textarea rows="4" formControlName="notes"></textarea>
+        </div>
+
+        @if (isEditMode) {
+          <div class="checkbox-field">
+            <input id="isArchived" type="checkbox" formControlName="isArchived" />
+
+            <label for="isArchived"> Archived </label>
+          </div>
+        }
+
+        <div class="buttons">
+          <a routerLink="/clients" class="secondary-button"> Cancel </a>
+
+          <button type="submit" class="primary-button" [disabled]="isSaving">
+            @if (isSaving) {
+              Saving...
+            } @else {
+              Save Client
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

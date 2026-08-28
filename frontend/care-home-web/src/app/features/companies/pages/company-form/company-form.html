@@ -1,0 +1,79 @@
+<div class="page">
+    <div class="form-container">
+
+        <h1>
+            @if (isEditMode) {
+            Edit Company
+            } @else {
+            Add Company
+            }
+        </h1>
+
+        @if (isLoading) {
+        <p>Loading company...</p>
+        }
+
+        @if (errorMessage) {
+        <div class="error-message">
+            {{ errorMessage }}
+        </div>
+        }
+
+        @if (!isLoading) {
+        <form [formGroup]="form" (ngSubmit)="save()">
+
+            <div class="form-field">
+                <label for="name">
+                    Company Name
+                </label>
+
+                <input id="name" type="text" formControlName="name" placeholder="Enter company name" />
+
+                @if (
+                form.controls.name.touched &&
+                form.controls.name.hasError('required')
+                ) {
+                <small class="validation-error">
+                    Company name is required.
+                </small>
+                }
+
+                @if (
+                form.controls.name.touched &&
+                form.controls.name.hasError('maxlength')
+                ) {
+                <small class="validation-error">
+                    Company name cannot exceed 150 characters.
+                </small>
+                }
+            </div>
+
+            @if (isEditMode) {
+            <div class="form-field checkbox-field">
+                <input id="isActive" type="checkbox" formControlName="isActive" />
+
+                <label for="isActive">
+                    Active
+                </label>
+            </div>
+            }
+
+            <div class="buttons">
+                <a routerLink="/companies" class="secondary-button">
+                    Cancel
+                </a>
+
+                <button type="submit" class="primary-button" [disabled]="isSaving">
+                    @if (isSaving) {
+                    Saving...
+                    } @else {
+                    Save Company
+                    }
+                </button>
+            </div>
+
+        </form>
+        }
+
+    </div>
+</div>

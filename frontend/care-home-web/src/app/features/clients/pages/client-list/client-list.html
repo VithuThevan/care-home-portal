@@ -1,0 +1,115 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Clients</h1>
+
+      <p>Manage clients across all care homes.</p>
+    </div>
+
+    <a routerLink="/clients/new" class="primary-button"> Add Client </a>
+  </div>
+
+  <div class="filters">
+    <input
+      type="text"
+      [(ngModel)]="searchText"
+      placeholder="Search name, Sage ID or reference"
+      (keyup.enter)="search()"
+    />
+
+    <select [(ngModel)]="selectedCareHomeId">
+      <option [ngValue]="0">All Care Homes</option>
+
+      @for (careHome of careHomes; track careHome.id) {
+        <option [ngValue]="careHome.id">
+          {{ careHome.name }}
+        </option>
+      }
+    </select>
+
+    <button type="button" (click)="search()">Search</button>
+
+    <button type="button" (click)="clearFilters()">Clear</button>
+  </div>
+
+  @if (isLoading) {
+    <p>Loading clients...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!isLoading) {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Reference</th>
+            <th>Sage ID</th>
+            <th>Company</th>
+            <th>Care Home</th>
+            <th>Care Type</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (client of clients; track client.id) {
+            <tr>
+              <td>
+                {{ client.title }}
+                {{ client.firstName }}
+                {{ client.lastName }}
+              </td>
+
+              <td>
+                {{ client.referenceNumber }}
+              </td>
+
+              <td>
+                {{ client.sageId }}
+              </td>
+
+              <td>
+                {{ client.companyName }}
+              </td>
+
+              <td>
+                {{ client.careHomeName }}
+              </td>
+
+              <td>
+                {{ client.careType }}
+              </td>
+
+              <td>
+                {{ client.status }}
+
+                @if (client.isArchived) {
+                  / Archived
+                }
+              </td>
+
+              <td class="actions">
+                <a [routerLink]="['/clients', client.id, 'edit']"> Edit </a>
+
+                @if (!client.isArchived) {
+                  <button type="button" (click)="archiveClient(client)">Archive</button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8">No clients found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

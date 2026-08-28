@@ -1,0 +1,218 @@
+<div class="page">
+
+    <div class="form-container">
+
+        <h1>
+            @if (isEditMode) {
+            Edit Care Home
+            } @else {
+            Add Care Home
+            }
+        </h1>
+
+
+        @if (isLoading) {
+
+        <p>
+            Loading care home...
+        </p>
+
+        }
+
+
+        @if (errorMessage) {
+
+        <div class="error-message">
+            {{ errorMessage }}
+        </div>
+
+        }
+
+
+        @if (!isLoading) {
+
+        <form [formGroup]="form" (ngSubmit)="save()">
+
+
+            <div class="form-field">
+
+                <label>
+                    Company
+                </label>
+
+                <select formControlName="companyId">
+
+                    <option [ngValue]="0">
+                        Select company
+                    </option>
+
+                    @for (
+                    company of companies;
+                    track company.id
+                    ) {
+
+                    <option [ngValue]="company.id">
+                        {{ company.name }}
+                    </option>
+
+                    }
+
+                </select>
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Care Home Code
+                </label>
+
+                <input type="text" formControlName="code" placeholder="Example: AMP" />
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Care Home Name
+                </label>
+
+                <input type="text" formControlName="name" placeholder="Example: Ampersand House" />
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Bed Capacity
+                </label>
+
+                <input type="number" formControlName="bedCapacity" />
+
+            </div>
+
+
+            <h2>
+                Contact Details
+            </h2>
+
+
+            <div class="form-field">
+
+                <label>
+                    Address
+                </label>
+
+                <textarea formControlName="address" rows="3"></textarea>
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Phone
+                </label>
+
+                <input type="text" formControlName="phone" />
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Email
+                </label>
+
+                <input type="email" formControlName="email" />
+
+            </div>
+
+
+            <h2>
+                Manager Details
+            </h2>
+
+
+            <div class="form-field">
+
+                <label>
+                    Manager Name
+                </label>
+
+                <input type="text" formControlName="managerName" />
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Manager Phone
+                </label>
+
+                <input type="text" formControlName="managerPhone" />
+
+            </div>
+
+
+            <div class="form-field">
+
+                <label>
+                    Manager Email
+                </label>
+
+                <input type="email" formControlName="managerEmail" />
+
+            </div>
+
+
+            @if (isEditMode) {
+
+            <div class="checkbox-field">
+
+                <input id="isActive" type="checkbox" formControlName="isActive" />
+
+                <label for="isActive">
+                    Active
+                </label>
+
+            </div>
+
+            }
+
+
+            <div class="buttons">
+
+                <a routerLink="/care-homes" class="secondary-button">
+                    Cancel
+                </a>
+
+
+                <button type="submit" class="primary-button" [disabled]="isSaving">
+
+                    @if (isSaving) {
+
+                    Saving...
+
+                    } @else {
+
+                    Save Care Home
+
+                    }
+
+                </button>
+
+            </div>
+
+        </form>
+
+        }
+
+    </div>
+
+</div>

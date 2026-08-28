@@ -1,0 +1,59 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace CareHome.Api.Models;
+
+public class Client
+{
+    public int Id { get; set; }
+
+    public int CareHomeId { get; set; }
+                                                                                                
+    [Required]
+    [MaxLength(20)]
+    public string SageId { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(20)]
+    public string ReferenceNumber { get; set; } = string.Empty;
+
+    [MaxLength(10)]
+    public string? Title { get; set; }
+
+    [Required]
+    [MaxLength(100)]
+    public string FirstName { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(100)]
+    public string LastName { get; set; } = string.Empty;
+
+    public DateTime? DateOfBirth { get; set; }
+
+    [Required]
+    [MaxLength(30)]
+    public string CareType { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(30)]
+    public string Status { get; set; } = "Current";
+
+    public DateTime AdmissionDate { get; set; }
+
+    public DateTime? DischargeDate { get; set; }
+
+    [MaxLength(100)]
+    public string? DischargeReason { get; set; }
+
+    [MaxLength(150)]
+    public string? Email { get; set; }
+
+    [MaxLength(30)]
+    public string? Phone { get; set; }
+
+    [MaxLength(1000)]
+    public string? Notes { get; set; }
+
+    public bool IsArchived { get; set; } = false;
+
+    public CareHomeLocation CareHome { get; set; } = null!;
+}
