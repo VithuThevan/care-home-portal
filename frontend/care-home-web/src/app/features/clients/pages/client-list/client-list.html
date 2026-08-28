@@ -30,6 +30,15 @@
     <button type="button" (click)="search()">Search</button>
 
     <button type="button" (click)="clearFilters()">Clear</button>
+
+    <label class="checkbox-filter">
+      <input
+        type="checkbox"
+        [(ngModel)]="showArchived"
+        (change)="loadClients()"
+      />
+      Show archived
+    </label>
   </div>
 
   @if (isLoading) {
@@ -98,7 +107,7 @@
               <td class="actions">
                 <a [routerLink]="['/clients', client.id, 'edit']"> Edit </a>
 
-                @if (!client.isArchived) {
+                @if (!client.isArchived && client.status !== 'Current') {
                   <button type="button" (click)="archiveClient(client)">Archive</button>
                 }
               </td>

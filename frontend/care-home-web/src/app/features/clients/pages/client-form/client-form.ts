@@ -36,6 +36,8 @@ export class ClientForm implements OnInit {
 
   careHomes: CareHomeLocation[] = [];
 
+  assignedCareHomeId: number | null = null;
+
   isEditMode = false;
 
   isLoading = false;
@@ -78,8 +80,41 @@ export class ClientForm implements OnInit {
     isArchived: [false],
   });
 
+  get selectableCareHomes(): CareHomeLocation[] {
+    return this.careHomes.filter(
+      (careHome) =>
+        careHome.isActive ||
+        (this.isEditMode && careHome.id === this.assignedCareHomeId),
+    );
+  }
+
+  get isCurrentStatus(): boolean {
+    return this.form.controls.status.value === 'Current';
+  }
+
   ngOnInit(): void {
     this.loadCareHomes();
+
+    this.form.controls.status.valueChanges.subscribe((status) => {
+      if (status === 'Current') {
+        this.form.patchValue(
+          {
+            dischargeDate: '',
+            dischargeReason: '',
+            isArchived: false,
+          },
+          { emitEvent: false },
+        );
+
+        this.form.controls.dischargeDate.clearValidators();
+      } else {
+        this.form.controls.dischargeDate.setValidators(Validators.required);
+      }
+
+      this.form.controls.dischargeDate.updateValueAndValidity({
+        emitEvent: false,
+      });
+    });
 
     const id = this.route.snapshot.paramMap.get('id');
 
@@ -95,7 +130,7 @@ export class ClientForm implements OnInit {
   private loadCareHomes(): void {
     this.careHomeService.getCareHomes().subscribe({
       next: (careHomes) => {
-        this.careHomes = careHomes.filter((x) => x.isActive);
+        this.careHomes = careHomes;
       },
 
       error: (error) => {
@@ -122,6 +157,8 @@ export class ClientForm implements OnInit {
       )
       .subscribe({
         next: (client) => {
+          this.assignedCareHomeId = client.careHomeId;
+
           this.form.patchValue({
             careHomeId: client.careHomeId,
 
@@ -172,11 +209,20 @@ export class ClientForm implements OnInit {
       return;
     }
 
-    this.isSaving = true;
-
     this.errorMessage = '';
 
     const value = this.form.getRawValue();
+
+    if (this.isEditMode && value.status !== 'Current' && !value.dischargeDate) {
+      this.form.markAllAsTouched();
+
+      this.errorMessage =
+        'Discharge date is required when client is no longer current.';
+
+      return;
+    }
+
+    this.isSaving = true;
 
     const baseRequest = {
       careHomeId: value.careHomeId,
@@ -205,17 +251,19 @@ export class ClientForm implements OnInit {
     };
 
     if (this.isEditMode && this.clientId !== null) {
-      this.clientService
+        this.clientService
         .updateClient(this.clientId, {
           ...baseRequest,
 
           status: value.status,
 
-          dischargeDate: value.dischargeDate || null,
+          dischargeDate:
+            value.status === 'Current' ? null : value.dischargeDate || null,
 
-          dischargeReason: value.dischargeReason,
+          dischargeReason:
+            value.status === 'Current' ? null : value.dischargeReason,
 
-          isArchived: value.isArchived,
+          isArchived: value.status === 'Current' ? false : value.isArchived,
         })
         .subscribe({
           next: () => {

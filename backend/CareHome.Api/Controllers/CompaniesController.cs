@@ -107,6 +107,17 @@ public class CompaniesController : ControllerBase
             });
         }
 
+        if (company.IsActive && !request.IsActive)
+        {
+            var deactivationError =
+                await RejectIfDeactivatingWithActiveCareHomes(id);
+
+            if (deactivationError is not null)
+            {
+                return deactivationError;
+            }
+        }
+
         company.Name = companyName;
         company.IsActive = request.IsActive;
 
@@ -127,10 +138,41 @@ public class CompaniesController : ControllerBase
             return NotFound();
         }
 
+        if (company.IsActive)
+        {
+            var deactivationError =
+                await RejectIfDeactivatingWithActiveCareHomes(id);
+
+            if (deactivationError is not null)
+            {
+                return deactivationError;
+            }
+        }
+
         company.IsActive = false;
 
         await _dbContext.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    private async Task<IActionResult?> RejectIfDeactivatingWithActiveCareHomes(
+        int companyId)
+    {
+        var hasActiveCareHomes =
+            await _dbContext.CareHomes.AnyAsync(x =>
+                x.CompanyId == companyId &&
+                x.IsActive);
+
+        if (hasActiveCareHomes)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Deactivate all care homes under this company before deactivating the company."
+            });
+        }
+
+        return null;
     }
 }

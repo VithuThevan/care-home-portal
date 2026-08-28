@@ -33,6 +33,7 @@ public class Client
     [MaxLength(30)]
     public string CareType { get; set; } = string.Empty;
 
+    // Occupancy lifecycle: Current, Left, or Deceased.
     [Required]
     [MaxLength(30)]
     public string Status { get; set; } = "Current";
@@ -53,6 +54,7 @@ public class Client
     [MaxLength(1000)]
     public string? Notes { get; set; }
 
+    // Visibility/history only; not an occupancy status.
     public bool IsArchived { get; set; } = false;
 
     public CareHomeLocation CareHome { get; set; } = null!;

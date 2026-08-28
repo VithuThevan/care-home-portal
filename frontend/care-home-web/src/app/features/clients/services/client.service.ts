@@ -21,7 +21,8 @@ export class ClientService {
 
   getClients(
     search?: string,
-    careHomeId?: number
+    careHomeId?: number,
+    includeArchived = false
   ): Observable<Client[]> {
 
     let params =
@@ -37,6 +38,14 @@ export class ClientService {
         params.set(
           'careHomeId',
           careHomeId
+        );
+    }
+
+    if (includeArchived) {
+      params =
+        params.set(
+          'includeArchived',
+          'true'
         );
     }
 

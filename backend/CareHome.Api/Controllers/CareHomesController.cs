@@ -80,17 +80,12 @@ public class CareHomesController : ControllerBase
     public async Task<IActionResult> CreateCareHome(
         CreateCareHomeRequest request)
     {
-        var companyExists = await _dbContext.Companies
-            .AnyAsync(x =>
-                x.Id == request.CompanyId &&
-                x.IsActive);
+        var companyError =
+            await ValidateSelectedCompany(request.CompanyId);
 
-        if (!companyExists)
+        if (companyError is not null)
         {
-            return BadRequest(new
-            {
-                message = "Selected company does not exist."
-            });
+            return companyError;
         }
 
         var code = request.Code.Trim();
@@ -145,17 +140,14 @@ public class CareHomesController : ControllerBase
             return NotFound();
         }
 
-        var companyExists = await _dbContext.Companies
-            .AnyAsync(x =>
-                x.Id == request.CompanyId &&
-                x.IsActive);
+        var companyError =
+            await ValidateSelectedCompany(
+                request.CompanyId,
+                careHome.CompanyId);
 
-        if (!companyExists)
+        if (companyError is not null)
         {
-            return BadRequest(new
-            {
-                message = "Selected company does not exist."
-            });
+            return companyError;
         }
 
         var code = request.Code.Trim();
@@ -171,6 +163,17 @@ public class CareHomesController : ControllerBase
             {
                 message = "Care home code already exists."
             });
+        }
+
+        if (careHome.IsActive && !request.IsActive)
+        {
+            var deactivationError =
+                await RejectIfDeactivatingWithCurrentClients(id);
+
+            if (deactivationError is not null)
+            {
+                return deactivationError;
+            }
         }
 
         careHome.CompanyId = request.CompanyId;
@@ -201,10 +204,72 @@ public class CareHomesController : ControllerBase
             return NotFound();
         }
 
+        if (careHome.IsActive)
+        {
+            var deactivationError =
+                await RejectIfDeactivatingWithCurrentClients(id);
+
+            if (deactivationError is not null)
+            {
+                return deactivationError;
+            }
+        }
+
         careHome.IsActive = false;
 
         await _dbContext.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    private async Task<IActionResult?> ValidateSelectedCompany(
+        int companyId,
+        int? currentCompanyId = null)
+    {
+        var company = await _dbContext.Companies
+            .FirstOrDefaultAsync(x => x.Id == companyId);
+
+        if (company is null)
+        {
+            return BadRequest(new
+            {
+                message = "Selected company does not exist."
+            });
+        }
+
+        var companyUnchanged =
+            currentCompanyId == companyId;
+
+        if (!companyUnchanged && !company.IsActive)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Selected company does not exist or is inactive."
+            });
+        }
+
+        return null;
+    }
+
+    private async Task<IActionResult?> RejectIfDeactivatingWithCurrentClients(
+        int careHomeId)
+    {
+        var hasCurrentClients =
+            await _dbContext.Clients.AnyAsync(x =>
+                x.CareHomeId == careHomeId &&
+                x.Status == "Current" &&
+                !x.IsArchived);
+
+        if (hasCurrentClients)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "This care home has current clients and cannot be deactivated."
+            });
+        }
+
+        return null;
     }
 }

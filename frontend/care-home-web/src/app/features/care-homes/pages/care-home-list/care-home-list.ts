@@ -82,6 +82,7 @@ export class CareHomeList implements OnInit {
           console.error(error);
 
           this.errorMessage =
+            error.error?.message ??
             'Unable to deactivate care home.';
         }
       });

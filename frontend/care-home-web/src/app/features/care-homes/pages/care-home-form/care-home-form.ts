@@ -64,6 +64,8 @@ export class CareHomeForm implements OnInit {
 
   companies: Company[] = [];
 
+  assignedCompanyId: number | null = null;
+
   isEditMode = false;
 
   isLoading = false;
@@ -130,6 +132,13 @@ export class CareHomeForm implements OnInit {
 
     });
 
+  get selectableCompanies(): Company[] {
+    return this.companies.filter(
+      (company) =>
+        company.isActive ||
+        (this.isEditMode && company.id === this.assignedCompanyId)
+    );
+  }
 
   ngOnInit(): void {
 
@@ -193,6 +202,9 @@ export class CareHomeForm implements OnInit {
       .subscribe({
 
         next: (careHome) => {
+
+          this.assignedCompanyId =
+            careHome.companyId;
 
           this.form.patchValue({
 

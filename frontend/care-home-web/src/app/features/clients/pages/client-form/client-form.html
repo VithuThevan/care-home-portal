@@ -26,11 +26,14 @@
           <select formControlName="careHomeId">
             <option [ngValue]="0">Select Care Home</option>
 
-            @for (careHome of careHomes; track careHome.id) {
+            @for (careHome of selectableCareHomes; track careHome.id) {
               <option [ngValue]="careHome.id">
                 {{ careHome.companyName }}
                 -
                 {{ careHome.name }}
+                @if (!careHome.isActive) {
+                  (Inactive)
+                }
               </option>
             }
           </select>
@@ -128,18 +131,22 @@
               </select>
             </div>
 
+            @if (!isCurrentStatus) {
+              <div class="form-field">
+                <label> Discharge Date </label>
+
+                <input type="date" formControlName="dischargeDate" />
+              </div>
+            }
+          </div>
+
+          @if (!isCurrentStatus) {
             <div class="form-field">
-              <label> Discharge Date </label>
+              <label> Discharge Reason </label>
 
-              <input type="date" formControlName="dischargeDate" />
+              <input type="text" formControlName="dischargeReason" />
             </div>
-          </div>
-
-          <div class="form-field">
-            <label> Discharge Reason </label>
-
-            <input type="text" formControlName="dischargeReason" />
-          </div>
+          }
         }
 
         <h2>Contact Details</h2>
@@ -164,7 +171,7 @@
           <textarea rows="4" formControlName="notes"></textarea>
         </div>
 
-        @if (isEditMode) {
+        @if (isEditMode && !isCurrentStatus) {
           <div class="checkbox-field">
             <input id="isArchived" type="checkbox" formControlName="isArchived" />
 

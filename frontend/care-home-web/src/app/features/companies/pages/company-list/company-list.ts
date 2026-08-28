@@ -66,6 +66,7 @@ export class CompanyList implements OnInit {
           console.error(error);
 
           this.errorMessage =
+            error.error?.message ??
             'Unable to deactivate company.';
         }
       });

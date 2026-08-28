@@ -20,13 +20,19 @@ public class ClientsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetClients(
         string? search = null,
-        int? careHomeId = null)
+        int? careHomeId = null,
+        bool includeArchived = false)
     {
         var query = _dbContext.Clients
             .AsNoTracking()
             .Include(x => x.CareHome)
             .ThenInclude(x => x.Company)
             .AsQueryable();
+
+        if (!includeArchived)
+        {
+            query = query.Where(x => !x.IsArchived);
+        }
 
         if (careHomeId.HasValue)
         {
@@ -124,18 +130,12 @@ public class ClientsController : ControllerBase
     public async Task<IActionResult> CreateClient(
         CreateClientRequest request)
     {
-        var careHomeExists =
-            await _dbContext.CareHomes.AnyAsync(x =>
-                x.Id == request.CareHomeId &&
-                x.IsActive);
+        var careHomeError =
+            await ValidateSelectedCareHome(request.CareHomeId);
 
-        if (!careHomeExists)
+        if (careHomeError is not null)
         {
-            return BadRequest(new
-            {
-                message =
-                    "Selected care home does not exist or is inactive."
-            });
+            return careHomeError;
         }
 
         var sageId = request.SageId.Trim();
@@ -231,18 +231,14 @@ public class ClientsController : ControllerBase
             return NotFound();
         }
 
-        var careHomeExists =
-            await _dbContext.CareHomes.AnyAsync(x =>
-                x.Id == request.CareHomeId &&
-                x.IsActive);
+        var careHomeError =
+            await ValidateSelectedCareHome(
+                request.CareHomeId,
+                client.CareHomeId);
 
-        if (!careHomeExists)
+        if (careHomeError is not null)
         {
-            return BadRequest(new
-            {
-                message =
-                    "Selected care home does not exist or is inactive."
-            });
+            return careHomeError;
         }
 
         var sageId = request.SageId.Trim();
@@ -346,6 +342,7 @@ public class ClientsController : ControllerBase
         {
             client.DischargeDate = null;
             client.DischargeReason = null;
+            client.IsArchived = false;
         }
         else
         {
@@ -354,6 +351,9 @@ public class ClientsController : ControllerBase
 
             client.DischargeReason =
                 request.DischargeReason?.Trim();
+
+            client.IsArchived =
+                request.IsArchived;
         }
 
         client.Email =
@@ -364,9 +364,6 @@ public class ClientsController : ControllerBase
 
         client.Notes =
             request.Notes?.Trim();
-
-        client.IsArchived =
-            request.IsArchived;
 
         await _dbContext.SaveChangesAsync();
 
@@ -382,6 +379,15 @@ public class ClientsController : ControllerBase
         if (client is null)
         {
             return NotFound();
+        }
+
+        if (client.Status == "Current")
+        {
+            return BadRequest(new
+            {
+                message =
+                    "A current client must be discharged before being archived."
+            });
         }
 
         client.IsArchived = true;
@@ -434,6 +440,37 @@ public class ClientsController : ControllerBase
             {
                 message =
                     "Discharge date cannot be before admission date."
+            });
+        }
+
+        return null;
+    }
+
+    private async Task<IActionResult?> ValidateSelectedCareHome(
+        int careHomeId,
+        int? currentCareHomeId = null)
+    {
+        var careHome = await _dbContext.CareHomes
+            .FirstOrDefaultAsync(x => x.Id == careHomeId);
+
+        if (careHome is null)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Selected care home does not exist or is inactive."
+            });
+        }
+
+        var careHomeUnchanged =
+            currentCareHomeId == careHomeId;
+
+        if (!careHomeUnchanged && !careHome.IsActive)
+        {
+            return BadRequest(new
+            {
+                message =
+                    "Selected care home does not exist or is inactive."
             });
         }
 

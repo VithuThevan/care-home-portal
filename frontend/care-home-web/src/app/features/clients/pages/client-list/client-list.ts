@@ -34,6 +34,8 @@ export class ClientList implements OnInit {
 
   selectedCareHomeId = 0;
 
+  showArchived = false;
+
   isLoading = false;
 
   errorMessage = '';
@@ -66,6 +68,8 @@ export class ClientList implements OnInit {
         this.searchText.trim() || undefined,
 
         this.selectedCareHomeId || undefined,
+
+        this.showArchived,
       )
       .subscribe({
         next: (clients) => {
@@ -111,7 +115,7 @@ export class ClientList implements OnInit {
       error: (error) => {
         console.error(error);
 
-        this.errorMessage = 'Unable to archive client.';
+        this.errorMessage = error.error?.message ?? 'Unable to archive client.';
       },
     });
   }

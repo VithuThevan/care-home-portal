@@ -47,12 +47,15 @@
                     </option>
 
                     @for (
-                    company of companies;
+                    company of selectableCompanies;
                     track company.id
                     ) {
 
                     <option [ngValue]="company.id">
                         {{ company.name }}
+                        @if (!company.isActive) {
+                        (Inactive)
+                        }
                     </option>
 
                     }
