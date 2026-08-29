@@ -1,0 +1,32 @@
+<div class="page">
+  <div class="page-header"><div><h1>Miscellaneous Charges</h1><p>CSV columns: ClientReference, UsedDate, Description, Amount, NominalCode</p></div></div>
+  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
+  @if (info) { <p>{{ info }}</p> }
+  <input type="file" accept=".csv,text/csv" (change)="onFile($event)" />
+  @if (preview) {
+    <p>Valid {{ preview.validCount }} · Invalid {{ preview.invalidCount }}</p>
+    <table>
+      <thead><tr><th>Row</th><th>Status</th><th>Client</th><th>Error</th></tr></thead>
+      <tbody>
+        @for (row of preview.rows; track row.rowNumber) {
+          <tr>
+            <td>{{ row.rowNumber }}</td>
+            <td>{{ row.isValid ? 'Valid' : 'Invalid' }}</td>
+            <td>{{ row.clientName }}</td>
+            <td>{{ row.error }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <button class="primary-button" type="button" [disabled]="preview.invalidCount > 0" (click)="confirm()">Confirm import</button>
+  }
+  <h2>Import batches</h2>
+  <table>
+    <thead><tr><th>File</th><th>When</th><th>Accepted</th></tr></thead>
+    <tbody>
+      @for (batch of batches; track batch.id) {
+        <tr><td>{{ batch.fileName }}</td><td>{{ batch.importedAt }}</td><td>{{ batch.acceptedRows }}</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { Company } from '../../models/company.model';
 import { CompanyService } from '../../services/company.service';
+import { getApiErrorMessage } from '../../../../core/api-error';
 
 @Component({
   selector: 'app-company-list',
@@ -39,7 +40,7 @@ export class CompanyList implements OnInit {
         console.error(error);
 
         this.errorMessage =
-          'Unable to load companies.';
+          getApiErrorMessage(error, 'Unable to load companies.');
 
         this.isLoading = false;
       }
@@ -66,8 +67,10 @@ export class CompanyList implements OnInit {
           console.error(error);
 
           this.errorMessage =
-            error.error?.message ??
-            'Unable to deactivate company.';
+            getApiErrorMessage(
+              error,
+              'Unable to deactivate company.'
+            );
         }
       });
   }

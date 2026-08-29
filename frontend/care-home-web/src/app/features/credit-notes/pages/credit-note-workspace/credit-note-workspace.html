@@ -1,0 +1,42 @@
+<div class="page">
+  <div class="page-header"><div><h1>Credit Notes</h1><p>Credits cannot exceed remaining invoiced amounts.</p></div></div>
+  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
+  <div class="filters">
+    <input placeholder="Client ID (optional)" [(ngModel)]="clientId" />
+    <input type="date" [(ngModel)]="periodStart" />
+    <input type="date" [(ngModel)]="periodEnd" />
+    <input placeholder="Reason" [(ngModel)]="reason" />
+    <button type="button" (click)="runPreview()">Preview</button>
+    <button type="button" class="primary-button" [disabled]="!preview?.canGenerate" (click)="generate()">Generate</button>
+  </div>
+  @if (preview) {
+    <table>
+      <thead><tr><th>Invoice</th><th>Client</th><th>Remaining</th><th>Credit</th></tr></thead>
+      <tbody>
+        @for (line of preview.lines; track line.invoiceLineId) {
+          <tr>
+            <td>{{ line.invoiceNumber }}</td>
+            <td>{{ line.clientName }}</td>
+            <td>{{ line.remainingAmount | number:'1.2-2' }}</td>
+            <td>{{ line.creditAmount | number:'1.2-2' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+  <h2>Existing credit notes</h2>
+  <table>
+    <thead><tr><th>Number</th><th>Invoice</th><th>Date</th><th>Amount</th><th></th></tr></thead>
+    <tbody>
+      @for (note of notes; track note.id) {
+        <tr>
+          <td>{{ note.creditNoteNumber }}</td>
+          <td>{{ note.invoiceNumber }}</td>
+          <td>{{ note.creditNoteDate }}</td>
+          <td>{{ note.totalAmount | number:'1.2-2' }}</td>
+          <td><button type="button" (click)="pdf(note.id)">PDF</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

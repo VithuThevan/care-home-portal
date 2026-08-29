@@ -12,6 +12,8 @@ import { CareHomeLocation } from '../../../care-homes/models/care-home.model';
 
 import { CareHomeService } from '../../../care-homes/services/care-home.service';
 
+import { getApiErrorMessage } from '../../../../core/api-error';
+
 @Component({
   selector: 'app-client-list',
 
@@ -27,6 +29,8 @@ export class ClientList implements OnInit {
   private readonly careHomeService = inject(CareHomeService);
 
   clients: Client[] = [];
+
+  totalCount = 0;
 
   careHomes: CareHomeLocation[] = [];
 
@@ -72,16 +76,16 @@ export class ClientList implements OnInit {
         this.showArchived,
       )
       .subscribe({
-        next: (clients) => {
-          this.clients = clients;
-
+        next: (page) => {
+          this.clients = page.items;
+          this.totalCount = page.totalCount;
           this.isLoading = false;
         },
 
         error: (error) => {
           console.error(error);
 
-          this.errorMessage = 'Unable to load clients.';
+          this.errorMessage = getApiErrorMessage(error, 'Unable to load clients.');
 
           this.isLoading = false;
         },
@@ -115,7 +119,10 @@ export class ClientList implements OnInit {
       error: (error) => {
         console.error(error);
 
-        this.errorMessage = error.error?.message ?? 'Unable to archive client.';
+        this.errorMessage = getApiErrorMessage(
+          error,
+          'Unable to archive client.',
+        );
       },
     });
   }

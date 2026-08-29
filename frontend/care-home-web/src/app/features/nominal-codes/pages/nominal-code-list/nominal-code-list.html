@@ -1,0 +1,73 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Nominal Codes</h1>
+      <p>Manage Sage nominal code master data.</p>
+    </div>
+
+    <a routerLink="/nominal-codes/new" class="primary-button">
+      Add Nominal Code
+    </a>
+  </div>
+
+  @if (isLoading) {
+    <p>Loading nominal codes...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!isLoading) {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (nominalCode of nominalCodes; track nominalCode.id) {
+            <tr>
+              <td>{{ nominalCode.code }}</td>
+              <td>{{ nominalCode.name }}</td>
+              <td>{{ nominalCode.description || '-' }}</td>
+              <td>
+                @if (nominalCode.isActive) {
+                  <span class="status active">Active</span>
+                } @else {
+                  <span class="status inactive">Inactive</span>
+                }
+              </td>
+              <td class="actions">
+                <a [routerLink]="['/nominal-codes', nominalCode.id, 'edit']">
+                  Edit
+                </a>
+
+                @if (nominalCode.isActive) {
+                  <button
+                    type="button"
+                    (click)="deactivateNominalCode(nominalCode)"
+                  >
+                    Deactivate
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">No nominal codes found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

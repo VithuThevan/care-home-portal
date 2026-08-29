@@ -1,50 +1,58 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace CareHome.Api.Dtos.Clients;
-
-public class UpdateClientRequest
+namespace CareHome.Api.Dtos.Clients
 {
-    [Range(1, int.MaxValue)]
-    public int CareHomeId { get; set; }
+    public class UpdateClientRequest
+    {
+        [Range(1, int.MaxValue)]
+        public int CareHomeId { get; set; }
 
-    [Required]
-    [MaxLength(20)]
-    public string SageId { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(20)]
+        public string SageId { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(20)]
-    public string ReferenceNumber { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(20)]
+        public string ReferenceNumber { get; set; } = string.Empty;
 
-    [MaxLength(10)]
-    public string? Title { get; set; }
+        [MaxLength(10)]
+        public string? Title { get; set; }
 
-    [Required]
-    [MaxLength(100)]
-    public string FirstName { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(100)]
+        public string FirstName { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(100)]
-    public string LastName { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(100)]
+        public string LastName { get; set; } = string.Empty;
 
-    public DateOnly? DateOfBirth { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
 
-    [Required]
-    public string CareType { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(30)]
+        public string CareType { get; set; } = string.Empty;
 
-    [Required]
-    public string Status { get; set; } = "Current";
+        [Required]
+        [MaxLength(30)]
+        public string Status { get; set; } = "Current";
 
-    public DateOnly AdmissionDate { get; set; }
+        public DateOnly AdmissionDate { get; set; }
 
-    public DateOnly? DischargeDate { get; set; }
+        public DateOnly? DischargeDate { get; set; }
 
-    public string? DischargeReason { get; set; }
+        [MaxLength(100)]
+        public string? DischargeReason { get; set; }
 
-    public string? Email { get; set; }
+        [MaxLength(150)]
+        [EmailAddress]
+        public string? Email { get; set; }
 
-    public string? Phone { get; set; }
+        [MaxLength(30)]
+        public string? Phone { get; set; }
 
-    public string? Notes { get; set; }
+        [MaxLength(1000)]
+        public string? Notes { get; set; }
 
-    public bool IsArchived { get; set; }
+        public bool IsArchived { get; set; }
+    }
 }

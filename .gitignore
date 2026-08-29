@@ -4,6 +4,9 @@
 *.user
 *.suo
 
+# Local generated documents and Sage files
+**/App_Data/
+
 # Node / Angular
 **/node_modules/
 **/dist/

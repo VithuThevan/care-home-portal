@@ -59,7 +59,7 @@ export interface UpdateClientRequest extends CreateClientRequest {
 
   dischargeDate?: string | null;
 
-  dischargeReason?: string;
+  dischargeReason?: string | null;
 
   isArchived: boolean;
 }

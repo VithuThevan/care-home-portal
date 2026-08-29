@@ -105,6 +105,8 @@
               </td>
 
               <td class="actions">
+                <a [routerLink]="['/clients', client.id]"> Open </a>
+
                 <a [routerLink]="['/clients', client.id, 'edit']"> Edit </a>
 
                 @if (!client.isArchived && client.status !== 'Current') {

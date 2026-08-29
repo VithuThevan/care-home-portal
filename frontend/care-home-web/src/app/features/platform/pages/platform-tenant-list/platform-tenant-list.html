@@ -1,0 +1,36 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Organisations</h1>
+      <p>Platform administration for purchasing organisations.</p>
+    </div>
+    <a routerLink="/platform/tenants/new" class="primary-button">Add organisation</a>
+  </div>
+
+  @if (errorMessage) {
+    <div class="error-message">{{ errorMessage }}</div>
+  }
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Trading name</th>
+        <th>Email</th>
+        <th>Active</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (tenant of tenants; track tenant.id) {
+        <tr>
+          <td>{{ tenant.name }}</td>
+          <td>{{ tenant.tradingName || '—' }}</td>
+          <td>{{ tenant.email || '—' }}</td>
+          <td>{{ tenant.isActive ? 'Yes' : 'No' }}</td>
+          <td><a [routerLink]="['/platform/tenants', tenant.id]">Edit</a></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

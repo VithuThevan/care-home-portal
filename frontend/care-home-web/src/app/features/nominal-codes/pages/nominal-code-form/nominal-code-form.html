@@ -1,0 +1,100 @@
+<div class="page">
+  <div class="form-container">
+    <h1>
+      @if (isEditMode) {
+        Edit Nominal Code
+      } @else {
+        Add Nominal Code
+      }
+    </h1>
+
+    @if (isLoading) {
+      <p>Loading nominal code...</p>
+    }
+
+    @if (errorMessage) {
+      <div class="error-message">
+        {{ errorMessage }}
+      </div>
+    }
+
+    @if (!isLoading) {
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-field">
+          <label for="code">Code</label>
+          <input id="code" type="text" formControlName="code" />
+
+          @if (
+            form.controls.code.touched &&
+            form.controls.code.hasError('required')
+          ) {
+            <small class="field-error">Code is required.</small>
+          }
+
+          @if (
+            form.controls.code.touched &&
+            form.controls.code.hasError('maxlength')
+          ) {
+            <small class="field-error">Code cannot exceed 20 characters.</small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="name">Name</label>
+          <input id="name" type="text" formControlName="name" />
+
+          @if (
+            form.controls.name.touched &&
+            form.controls.name.hasError('required')
+          ) {
+            <small class="field-error">Name is required.</small>
+          }
+
+          @if (
+            form.controls.name.touched &&
+            form.controls.name.hasError('maxlength')
+          ) {
+            <small class="field-error">Name cannot exceed 150 characters.</small>
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="3"
+          ></textarea>
+
+          @if (
+            form.controls.description.touched &&
+            form.controls.description.hasError('maxlength')
+          ) {
+            <small class="field-error">
+              Description cannot exceed 500 characters.
+            </small>
+          }
+        </div>
+
+        @if (isEditMode) {
+          <div class="checkbox-field">
+            <input id="isActive" type="checkbox" formControlName="isActive" />
+            <label for="isActive">Active</label>
+          </div>
+        }
+
+        <div class="buttons">
+          <a routerLink="/nominal-codes" class="secondary-button">Cancel</a>
+
+          <button type="submit" class="primary-button" [disabled]="isSaving">
+            @if (isSaving) {
+              Saving...
+            } @else {
+              Save Nominal Code
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>

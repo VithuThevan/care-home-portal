@@ -30,6 +30,8 @@ import {
   CareHomeService
 } from '../../services/care-home.service';
 
+import { getApiErrorMessage } from '../../../../core/api-error';
+
 
 @Component({
   selector: 'app-care-home-form',
@@ -110,22 +112,40 @@ export class CareHomeForm implements OnInit {
         ]
       ],
 
-      address: [''],
+      address: [
+        '',
+        Validators.maxLength(200)
+      ],
 
-      phone: [''],
+      phone: [
+        '',
+        Validators.maxLength(30)
+      ],
 
       email: [
         '',
-        Validators.email
+        [
+          Validators.email,
+          Validators.maxLength(150)
+        ]
       ],
 
-      managerName: [''],
+      managerName: [
+        '',
+        Validators.maxLength(150)
+      ],
 
-      managerPhone: [''],
+      managerPhone: [
+        '',
+        Validators.maxLength(30)
+      ],
 
       managerEmail: [
         '',
-        Validators.email
+        [
+          Validators.email,
+          Validators.maxLength(150)
+        ]
       ],
 
       isActive: [true]
@@ -176,7 +196,7 @@ export class CareHomeForm implements OnInit {
           console.error(error);
 
           this.errorMessage =
-            'Unable to load companies.';
+            getApiErrorMessage(error, 'Unable to load companies.');
         }
 
       });
@@ -250,7 +270,7 @@ export class CareHomeForm implements OnInit {
           console.error(error);
 
           this.errorMessage =
-            'Unable to load care home.';
+            getApiErrorMessage(error, 'Unable to load care home.');
         }
 
       });
@@ -326,6 +346,11 @@ export class CareHomeForm implements OnInit {
               value.isActive
           }
         )
+        .pipe(
+          finalize(() => {
+            this.isSaving = false;
+          })
+        )
         .subscribe({
 
           next: () => {
@@ -341,10 +366,10 @@ export class CareHomeForm implements OnInit {
             console.error(error);
 
             this.errorMessage =
-              error.error?.message ??
-              'Unable to update care home.';
-
-            this.isSaving = false;
+              getApiErrorMessage(
+                error,
+                'Unable to update care home.'
+              );
 
           }
 
@@ -356,6 +381,11 @@ export class CareHomeForm implements OnInit {
 
     this.careHomeService
       .createCareHome(request)
+      .pipe(
+        finalize(() => {
+          this.isSaving = false;
+        })
+      )
       .subscribe({
 
         next: () => {
@@ -371,10 +401,10 @@ export class CareHomeForm implements OnInit {
           console.error(error);
 
           this.errorMessage =
-            error.error?.message ??
-            'Unable to create care home.';
-
-          this.isSaving = false;
+            getApiErrorMessage(
+              error,
+              'Unable to create care home.'
+            );
 
         }
 

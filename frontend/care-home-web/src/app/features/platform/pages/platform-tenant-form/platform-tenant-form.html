@@ -1,0 +1,63 @@
+<div class="page">
+  <div class="form-container">
+    <h1>{{ isEditMode ? 'Edit organisation' : 'Add organisation' }}</h1>
+    @if (errorMessage) {
+      <div class="error-message">{{ errorMessage }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-field">
+        <label>Name</label>
+        <input formControlName="name" />
+      </div>
+      <div class="form-field">
+        <label>Trading name</label>
+        <input formControlName="tradingName" />
+      </div>
+      <div class="form-field">
+        <label>Registration number</label>
+        <input formControlName="registrationNumber" />
+      </div>
+      <div class="form-field">
+        <label>Address</label>
+        <input formControlName="address" />
+      </div>
+      <div class="form-field">
+        <label>Phone</label>
+        <input formControlName="phone" />
+      </div>
+      <div class="form-field">
+        <label>Email</label>
+        <input formControlName="email" />
+      </div>
+      <div class="form-field">
+        <label>Website</label>
+        <input formControlName="website" />
+      </div>
+      <label class="checkbox-filter">
+        <input type="checkbox" formControlName="isActive" />
+        Active
+      </label>
+
+      @if (!isEditMode) {
+        <h2>Optional first administrator</h2>
+        <div class="form-field">
+          <label>Admin email</label>
+          <input formControlName="adminEmail" />
+        </div>
+        <div class="form-field">
+          <label>Admin password</label>
+          <input type="password" formControlName="adminPassword" />
+        </div>
+        <div class="form-field">
+          <label>Admin display name</label>
+          <input formControlName="adminDisplayName" />
+        </div>
+      }
+
+      <div class="buttons">
+        <button class="primary-button" type="submit" [disabled]="isSaving">Save</button>
+        <a routerLink="/platform/tenants">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>

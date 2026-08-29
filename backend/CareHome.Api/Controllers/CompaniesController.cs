@@ -1,178 +1,206 @@
+using CareHome.Api.Common;
 using CareHome.Api.Data;
 using CareHome.Api.Dtos.Companies;
 using CareHome.Api.Models;
+using CareHome.Api.Security;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace CareHome.Api.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class CompaniesController : ControllerBase
+namespace CareHome.Api.Controllers
 {
-    private readonly CareHomeDbContext _dbContext;
-
-    public CompaniesController(CareHomeDbContext dbContext)
+    [ApiController]
+    [Route("api/[controller]")]
+    [RequireTenant]
+    public class CompaniesController(
+        CareHomeDbContext dbContext,
+        ITenantContext tenantContext) : ControllerBase
     {
-        _dbContext = dbContext;
-    }
-
-    // GET: api/companies
-    [HttpGet]
-    public async Task<ActionResult<List<Company>>> GetCompanies()
-    {
-        var companies = await _dbContext.Companies
-            .OrderBy(company => company.Name)
-            .ToListAsync();
-
-        return Ok(companies);
-    }
-
-    // GET: api/companies/1
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<Company>> GetCompany(int id)
-    {
-        var company = await _dbContext.Companies
-            .FirstOrDefaultAsync(company => company.Id == id);
-
-        if (company is null)
+        [HttpGet]
+        public async Task<ActionResult<List<CompanyDto>>> GetCompanies()
         {
-            return NotFound();
+            var tenantId = tenantContext.TenantId;
+            var companies = await dbContext.Companies
+                .AsNoTracking()
+                .ForTenant(tenantId)
+                .OrderBy(company => company.Name)
+                .Select(company => new CompanyDto
+                {
+                    Id = company.Id,
+                    Name = company.Name,
+                    IsActive = company.IsActive
+                })
+                .ToListAsync();
+
+            return Ok(companies);
         }
 
-        return Ok(company);
-    }
-
-    // POST: api/companies
-    [HttpPost]
-    public async Task<ActionResult<Company>> CreateCompany(
-        CreateCompanyRequest request)
-    {
-        var companyName = request.Name.Trim();
-
-        var companyExists = await _dbContext.Companies
-            .AnyAsync(company =>
-                company.Name == companyName);
-
-        if (companyExists)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<CompanyDto>> GetCompany(int id)
         {
-            return BadRequest(new
+            var tenantId = tenantContext.TenantId;
+            var company = await dbContext.Companies
+                .AsNoTracking()
+                .Where(company => company.Id == id && company.TenantId == tenantId)
+                .Select(company => new CompanyDto
+                {
+                    Id = company.Id,
+                    Name = company.Name,
+                    IsActive = company.IsActive
+                })
+                .FirstOrDefaultAsync();
+
+            if (company is null)
             {
-                message = "A company with this name already exists."
-            });
-        }
-
-        var company = new Company
-        {
-            Name = companyName,
-            IsActive = true
-        };
-
-        _dbContext.Companies.Add(company);
-
-        await _dbContext.SaveChangesAsync();
-
-        return CreatedAtAction(
-            nameof(GetCompany),
-            new { id = company.Id },
-            company);
-    }
-
-    // PUT: api/companies/1
-    [HttpPut("{id:int}")]
-    public async Task<ActionResult<Company>> UpdateCompany(
-        int id,
-        UpdateCompanyRequest request)
-    {
-        var company = await _dbContext.Companies
-            .FirstOrDefaultAsync(company => company.Id == id);
-
-        if (company is null)
-        {
-            return NotFound();
-        }
-
-        var companyName = request.Name.Trim();
-
-        var duplicateExists = await _dbContext.Companies
-            .AnyAsync(existingCompany =>
-                existingCompany.Id != id &&
-                existingCompany.Name == companyName);
-
-        if (duplicateExists)
-        {
-            return BadRequest(new
-            {
-                message = "A company with this name already exists."
-            });
-        }
-
-        if (company.IsActive && !request.IsActive)
-        {
-            var deactivationError =
-                await RejectIfDeactivatingWithActiveCareHomes(id);
-
-            if (deactivationError is not null)
-            {
-                return deactivationError;
+                return NotFound();
             }
+
+            return Ok(company);
         }
 
-        company.Name = companyName;
-        company.IsActive = request.IsActive;
-
-        await _dbContext.SaveChangesAsync();
-
-        return Ok(company);
-    }
-
-    // DELETE: api/companies/1
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> DeactivateCompany(int id)
-    {
-        var company = await _dbContext.Companies
-            .FirstOrDefaultAsync(company => company.Id == id);
-
-        if (company is null)
+        [HttpPost]
+        public async Task<ActionResult<CompanyDto>> CreateCompany(
+            CreateCompanyRequest request)
         {
-            return NotFound();
-        }
+            var tenantId = tenantContext.TenantId;
+            var companyName = request.Name.Trim();
 
-        if (company.IsActive)
-        {
-            var deactivationError =
-                await RejectIfDeactivatingWithActiveCareHomes(id);
+            var companyExists = await dbContext.Companies
+                .AnyAsync(company =>
+                    company.TenantId == tenantId &&
+                    company.Name == companyName);
 
-            if (deactivationError is not null)
+            if (companyExists)
             {
-                return deactivationError;
+                return BadRequest(new
+                {
+                    message = "A company with this name already exists."
+                });
             }
-        }
 
-        company.IsActive = false;
-
-        await _dbContext.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    private async Task<IActionResult?> RejectIfDeactivatingWithActiveCareHomes(
-        int companyId)
-    {
-        var hasActiveCareHomes =
-            await _dbContext.CareHomes.AnyAsync(x =>
-                x.CompanyId == companyId &&
-                x.IsActive);
-
-        if (hasActiveCareHomes)
-        {
-            return BadRequest(new
+            var company = new Company
             {
-                message =
-                    "Deactivate all care homes under this company before deactivating the company."
-            });
+                TenantId = tenantId,
+                Name = companyName,
+                IsActive = true
+            };
+
+            dbContext.Companies.Add(company);
+
+            await dbContext.SaveChangesAsync();
+
+            return CreatedAtAction(
+                nameof(GetCompany),
+                new { id = company.Id },
+                ToDto(company));
         }
 
-        return null;
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<CompanyDto>> UpdateCompany(
+            int id,
+            UpdateCompanyRequest request)
+        {
+            var tenantId = tenantContext.TenantId;
+            var company = await dbContext.Companies
+                .FirstOrDefaultAsync(company => company.Id == id && company.TenantId == tenantId);
+
+            if (company is null)
+            {
+                return NotFound();
+            }
+
+            var companyName = request.Name.Trim();
+
+            var duplicateExists = await dbContext.Companies
+                .AnyAsync(existingCompany =>
+                    existingCompany.TenantId == tenantId &&
+                    existingCompany.Id != id &&
+                    existingCompany.Name == companyName);
+
+            if (duplicateExists)
+            {
+                return BadRequest(new
+                {
+                    message = "A company with this name already exists."
+                });
+            }
+
+            if (company.IsActive && !request.IsActive)
+            {
+                var deactivationError =
+                    await RejectIfDeactivatingWithActiveCareHomes(id);
+
+                if (deactivationError is not null)
+                {
+                    return deactivationError;
+                }
+            }
+
+            company.Name = companyName;
+            company.IsActive = request.IsActive;
+
+            await dbContext.SaveChangesAsync();
+
+            return Ok(ToDto(company));
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeactivateCompany(int id)
+        {
+            var tenantId = tenantContext.TenantId;
+            var company = await dbContext.Companies
+                .FirstOrDefaultAsync(company => company.Id == id && company.TenantId == tenantId);
+
+            if (company is null)
+            {
+                return NotFound();
+            }
+
+            if (company.IsActive)
+            {
+                var deactivationError =
+                    await RejectIfDeactivatingWithActiveCareHomes(id);
+
+                if (deactivationError is not null)
+                {
+                    return deactivationError;
+                }
+            }
+
+            company.IsActive = false;
+
+            await dbContext.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private async Task<ActionResult?> RejectIfDeactivatingWithActiveCareHomes(
+            int companyId)
+        {
+            var hasActiveCareHomes =
+                await dbContext.CareHomes.AnyAsync(x =>
+                    x.CompanyId == companyId &&
+                    x.IsActive);
+
+            if (hasActiveCareHomes)
+            {
+                return BadRequest(new
+                {
+                    message =
+                        "Deactivate all care homes under this company before deactivating the company."
+                });
+            }
+
+            return null;
+        }
+
+        private static CompanyDto ToDto(Company company)
+        {
+            return new CompanyDto
+            {
+                Id = company.Id,
+                Name = company.Name,
+                IsActive = company.IsActive
+            };
+        }
     }
 }

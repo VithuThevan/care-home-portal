@@ -1,15 +1,64 @@
-<div class="app-shell">
-  <aside class="sidebar">
-    <div class="brand">Care Home Back Office</div>
+@if (!auth.isLoggedIn()) {
+  <router-outlet />
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div>Care Home Back Office</div>
+        @if (auth.currentUser()?.tenantName) {
+          <div class="org-name">{{ auth.currentUser()?.tenantName }}</div>
+        }
+      </div>
+      <div class="user-chip">{{ auth.currentUser()?.displayName }}</div>
 
-    <nav>
-      <a routerLink="/companies" routerLinkActive="active">Companies</a>
-      <a routerLink="/care-homes" routerLinkActive="active">Care Homes</a>
-      <a routerLink="/clients" routerLinkActive="active">Clients</a>
-    </nav>
-  </aside>
+      <nav>
+        @if (auth.isPlatformAdmin() && !auth.currentUser()?.tenantPublicId) {
+          <a routerLink="/platform/tenants" routerLinkActive="active">Organisations</a>
+        } @else {
+        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
 
-  <main class="main-content">
-    <router-outlet />
-  </main>
-</div>
+        <div class="nav-section-label">Operations</div>
+        <a routerLink="/companies" routerLinkActive="active">Companies</a>
+        <a routerLink="/care-homes" routerLinkActive="active">Care Homes</a>
+        <a routerLink="/clients" routerLinkActive="active">Clients</a>
+
+        <div class="nav-section-label">Billing Setup</div>
+        <a routerLink="/funding-authorities" routerLinkActive="active">Funding Authorities</a>
+        <a routerLink="/invoice-categories" routerLinkActive="active">Invoice Categories</a>
+        <a routerLink="/nominal-codes" routerLinkActive="active">Nominal Codes</a>
+        <a routerLink="/invoice-templates" routerLinkActive="active">Invoice Templates</a>
+
+        <div class="nav-section-label">Billing</div>
+        <a routerLink="/billing" routerLinkActive="active">Billing Workspace</a>
+        <a routerLink="/invoices" routerLinkActive="active">Invoices</a>
+        <a routerLink="/credit-notes" routerLinkActive="active">Credit Notes</a>
+        <a routerLink="/misc-charges" routerLinkActive="active">Miscellaneous Charges</a>
+
+        <div class="nav-section-label">Finance</div>
+        <a routerLink="/reports" routerLinkActive="active">Reports</a>
+        <a routerLink="/sage-exports" routerLinkActive="active">Sage50 Export</a>
+
+        @if (auth.canManageUsers()) {
+          <div class="nav-section-label">Administration</div>
+          <a routerLink="/users" routerLinkActive="active">Users</a>
+          <a routerLink="/audit" routerLinkActive="active">Audit Log</a>
+          @if (auth.canManageOrganisation()) {
+            <a routerLink="/settings/organisation" routerLinkActive="active">Organisation</a>
+          }
+        }
+        }
+
+        @if (auth.isPlatformAdmin()) {
+          <div class="nav-section-label">Platform</div>
+          <a routerLink="/platform/tenants" routerLinkActive="active">Organisations</a>
+        }
+
+        <button type="button" class="logout" (click)="auth.logout()">Sign out</button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <router-outlet />
+    </main>
+  </div>
+}

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CareHome.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class ConvertClientDatesToDateOnly : Migration
+    internal partial class ConvertClientDatesToDateOnly : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

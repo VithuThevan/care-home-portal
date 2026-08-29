@@ -20,3 +20,185 @@ body {
   color: #222;
   background: #f7f7f7;
 }
+
+.page {
+  padding: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.page-header h1,
+.page h1 {
+  margin: 0 0 4px;
+}
+
+.filters,
+.form-row,
+.buttons,
+.actions,
+.pager {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filters {
+  margin-bottom: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  min-width: 180px;
+  flex: 1;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.filters input,
+.filters select,
+.filters button,
+.pager button {
+  padding: 9px 12px;
+}
+
+.primary-button,
+.secondary-button {
+  padding: 10px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: none;
+  background: #222;
+  color: #fff;
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  border: 1px solid #ccc;
+  color: inherit;
+  background: #fff;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.error-message {
+  color: #b71c1c;
+  margin-bottom: 16px;
+}
+
+.field-error {
+  color: #b71c1c;
+  font-size: 0.85rem;
+}
+
+.warning-message {
+  color: #8a5a00;
+  margin-bottom: 12px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.card p {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.tabs a,
+.tabs button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tabs a.active,
+.tabs button.active {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+}
+
+.status.active {
+  color: #2e7d32;
+}
+
+.status.inactive {
+  color: #9e9e9e;
+}

@@ -1,0 +1,72 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Operational overview across accessible care homes.</p>
+    </div>
+  </div>
+
+  @if (errorMessage) {
+    <div class="error-message">{{ errorMessage }}</div>
+  }
+
+  @if (data) {
+    <div class="cards">
+      <div class="card"><h3>Care Homes</h3><p>{{ data.totalCareHomes }}</p></div>
+      <div class="card"><h3>Current Clients</h3><p>{{ data.currentClients }}</p></div>
+      <div class="card"><h3>Available Beds</h3><p>{{ data.availableBeds }}</p></div>
+      <div class="card"><h3>Outstanding Invoices</h3><p>{{ data.outstandingInvoices }}</p></div>
+      <div class="card"><h3>Outstanding Amount</h3><p>{{ data.outstandingAmount | number:'1.2-2' }}</p></div>
+      <div class="card"><h3>Invoices Generated</h3><p>{{ data.invoicesGenerated }}</p></div>
+    </div>
+
+    <h2>Setup checklist</h2>
+    <ul>
+      @for (item of data.setupHints; track item) {
+        <li>{{ item }}</li>
+      } @empty {
+        <li>Organisation setup looks complete.</li>
+      }
+    </ul>
+
+    <h2>Occupancy by home</h2>
+    <table>
+      <thead><tr><th>Home</th><th>Occupied</th><th>Capacity</th><th>Available</th><th></th></tr></thead>
+      <tbody>
+        @for (row of data.occupancyByHome; track row.careHomeId) {
+          <tr>
+            <td>{{ row.careHomeName }}</td>
+            <td>{{ row.occupied }}</td>
+            <td>{{ row.capacity }}</td>
+            <td>{{ row.available }}</td>
+            <td><a [routerLink]="['/care-homes', row.careHomeId, 'dashboard']">Open</a></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <h2>Recent invoices</h2>
+    <table>
+      <thead><tr><th>Number</th><th>Home</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>
+        @for (row of data.recentInvoices; track row.id) {
+          <tr>
+            <td><a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a></td>
+            <td>{{ row.careHomeName }}</td>
+            <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+            <td>{{ row.status }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <h2>Billing exceptions</h2>
+    <ul>
+      @for (item of data.billingExceptions; track item) {
+        <li>{{ item }}</li>
+      } @empty {
+        <li>No recent exceptions.</li>
+      }
+    </ul>
+  }
+</div>

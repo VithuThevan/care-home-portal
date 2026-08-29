@@ -37,6 +37,13 @@
               </option>
             }
           </select>
+
+          @if (
+            form.controls.careHomeId.touched &&
+            form.controls.careHomeId.hasError('min')
+          ) {
+            <small class="field-error">Care home is required.</small>
+          }
         </div>
 
         <h2>Client Identification</h2>
@@ -46,12 +53,26 @@
             <label> Sage ID </label>
 
             <input type="text" formControlName="sageId" />
+
+            @if (
+              form.controls.sageId.touched &&
+              form.controls.sageId.hasError('required')
+            ) {
+              <small class="field-error">Sage ID is required.</small>
+            }
           </div>
 
           <div class="form-field">
             <label> Client Reference Number </label>
 
             <input type="text" formControlName="referenceNumber" />
+
+            @if (
+              form.controls.referenceNumber.touched &&
+              form.controls.referenceNumber.hasError('required')
+            ) {
+              <small class="field-error">Reference number is required.</small>
+            }
           </div>
         </div>
 
@@ -80,12 +101,26 @@
             <label> First Name </label>
 
             <input type="text" formControlName="firstName" />
+
+            @if (
+              form.controls.firstName.touched &&
+              form.controls.firstName.hasError('required')
+            ) {
+              <small class="field-error">First name is required.</small>
+            }
           </div>
 
           <div class="form-field">
             <label> Last Name </label>
 
             <input type="text" formControlName="lastName" />
+
+            @if (
+              form.controls.lastName.touched &&
+              form.controls.lastName.hasError('required')
+            ) {
+              <small class="field-error">Last name is required.</small>
+            }
           </div>
         </div>
 
@@ -108,12 +143,26 @@
 
               <option value="Residential">Residential</option>
             </select>
+
+            @if (
+              form.controls.careType.touched &&
+              form.controls.careType.hasError('required')
+            ) {
+              <small class="field-error">Care type is required.</small>
+            }
           </div>
 
           <div class="form-field">
             <label> Admission Date </label>
 
             <input type="date" formControlName="admissionDate" />
+
+            @if (
+              form.controls.admissionDate.touched &&
+              form.controls.admissionDate.hasError('required')
+            ) {
+              <small class="field-error">Admission date is required.</small>
+            }
           </div>
         </div>
 
@@ -136,6 +185,13 @@
                 <label> Discharge Date </label>
 
                 <input type="date" formControlName="dischargeDate" />
+
+                @if (
+                  form.controls.dischargeDate.touched &&
+                  form.controls.dischargeDate.hasError('required')
+                ) {
+                  <small class="field-error">Discharge date is required.</small>
+                }
               </div>
             }
           </div>
@@ -156,6 +212,13 @@
             <label> Email </label>
 
             <input type="email" formControlName="email" />
+
+            @if (
+              form.controls.email.touched &&
+              form.controls.email.hasError('email')
+            ) {
+              <small class="field-error">Enter a valid email address.</small>
+            }
           </div>
 
           <div class="form-field">

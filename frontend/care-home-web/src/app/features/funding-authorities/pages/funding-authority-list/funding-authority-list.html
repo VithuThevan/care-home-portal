@@ -1,0 +1,77 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Funding Authorities</h1>
+      <p>Manage organisations and people that fund client care.</p>
+    </div>
+
+    <a routerLink="/funding-authorities/new" class="primary-button">
+      Add Funding Authority
+    </a>
+  </div>
+
+  @if (isLoading) {
+    <p>Loading funding authorities...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!isLoading) {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Billing Frequency</th>
+            <th>Contact</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (authority of fundingAuthorities; track authority.id) {
+            <tr>
+              <td>{{ authority.code }}</td>
+              <td>{{ authority.name }}</td>
+              <td>{{ authority.type }}</td>
+              <td>{{ authority.billingFrequency }}</td>
+              <td>{{ authority.contactName || '-' }}</td>
+              <td>
+                @if (authority.isActive) {
+                  <span class="status active">Active</span>
+                } @else {
+                  <span class="status inactive">Inactive</span>
+                }
+              </td>
+              <td class="actions">
+                <a [routerLink]="['/funding-authorities', authority.id, 'edit']">
+                  Edit
+                </a>
+
+                @if (authority.isActive) {
+                  <button
+                    type="button"
+                    (click)="deactivateFundingAuthority(authority)"
+                  >
+                    Deactivate
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">No funding authorities found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -16,7 +16,10 @@ import {
   RouterLink
 } from '@angular/router';
 
+import { finalize } from 'rxjs';
+
 import { CompanyService } from '../../services/company.service';
+import { getApiErrorMessage } from '../../../../core/api-error';
 
 @Component({
   selector: 'app-company-form',
@@ -82,23 +85,24 @@ export class CompanyForm implements OnInit {
 
     this.companyService
       .getCompany(this.companyId)
+      .pipe(
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
       .subscribe({
         next: (company) => {
           this.form.patchValue({
             name: company.name,
             isActive: company.isActive
           });
-
-          this.isLoading = false;
         },
 
         error: (error) => {
           console.error(error);
 
           this.errorMessage =
-            'Unable to load company.';
-
-          this.isLoading = false;
+            getApiErrorMessage(error, 'Unable to load company.');
         }
       });
   }
@@ -124,6 +128,11 @@ export class CompanyForm implements OnInit {
             isActive: formValue.isActive
           }
         )
+        .pipe(
+          finalize(() => {
+            this.isSaving = false;
+          })
+        )
         .subscribe({
           next: () => {
             this.router.navigate(['/companies']);
@@ -133,10 +142,7 @@ export class CompanyForm implements OnInit {
             console.error(error);
 
             this.errorMessage =
-              error.error?.message ??
-              'Unable to update company.';
-
-            this.isSaving = false;
+              getApiErrorMessage(error, 'Unable to update company.');
           }
         });
 
@@ -147,6 +153,11 @@ export class CompanyForm implements OnInit {
       .createCompany({
         name: formValue.name
       })
+      .pipe(
+        finalize(() => {
+          this.isSaving = false;
+        })
+      )
       .subscribe({
         next: () => {
           this.router.navigate(['/companies']);
@@ -156,10 +167,7 @@ export class CompanyForm implements OnInit {
           console.error(error);
 
           this.errorMessage =
-            error.error?.message ??
-            'Unable to create company.';
-
-          this.isSaving = false;
+            getApiErrorMessage(error, 'Unable to create company.');
         }
       });
   }

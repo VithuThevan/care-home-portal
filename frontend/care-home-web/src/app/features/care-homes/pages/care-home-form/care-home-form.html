@@ -62,6 +62,15 @@
 
                 </select>
 
+                @if (
+                form.controls.companyId.touched &&
+                form.controls.companyId.hasError('min')
+                ) {
+                <small class="field-error">
+                    Company is required.
+                </small>
+                }
+
             </div>
 
 
@@ -73,6 +82,24 @@
 
                 <input type="text" formControlName="code" placeholder="Example: AMP" />
 
+                @if (
+                form.controls.code.touched &&
+                form.controls.code.hasError('required')
+                ) {
+                <small class="field-error">
+                    Code is required.
+                </small>
+                }
+
+                @if (
+                form.controls.code.touched &&
+                form.controls.code.hasError('maxlength')
+                ) {
+                <small class="field-error">
+                    Code cannot exceed 30 characters.
+                </small>
+                }
+
             </div>
 
 
@@ -82,7 +109,25 @@
                     Care Home Name
                 </label>
 
-                <input type="text" formControlName="name" placeholder="Example: Ampersand House" />
+                <input type="text" formControlName="name" placeholder="Example: Sunrise House" />
+
+                @if (
+                form.controls.name.touched &&
+                form.controls.name.hasError('required')
+                ) {
+                <small class="field-error">
+                    Name is required.
+                </small>
+                }
+
+                @if (
+                form.controls.name.touched &&
+                form.controls.name.hasError('maxlength')
+                ) {
+                <small class="field-error">
+                    Name cannot exceed 150 characters.
+                </small>
+                }
 
             </div>
 
@@ -94,6 +139,15 @@
                 </label>
 
                 <input type="number" formControlName="bedCapacity" />
+
+                @if (
+                form.controls.bedCapacity.touched &&
+                form.controls.bedCapacity.hasError('min')
+                ) {
+                <small class="field-error">
+                    Bed capacity cannot be negative.
+                </small>
+                }
 
             </div>
 
@@ -133,6 +187,15 @@
 
                 <input type="email" formControlName="email" />
 
+                @if (
+                form.controls.email.touched &&
+                form.controls.email.hasError('email')
+                ) {
+                <small class="field-error">
+                    Enter a valid email address.
+                </small>
+                }
+
             </div>
 
 
@@ -170,6 +233,15 @@
                 </label>
 
                 <input type="email" formControlName="managerEmail" />
+
+                @if (
+                form.controls.managerEmail.touched &&
+                form.controls.managerEmail.hasError('email')
+                ) {
+                <small class="field-error">
+                    Enter a valid email address.
+                </small>
+                }
 
             </div>
 

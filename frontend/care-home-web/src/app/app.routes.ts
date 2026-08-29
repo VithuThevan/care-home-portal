@@ -1,66 +1,74 @@
 import { Routes } from '@angular/router';
 
+import { authGuard, guestGuard, adminGuard, platformGuard, organisationSettingsGuard } from './core/auth.guard';
+import { LoginPage } from './features/login/login';
+import { ForbiddenPage } from './features/forbidden/forbidden';
+import { DashboardPage } from './features/dashboard/dashboard';
 import { CompanyList } from './features/companies/pages/company-list/company-list';
-
 import { CompanyForm } from './features/companies/pages/company-form/company-form';
-
 import { CareHomeList } from './features/care-homes/pages/care-home-list/care-home-list';
-
 import { CareHomeForm } from './features/care-homes/pages/care-home-form/care-home-form';
-
+import { CareHomeDashboardPage } from './features/care-homes/pages/care-home-dashboard/care-home-dashboard';
 import { ClientList } from './features/clients/pages/client-list/client-list';
-
 import { ClientForm } from './features/clients/pages/client-form/client-form';
+import { ClientProfilePage } from './features/clients/pages/client-profile/client-profile';
+import { FundingAuthorityList } from './features/funding-authorities/pages/funding-authority-list/funding-authority-list';
+import { FundingAuthorityForm } from './features/funding-authorities/pages/funding-authority-form/funding-authority-form';
+import { InvoiceCategoryList } from './features/invoice-categories/pages/invoice-category-list/invoice-category-list';
+import { InvoiceCategoryForm } from './features/invoice-categories/pages/invoice-category-form/invoice-category-form';
+import { NominalCodeList } from './features/nominal-codes/pages/nominal-code-list/nominal-code-list';
+import { NominalCodeForm } from './features/nominal-codes/pages/nominal-code-form/nominal-code-form';
+import { InvoiceTemplateListPage } from './features/invoice-templates/pages/invoice-template-list/invoice-template-list';
+import { BillingWorkspacePage } from './features/billing/pages/billing-workspace/billing-workspace';
+import { InvoiceListPage } from './features/invoices/pages/invoice-list/invoice-list';
+import { InvoiceDetailPage } from './features/invoices/pages/invoice-detail/invoice-detail';
+import { CreditNoteWorkspacePage } from './features/credit-notes/pages/credit-note-workspace/credit-note-workspace';
+import { MiscChargesPage } from './features/misc-charges/pages/misc-charges/misc-charges';
+import { ReportsPage } from './features/reports/pages/reports/reports';
+import { SageExportPage } from './features/sage/pages/sage-export/sage-export';
+import { UserListPage } from './features/users/pages/user-list/user-list';
+import { AuditListPage } from './features/audit/pages/audit-list/audit-list';
+import { PlatformTenantListPage } from './features/platform/pages/platform-tenant-list/platform-tenant-list';
+import { PlatformTenantFormPage } from './features/platform/pages/platform-tenant-form/platform-tenant-form';
+import { OrganisationSettingsPage } from './features/settings/pages/organisation-settings/organisation-settings';
 
 export const routes: Routes = [
-  {
-    path: '',
-    redirectTo: 'companies',
-    pathMatch: 'full',
-  },
-
-  {
-    path: 'companies',
-    component: CompanyList,
-  },
-
-  {
-    path: 'companies/new',
-    component: CompanyForm,
-  },
-
-  {
-    path: 'companies/:id/edit',
-    component: CompanyForm,
-  },
-
-  {
-    path: 'care-homes',
-    component: CareHomeList,
-  },
-
-  {
-    path: 'care-homes/new',
-    component: CareHomeForm,
-  },
-
-  {
-    path: 'care-homes/:id/edit',
-    component: CareHomeForm,
-  },
-
-  {
-    path: 'clients',
-    component: ClientList,
-  },
-
-  {
-    path: 'clients/new',
-    component: ClientForm,
-  },
-
-  {
-    path: 'clients/:id/edit',
-    component: ClientForm,
-  },
+  { path: 'login', component: LoginPage, canActivate: [guestGuard] },
+  { path: 'forbidden', component: ForbiddenPage, canActivate: [authGuard] },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: 'dashboard', component: DashboardPage, canActivate: [authGuard] },
+  { path: 'companies', component: CompanyList, canActivate: [authGuard] },
+  { path: 'companies/new', component: CompanyForm, canActivate: [authGuard] },
+  { path: 'companies/:id/edit', component: CompanyForm, canActivate: [authGuard] },
+  { path: 'care-homes', component: CareHomeList, canActivate: [authGuard] },
+  { path: 'care-homes/new', component: CareHomeForm, canActivate: [authGuard] },
+  { path: 'care-homes/:id/dashboard', component: CareHomeDashboardPage, canActivate: [authGuard] },
+  { path: 'care-homes/:id/edit', component: CareHomeForm, canActivate: [authGuard] },
+  { path: 'clients', component: ClientList, canActivate: [authGuard] },
+  { path: 'clients/new', component: ClientForm, canActivate: [authGuard] },
+  { path: 'clients/:id/edit', component: ClientForm, canActivate: [authGuard] },
+  { path: 'clients/:id', component: ClientProfilePage, canActivate: [authGuard] },
+  { path: 'funding-authorities', component: FundingAuthorityList, canActivate: [authGuard] },
+  { path: 'funding-authorities/new', component: FundingAuthorityForm, canActivate: [authGuard] },
+  { path: 'funding-authorities/:id/edit', component: FundingAuthorityForm, canActivate: [authGuard] },
+  { path: 'invoice-categories', component: InvoiceCategoryList, canActivate: [authGuard] },
+  { path: 'invoice-categories/new', component: InvoiceCategoryForm, canActivate: [authGuard] },
+  { path: 'invoice-categories/:id/edit', component: InvoiceCategoryForm, canActivate: [authGuard] },
+  { path: 'nominal-codes', component: NominalCodeList, canActivate: [authGuard] },
+  { path: 'nominal-codes/new', component: NominalCodeForm, canActivate: [authGuard] },
+  { path: 'nominal-codes/:id/edit', component: NominalCodeForm, canActivate: [authGuard] },
+  { path: 'invoice-templates', component: InvoiceTemplateListPage, canActivate: [authGuard] },
+  { path: 'billing', component: BillingWorkspacePage, canActivate: [authGuard] },
+  { path: 'invoices', component: InvoiceListPage, canActivate: [authGuard] },
+  { path: 'invoices/:id', component: InvoiceDetailPage, canActivate: [authGuard] },
+  { path: 'credit-notes', component: CreditNoteWorkspacePage, canActivate: [authGuard] },
+  { path: 'misc-charges', component: MiscChargesPage, canActivate: [authGuard] },
+  { path: 'reports', component: ReportsPage, canActivate: [authGuard] },
+  { path: 'sage-exports', component: SageExportPage, canActivate: [authGuard] },
+  { path: 'users', component: UserListPage, canActivate: [authGuard, adminGuard] },
+  { path: 'audit', component: AuditListPage, canActivate: [authGuard, adminGuard] },
+  { path: 'settings/organisation', component: OrganisationSettingsPage, canActivate: [authGuard, organisationSettingsGuard] },
+  { path: 'platform/tenants', component: PlatformTenantListPage, canActivate: [authGuard, platformGuard] },
+  { path: 'platform/tenants/new', component: PlatformTenantFormPage, canActivate: [authGuard, platformGuard] },
+  { path: 'platform/tenants/:id', component: PlatformTenantFormPage, canActivate: [authGuard, platformGuard] },
 ];

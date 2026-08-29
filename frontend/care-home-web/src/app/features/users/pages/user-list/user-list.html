@@ -1,0 +1,40 @@
+<div class="page">
+  <div class="page-header"><div><h1>Users</h1><p>Roles are enforced in the API, not only by hiding buttons.</p></div></div>
+  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
+  <table>
+    <thead><tr><th>Name</th><th>Email</th><th>Roles</th><th>Active</th><th></th></tr></thead>
+    <tbody>
+      @for (user of users; track user.id) {
+        <tr>
+          <td>{{ user.displayName }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.roles.join(', ') }}</td>
+          <td>{{ user.isActive ? 'Yes' : 'No' }}</td>
+          <td><button type="button" (click)="deactivate(user.id)">Deactivate</button></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  <h2>Create user</h2>
+  <form [formGroup]="form" (ngSubmit)="create()">
+    <div class="form-row">
+      <div class="form-field"><label>Email</label><input formControlName="email" /></div>
+      <div class="form-field"><label>Display name</label><input formControlName="displayName" /></div>
+      <div class="form-field"><label>Password</label><input type="password" formControlName="password" /></div>
+      <div class="form-field">
+        <label>Role</label>
+        <select formControlName="role">
+          <option>TenantAdmin</option><option>Administrator</option><option>LocationManager</option><option>ReadOnly</option>
+        </select>
+      </div>
+    </div>
+    <p>Care home access (Location Managers)</p>
+    @for (home of homes; track home.id) {
+      <label class="checkbox-filter">
+        <input type="checkbox" (change)="toggleHome(home.id, $any($event.target).checked)" />
+        {{ home.name }}
+      </label>
+    }
+    <div class="buttons"><button class="primary-button" type="submit">Create user</button></div>
+  </form>
+</div>

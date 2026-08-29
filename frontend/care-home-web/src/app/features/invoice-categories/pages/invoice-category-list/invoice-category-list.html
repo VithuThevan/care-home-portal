@@ -1,0 +1,73 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Invoice Categories</h1>
+      <p>Manage invoice category master data.</p>
+    </div>
+
+    <a routerLink="/invoice-categories/new" class="primary-button">
+      Add Invoice Category
+    </a>
+  </div>
+
+  @if (isLoading) {
+    <p>Loading invoice categories...</p>
+  }
+
+  @if (errorMessage) {
+    <div class="error-message">
+      {{ errorMessage }}
+    </div>
+  }
+
+  @if (!isLoading) {
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (category of invoiceCategories; track category.id) {
+            <tr>
+              <td>{{ category.code }}</td>
+              <td>{{ category.name }}</td>
+              <td>{{ category.description || '-' }}</td>
+              <td>
+                @if (category.isActive) {
+                  <span class="status active">Active</span>
+                } @else {
+                  <span class="status inactive">Inactive</span>
+                }
+              </td>
+              <td class="actions">
+                <a [routerLink]="['/invoice-categories', category.id, 'edit']">
+                  Edit
+                </a>
+
+                @if (category.isActive) {
+                  <button
+                    type="button"
+                    (click)="deactivateInvoiceCategory(category)"
+                  >
+                    Deactivate
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">No invoice categories found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CareHome.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class AddClients : Migration
+    internal partial class AddClients : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

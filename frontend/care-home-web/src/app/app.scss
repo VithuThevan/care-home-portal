@@ -22,6 +22,13 @@
   border-bottom: 1px solid #333;
 }
 
+.org-name {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #b0b0b0;
+}
+
 nav {
   display: flex;
   flex-direction: column;
@@ -29,13 +36,31 @@ nav {
   gap: 4px;
 }
 
-nav a {
+nav a,
+nav .logout {
   display: block;
   padding: 10px 12px;
   border-radius: 6px;
   color: #d0d0d0;
   text-decoration: none;
   font-size: 0.95rem;
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+}
+
+nav a:hover,
+nav .logout:hover {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+.user-chip {
+  padding: 12px 20px 0;
+  font-size: 0.8rem;
+  color: #aaa;
 }
 
 nav a:hover {
@@ -47,6 +72,15 @@ nav a.active {
   background: #333;
   color: #fff;
   font-weight: 600;
+}
+
+.nav-section-label {
+  padding: 16px 12px 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #888;
 }
 
 .main-content {
@@ -74,5 +108,10 @@ nav a.active {
     flex-direction: row;
     flex-wrap: wrap;
     padding: 0 12px;
+  }
+
+  .nav-section-label {
+    flex-basis: 100%;
+    padding: 8px 4px 0;
   }
 }

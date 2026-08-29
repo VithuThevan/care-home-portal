@@ -1,0 +1,36 @@
+<div class="page">
+  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
+  @if (info) { <p>{{ info }}</p> }
+  @if (invoice) {
+    <div class="page-header">
+      <div>
+        <h1>Invoice {{ invoice.invoiceNumber }}</h1>
+        <p>{{ invoice.careHomeName }} · {{ invoice.fundingAuthorityName }} · {{ invoice.invoiceCategoryName }}</p>
+      </div>
+      <div class="buttons">
+        <button type="button" (click)="pdf()">Download PDF</button>
+        <button type="button" (click)="send()">Email</button>
+        <button type="button" (click)="pay('Paid')">Mark paid</button>
+        <button type="button" (click)="pay('NotPaid')">Mark unpaid</button>
+        <button type="button" (click)="voidInvoice()">Void</button>
+        <a routerLink="/invoices" class="secondary-button">Back</a>
+      </div>
+    </div>
+    <p>Period {{ invoice.periodStart }} to {{ invoice.periodEnd }} · Status {{ invoice.status }} / {{ invoice.paymentStatus }}</p>
+    <table>
+      <thead><tr><th>Reference</th><th>Client</th><th>Description</th><th>Days</th><th>Amount</th></tr></thead>
+      <tbody>
+        @for (line of invoice.lines; track line.id) {
+          <tr>
+            <td>{{ line.clientReference }}</td>
+            <td>{{ line.clientName }}</td>
+            <td>{{ line.description }}</td>
+            <td>{{ line.eligibleDays }}</td>
+            <td>{{ line.lineAmount | number:'1.2-2' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p><strong>Total {{ invoice.totalAmount | number:'1.2-2' }}</strong></p>
+  }
+</div>

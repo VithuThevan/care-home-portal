@@ -12,6 +12,8 @@ import { CareHomeService } from '../../../care-homes/services/care-home.service'
 
 import { ClientService } from '../../services/client.service';
 
+import { getApiErrorMessage } from '../../../../core/api-error';
+
 @Component({
   selector: 'app-client-form',
 
@@ -53,11 +55,11 @@ export class ClientForm implements OnInit {
 
     referenceNumber: ['', [Validators.required, Validators.maxLength(20)]],
 
-    title: [''],
+    title: ['', Validators.maxLength(10)],
 
-    firstName: ['', Validators.required],
+    firstName: ['', [Validators.required, Validators.maxLength(100)]],
 
-    lastName: ['', Validators.required],
+    lastName: ['', [Validators.required, Validators.maxLength(100)]],
 
     dateOfBirth: [''],
 
@@ -69,13 +71,13 @@ export class ClientForm implements OnInit {
 
     dischargeDate: [''],
 
-    dischargeReason: [''],
+    dischargeReason: ['', Validators.maxLength(100)],
 
-    email: ['', Validators.email],
+    email: ['', [Validators.email, Validators.maxLength(150)]],
 
-    phone: [''],
+    phone: ['', Validators.maxLength(30)],
 
-    notes: [''],
+    notes: ['', Validators.maxLength(1000)],
 
     isArchived: [false],
   });
@@ -136,7 +138,7 @@ export class ClientForm implements OnInit {
       error: (error) => {
         console.error(error);
 
-        this.errorMessage = 'Unable to load care homes.';
+        this.errorMessage = getApiErrorMessage(error, 'Unable to load care homes.');
       },
     });
   }
@@ -197,7 +199,7 @@ export class ClientForm implements OnInit {
         error: (error) => {
           console.error(error);
 
-          this.errorMessage = 'Unable to load client.';
+          this.errorMessage = getApiErrorMessage(error, 'Unable to load client.');
         },
       });
   }
@@ -265,6 +267,11 @@ export class ClientForm implements OnInit {
 
           isArchived: value.status === 'Current' ? false : value.isArchived,
         })
+        .pipe(
+          finalize(() => {
+            this.isSaving = false;
+          }),
+        )
         .subscribe({
           next: () => {
             this.router.navigate(['/clients']);
@@ -273,16 +280,23 @@ export class ClientForm implements OnInit {
           error: (error) => {
             console.error(error);
 
-            this.errorMessage = error.error?.message ?? 'Unable to update client.';
-
-            this.isSaving = false;
+            this.errorMessage = getApiErrorMessage(
+              error,
+              'Unable to update client.',
+            );
           },
         });
 
       return;
     }
 
-    this.clientService.createClient(baseRequest).subscribe({
+    this.clientService.createClient(baseRequest)
+      .pipe(
+        finalize(() => {
+          this.isSaving = false;
+        }),
+      )
+      .subscribe({
       next: () => {
         this.router.navigate(['/clients']);
       },
@@ -290,9 +304,10 @@ export class ClientForm implements OnInit {
       error: (error) => {
         console.error(error);
 
-        this.errorMessage = error.error?.message ?? 'Unable to create client.';
-
-        this.isSaving = false;
+        this.errorMessage = getApiErrorMessage(
+          error,
+          'Unable to create client.',
+        );
       },
     });
   }

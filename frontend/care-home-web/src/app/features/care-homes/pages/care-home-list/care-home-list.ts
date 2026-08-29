@@ -14,6 +14,8 @@ import {
   CareHomeService
 } from '../../services/care-home.service';
 
+import { getApiErrorMessage } from '../../../../core/api-error';
+
 @Component({
   selector: 'app-care-home-list',
   imports: [
@@ -52,7 +54,7 @@ export class CareHomeList implements OnInit {
           console.error(error);
 
           this.errorMessage =
-            'Unable to load care homes.';
+            getApiErrorMessage(error, 'Unable to load care homes.');
 
           this.isLoading = false;
         }
@@ -82,8 +84,10 @@ export class CareHomeList implements OnInit {
           console.error(error);
 
           this.errorMessage =
-            error.error?.message ??
-            'Unable to deactivate care home.';
+            getApiErrorMessage(
+              error,
+              'Unable to deactivate care home.'
+            );
         }
       });
   }

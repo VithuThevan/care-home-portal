@@ -5,7 +5,7 @@
 namespace CareHome.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class AddCareHomes : Migration
+    internal partial class AddCareHomes : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

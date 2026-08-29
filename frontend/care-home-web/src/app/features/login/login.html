@@ -1,0 +1,28 @@
+<div class="login-page">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="login-card">
+    <h1>Care Home Back Office</h1>
+    <p>Sign in to continue.</p>
+
+    @if (errorMessage) {
+      <div class="error-message">{{ errorMessage }}</div>
+    }
+
+    <div class="form-field">
+      <label>Email</label>
+      <input type="email" formControlName="email" />
+    </div>
+
+    <div class="form-field">
+      <label>Password</label>
+      <input type="password" formControlName="password" />
+    </div>
+
+    <button class="primary-button" type="submit" [disabled]="isSaving">
+      @if (isSaving) {
+        Signing in...
+      } @else {
+        Sign in
+      }
+    </button>
+  </form>
+</div>

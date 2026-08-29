@@ -5,7 +5,7 @@
 namespace CareHome.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUniqueCompanyName : Migration
+    internal partial class AddUniqueCompanyName : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

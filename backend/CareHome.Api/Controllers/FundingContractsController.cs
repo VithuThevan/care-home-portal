@@ -1,0 +1,341 @@
+using CareHome.Api.Audit;
+using CareHome.Api.Billing;
+using CareHome.Api.Common;
+using CareHome.Api.Data;
+using CareHome.Api.Dtos.FundingContracts;
+using CareHome.Api.Models;
+using CareHome.Api.Security;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace CareHome.Api.Controllers
+{
+    [ApiController]
+    [RequireTenant]
+    public class FundingContractsController(
+        CareHomeDbContext dbContext,
+        AuditService audit,
+        ITenantContext tenantContext) : ControllerBase
+    {
+        [HttpGet("api/clients/{clientId:int}/funding-contracts")]
+        public async Task<ActionResult<List<FundingContractDto>>> GetForClient(int clientId)
+        {
+            if (!await dbContext.Clients.AnyAsync(x => x.Id == clientId && x.TenantId == tenantContext.TenantId))
+            {
+                return NotFound();
+            }
+
+            var contracts = await dbContext.ClientFundingContracts
+                .AsNoTracking()
+                .Include(x => x.FundingAuthority)
+                .Include(x => x.InvoiceCategory)
+                .Include(x => x.NominalCode)
+                .Include(x => x.Rates)
+                .Where(x => x.ClientId == clientId && x.TenantId == tenantContext.TenantId)
+                .OrderByDescending(x => x.ContractStartDate)
+                .ToListAsync();
+
+            return Ok(contracts.Select(Map).ToList());
+        }
+
+        [HttpPost("api/clients/{clientId:int}/funding-contracts")]
+        public async Task<ActionResult<FundingContractDto>> Create(int clientId, CreateFundingContractRequest request)
+        {
+            var client = await dbContext.Clients.FirstOrDefaultAsync(x => x.Id == clientId && x.TenantId == tenantContext.TenantId);
+            if (client is null)
+            {
+                return NotFound();
+            }
+
+            var error = ValidateContract(request);
+            if (error is not null)
+            {
+                return error;
+            }
+
+            var relatedError = await EnsureRelatedEntities(request.FundingAuthorityId, request.InvoiceCategoryId, request.NominalCodeId, request.InvoiceTemplateId);
+            if (relatedError is not null)
+            {
+                return relatedError;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var contract = new ClientFundingContract
+            {
+                TenantId = tenantContext.TenantId,
+                ClientId = clientId,
+                FundingAuthorityId = request.FundingAuthorityId,
+                InvoiceCategoryId = request.InvoiceCategoryId,
+                NominalCodeId = request.NominalCodeId,
+                InvoiceTemplateId = request.InvoiceTemplateId,
+                ContractStartDate = request.ContractStartDate,
+                ContractEndDate = request.ContractEndDate,
+                Status = "Active",
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+
+            dbContext.ClientFundingContracts.Add(contract);
+            await dbContext.SaveChangesAsync();
+            await audit.LogAsync("ClientFundingContract", contract.Id.ToString(), "Create", null, request, "Created funding contract.");
+
+            return CreatedAtAction(nameof(GetOne), new { id = contract.Id }, await LoadDto(contract.Id));
+        }
+
+        [HttpGet("api/funding-contracts/{id:int}")]
+        public async Task<ActionResult<FundingContractDto>> GetOne(int id)
+        {
+            var dto = await LoadDto(id);
+            return dto is null ? NotFound() : Ok(dto);
+        }
+
+        [HttpPut("api/funding-contracts/{id:int}")]
+        public async Task<ActionResult<FundingContractDto>> Update(int id, UpdateFundingContractRequest request)
+        {
+            var contract = await dbContext.ClientFundingContracts.FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantContext.TenantId);
+            if (contract is null)
+            {
+                return NotFound();
+            }
+
+            var error = ValidateContract(request);
+            if (error is not null)
+            {
+                return error;
+            }
+
+            var relatedError = await EnsureRelatedEntities(request.FundingAuthorityId, request.InvoiceCategoryId, request.NominalCodeId, request.InvoiceTemplateId);
+            if (relatedError is not null)
+            {
+                return relatedError;
+            }
+
+            var used = await dbContext.InvoiceLines.AnyAsync(x =>
+                x.ClientFundingContractId == id && x.Invoice.Status != "Void");
+
+            if (used &&
+                (contract.FundingAuthorityId != request.FundingAuthorityId ||
+                 contract.InvoiceCategoryId != request.InvoiceCategoryId ||
+                 contract.NominalCodeId != request.NominalCodeId ||
+                 contract.ContractStartDate != request.ContractStartDate))
+            {
+                return BadRequest(new
+                {
+                    message = "This contract has been used on finalized invoices. Historical fields cannot be changed. Add a new contract or close this one instead."
+                });
+            }
+
+            if (request.Status is not "Active" and not "Inactive")
+            {
+                return BadRequest(new { message = "Status must be Active or Inactive." });
+            }
+
+            contract.FundingAuthorityId = request.FundingAuthorityId;
+            contract.InvoiceCategoryId = request.InvoiceCategoryId;
+            contract.NominalCodeId = request.NominalCodeId;
+            contract.InvoiceTemplateId = request.InvoiceTemplateId;
+            contract.ContractStartDate = request.ContractStartDate;
+            contract.ContractEndDate = request.ContractEndDate;
+            contract.Status = request.Status;
+            contract.UpdatedAt = DateTimeOffset.UtcNow;
+
+            await dbContext.SaveChangesAsync();
+            await audit.LogAsync("ClientFundingContract", id.ToString(), "Update", null, request, "Updated funding contract.");
+            return Ok(await LoadDto(id));
+        }
+
+        [HttpGet("api/funding-contracts/{id:int}/rates")]
+        public async Task<ActionResult<List<FundingRateDto>>> GetRates(int id)
+        {
+            if (!await dbContext.ClientFundingContracts.AnyAsync(x => x.Id == id && x.TenantId == tenantContext.TenantId))
+            {
+                return NotFound();
+            }
+
+            var rates = await dbContext.FundingRates.AsNoTracking()
+                .Where(x => x.ClientFundingContractId == id)
+                .OrderBy(x => x.EffectiveFrom)
+                .Select(x => new FundingRateDto
+                {
+                    Id = x.Id,
+                    ClientFundingContractId = x.ClientFundingContractId,
+                    EffectiveFrom = x.EffectiveFrom,
+                    EffectiveTo = x.EffectiveTo,
+                    Frequency = x.Frequency,
+                    Amount = x.Amount,
+                    Notes = x.Notes
+                })
+                .ToListAsync();
+
+            return Ok(rates);
+        }
+
+        [HttpPost("api/funding-contracts/{id:int}/rates")]
+        public async Task<ActionResult<FundingRateDto>> AddRate(int id, CreateFundingRateRequest request)
+        {
+            var contract = await dbContext.ClientFundingContracts
+                .Include(x => x.Rates)
+                .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantContext.TenantId);
+
+            if (contract is null)
+            {
+                return NotFound();
+            }
+
+            if (request.Amount < 0)
+            {
+                return BadRequest(new { message = "Rate amount cannot be negative." });
+            }
+
+            if (!RateFrequencies.All.Contains(request.Frequency))
+            {
+                return BadRequest(new { message = "Frequency must be Daily, Weekly, or Monthly." });
+            }
+
+            if (request.EffectiveTo.HasValue && request.EffectiveTo.Value < request.EffectiveFrom)
+            {
+                return BadRequest(new { message = "Effective to cannot be before effective from." });
+            }
+
+            if (request.ClosePreviousOpenEnded)
+            {
+                var open = contract.Rates
+                    .Where(x => x.EffectiveTo == null)
+                    .OrderByDescending(x => x.EffectiveFrom)
+                    .FirstOrDefault();
+
+                if (open is not null && open.EffectiveFrom < request.EffectiveFrom)
+                {
+                    var closedTo = request.EffectiveFrom.AddDays(-1);
+                    if (closedTo < open.EffectiveFrom)
+                    {
+                        return BadRequest(new { message = "Closing the previous open-ended rate would make its period invalid." });
+                    }
+
+                    open.EffectiveTo = closedTo;
+                }
+            }
+
+            var overlap = contract.Rates.Any(existing =>
+                DateRanges.Overlaps(
+                    existing.EffectiveFrom,
+                    existing.EffectiveTo,
+                    request.EffectiveFrom,
+                    request.EffectiveTo));
+
+            if (overlap)
+            {
+                return BadRequest(new { message = "This rate period overlaps an existing rate on the same contract." });
+            }
+
+            var rate = new FundingRate
+            {
+                ClientFundingContractId = id,
+                EffectiveFrom = request.EffectiveFrom,
+                EffectiveTo = request.EffectiveTo,
+                Frequency = request.Frequency,
+                Amount = Money.Round(request.Amount),
+                Notes = request.Notes?.Trim(),
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+
+            dbContext.FundingRates.Add(rate);
+            await dbContext.SaveChangesAsync();
+            await audit.LogAsync("FundingRate", rate.Id.ToString(), "Create", null, request, "Added funding rate.");
+
+            return Ok(new FundingRateDto
+            {
+                Id = rate.Id,
+                ClientFundingContractId = rate.ClientFundingContractId,
+                EffectiveFrom = rate.EffectiveFrom,
+                EffectiveTo = rate.EffectiveTo,
+                Frequency = rate.Frequency,
+                Amount = rate.Amount,
+                Notes = rate.Notes
+            });
+        }
+
+        private async Task<FundingContractDto?> LoadDto(int id)
+        {
+            var contract = await dbContext.ClientFundingContracts.AsNoTracking()
+                .Include(x => x.FundingAuthority)
+                .Include(x => x.InvoiceCategory)
+                .Include(x => x.NominalCode)
+                .Include(x => x.Rates)
+                .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantContext.TenantId);
+
+            return contract is null ? null : Map(contract);
+        }
+
+        private async Task<ActionResult?> EnsureRelatedEntities(
+            int fundingAuthorityId,
+            int invoiceCategoryId,
+            int nominalCodeId,
+            int? invoiceTemplateId)
+        {
+            var tenantId = tenantContext.TenantId;
+            if (!await dbContext.FundingAuthorities.AnyAsync(x => x.Id == fundingAuthorityId && x.TenantId == tenantId))
+            {
+                return BadRequest(new { message = "Funding authority was not found in this organisation." });
+            }
+
+            if (!await dbContext.InvoiceCategories.AnyAsync(x => x.Id == invoiceCategoryId && x.TenantId == tenantId))
+            {
+                return BadRequest(new { message = "Invoice category was not found in this organisation." });
+            }
+
+            if (!await dbContext.NominalCodes.AnyAsync(x => x.Id == nominalCodeId && x.TenantId == tenantId))
+            {
+                return BadRequest(new { message = "Nominal code was not found in this organisation." });
+            }
+
+            if (invoiceTemplateId is int templateId
+                && !await dbContext.InvoiceTemplates.AnyAsync(x => x.Id == templateId && x.TenantId == tenantId))
+            {
+                return BadRequest(new { message = "Invoice template was not found in this organisation." });
+            }
+
+            return null;
+        }
+
+        private static FundingContractDto Map(ClientFundingContract x)
+        {
+            return new FundingContractDto
+            {
+                Id = x.Id,
+                ClientId = x.ClientId,
+                FundingAuthorityId = x.FundingAuthorityId,
+                FundingAuthorityName = x.FundingAuthority.Name,
+                InvoiceCategoryId = x.InvoiceCategoryId,
+                InvoiceCategoryName = x.InvoiceCategory.Name,
+                NominalCodeId = x.NominalCodeId,
+                NominalCode = x.NominalCode.Code,
+                InvoiceTemplateId = x.InvoiceTemplateId,
+                ContractStartDate = x.ContractStartDate,
+                ContractEndDate = x.ContractEndDate,
+                Status = x.Status,
+                Rates = x.Rates.OrderBy(r => r.EffectiveFrom).Select(r => new FundingRateDto
+                {
+                    Id = r.Id,
+                    ClientFundingContractId = r.ClientFundingContractId,
+                    EffectiveFrom = r.EffectiveFrom,
+                    EffectiveTo = r.EffectiveTo,
+                    Frequency = r.Frequency,
+                    Amount = r.Amount,
+                    Notes = r.Notes
+                }).ToList()
+            };
+        }
+
+        private ActionResult? ValidateContract(CreateFundingContractRequest request)
+        {
+            if (request.ContractEndDate.HasValue && request.ContractEndDate.Value < request.ContractStartDate)
+            {
+                return BadRequest(new { message = "Contract end date cannot be before start date." });
+            }
+
+            return null;
+        }
+    }
+}
+
