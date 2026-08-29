@@ -3,15 +3,20 @@
 } @else {
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand">
-        <div>Care Home Back Office</div>
-        @if (auth.currentUser()?.tenantName) {
-          <div class="org-name">{{ auth.currentUser()?.tenantName }}</div>
-        }
+      <div class="brand-row">
+        <div class="brand">
+          <div>Care Home Back Office</div>
+          @if (auth.currentUser()?.tenantName) {
+            <div class="org-name">{{ auth.currentUser()?.tenantName }}</div>
+          }
+        </div>
+        <button type="button" class="menu-toggle" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
+          {{ menuOpen ? 'Close menu' : 'Menu' }}
+        </button>
       </div>
       <div class="user-chip">{{ auth.currentUser()?.displayName }}</div>
 
-      <nav>
+      <nav [class.open]="menuOpen" (click)="closeMenu()">
         @if (auth.isPlatformAdmin() && !auth.currentUser()?.tenantPublicId) {
           <a routerLink="/platform/tenants" routerLinkActive="active">Organisations</a>
         } @else {

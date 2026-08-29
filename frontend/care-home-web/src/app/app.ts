@@ -11,4 +11,13 @@ import { AuthService } from './core/auth.service';
 })
 export class App {
   readonly auth = inject(AuthService);
+  menuOpen = false;
+
+  toggleMenu(): void {
+    this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu(): void {
+    this.menuOpen = false;
+  }
 }

@@ -1,36 +1,74 @@
 <div class="page">
-  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
-  @if (info) { <p>{{ info }}</p> }
-  @if (invoice) {
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
+  }
+  @if (info()) {
+    <p>{{ info() }}</p>
+  }
+  @if (isLoading()) {
+    <p>Loading invoice...</p>
+  }
+  @if (invoice(); as inv) {
     <div class="page-header">
       <div>
-        <h1>Invoice {{ invoice.invoiceNumber }}</h1>
-        <p>{{ invoice.careHomeName }} · {{ invoice.fundingAuthorityName }} · {{ invoice.invoiceCategoryName }}</p>
+        <h1>Invoice {{ inv.invoiceNumber }}</h1>
+        <p>
+          {{ inv.companyName }} · {{ inv.careHomeName }} · {{ inv.fundingAuthorityName }} ·
+          {{ inv.invoiceCategoryName }}
+        </p>
       </div>
       <div class="buttons">
         <button type="button" (click)="pdf()">Download PDF</button>
-        <button type="button" (click)="send()">Email</button>
-        <button type="button" (click)="pay('Paid')">Mark paid</button>
-        <button type="button" (click)="pay('NotPaid')">Mark unpaid</button>
-        <button type="button" (click)="voidInvoice()">Void</button>
+        @if (auth.canWrite()) {
+          <button type="button" (click)="send()">Email</button>
+          <button type="button" (click)="pay('Paid')">Mark paid</button>
+          <button type="button" (click)="pay('NotPaid')">Mark unpaid</button>
+          <button type="button" (click)="voidInvoice()">Void</button>
+        }
         <a routerLink="/invoices" class="secondary-button">Back</a>
       </div>
     </div>
-    <p>Period {{ invoice.periodStart }} to {{ invoice.periodEnd }} · Status {{ invoice.status }} / {{ invoice.paymentStatus }}</p>
+    <p>
+      Invoice date {{ inv.invoiceDate }} · Due {{ inv.dueDate }} · Period {{ inv.periodStart }} to
+      {{ inv.periodEnd }} · Status {{ inv.status }} / {{ inv.paymentStatus }} · Total
+      {{ inv.totalAmount | number: '1.2-2' }}
+    </p>
     <table>
-      <thead><tr><th>Reference</th><th>Client</th><th>Description</th><th>Days</th><th>Amount</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th>Reference</th>
+          <th>Sage ID</th>
+          <th>Description</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Days</th>
+          <th>Frequency</th>
+          <th>Rate</th>
+          <th>Nominal</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
       <tbody>
-        @for (line of invoice.lines; track line.id) {
+        @for (line of inv.lines; track line.id) {
           <tr>
-            <td>{{ line.clientReference }}</td>
             <td>{{ line.clientName }}</td>
+            <td>{{ line.clientReference }}</td>
+            <td>{{ line.sageId }}</td>
             <td>{{ line.description }}</td>
+            <td>{{ line.servicePeriodStart }}</td>
+            <td>{{ line.servicePeriodEnd }}</td>
             <td>{{ line.eligibleDays }}</td>
-            <td>{{ line.lineAmount | number:'1.2-2' }}</td>
+            <td>{{ line.rateFrequency }}</td>
+            <td>{{ line.rateAmount | number: '1.2-2' }}</td>
+            <td>{{ line.nominalCode }}</td>
+            <td>{{ line.lineAmount | number: '1.2-2' }}</td>
           </tr>
         }
       </tbody>
     </table>
-    <p><strong>Total {{ invoice.totalAmount | number:'1.2-2' }}</strong></p>
+    <p>
+      <strong>Total {{ inv.totalAmount | number: '1.2-2' }}</strong>
+    </p>
   }
 </div>

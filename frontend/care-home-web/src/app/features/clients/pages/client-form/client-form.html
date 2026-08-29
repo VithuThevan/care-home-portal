@@ -8,13 +8,13 @@
       }
     </h1>
 
-    @if (errorMessage) {
+    @if (errorMessage()) {
       <div class="error-message">
-        {{ errorMessage }}
+        {{ errorMessage() }}
       </div>
     }
 
-    @if (isLoading) {
+    @if (isLoading()) {
       <p>Loading client...</p>
     } @else {
       <form [formGroup]="form" (ngSubmit)="save()">
@@ -245,8 +245,8 @@
         <div class="buttons">
           <a routerLink="/clients" class="secondary-button"> Cancel </a>
 
-          <button type="submit" class="primary-button" [disabled]="isSaving">
-            @if (isSaving) {
+          <button type="submit" class="primary-button" [disabled]="isSaving() || !auth.canWrite()">
+            @if (isSaving()) {
               Saving...
             } @else {
               Save Client

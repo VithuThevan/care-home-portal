@@ -1,7 +1,8 @@
 import {
   Component,
   inject,
-  OnInit
+  OnInit,
+  signal
 } from '@angular/core';
 
 import {
@@ -31,6 +32,7 @@ import {
 } from '../../services/care-home.service';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 
 
 @Component({
@@ -61,20 +63,22 @@ export class CareHomeForm implements OnInit {
   private readonly router =
     inject(Router);
 
+  readonly auth = inject(AuthService);
+
 
   careHomeId: number | null = null;
 
-  companies: Company[] = [];
+  readonly companies = signal<Company[]>([]);
 
-  assignedCompanyId: number | null = null;
+  readonly assignedCompanyId = signal<number | null>(null);
 
   isEditMode = false;
 
-  isLoading = false;
+  readonly isLoading = signal(false);
 
-  isSaving = false;
+  readonly isSaving = signal(false);
 
-  errorMessage = '';
+  readonly errorMessage = signal<string | null>(null);
 
 
   readonly form =
@@ -153,10 +157,10 @@ export class CareHomeForm implements OnInit {
     });
 
   get selectableCompanies(): Company[] {
-    return this.companies.filter(
+    return this.companies().filter(
       (company) =>
         company.isActive ||
-        (this.isEditMode && company.id === this.assignedCompanyId)
+        (this.isEditMode && company.id === this.assignedCompanyId())
     );
   }
 
@@ -187,7 +191,7 @@ export class CareHomeForm implements OnInit {
 
         next: (companies) => {
 
-          this.companies = companies;
+          this.companies.set(companies);
 
         },
 
@@ -195,8 +199,9 @@ export class CareHomeForm implements OnInit {
 
           console.error(error);
 
-          this.errorMessage =
-            getApiErrorMessage(error, 'Unable to load companies.');
+          this.errorMessage.set(
+            getApiErrorMessage(error, 'Unable to load companies.')
+          );
         }
 
       });
@@ -209,22 +214,22 @@ export class CareHomeForm implements OnInit {
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
 
     this.careHomeService
       .getCareHome(this.careHomeId)
       .pipe(
         finalize(() => {
-          this.isLoading = false;
+          this.isLoading.set(false);
         })
       )
       .subscribe({
 
         next: (careHome) => {
 
-          this.assignedCompanyId =
-            careHome.companyId;
+          this.assignedCompanyId.set(careHome.companyId);
 
           this.form.patchValue({
 
@@ -269,8 +274,9 @@ export class CareHomeForm implements OnInit {
 
           console.error(error);
 
-          this.errorMessage =
-            getApiErrorMessage(error, 'Unable to load care home.');
+          this.errorMessage.set(
+            getApiErrorMessage(error, 'Unable to load care home.')
+          );
         }
 
       });
@@ -288,9 +294,9 @@ export class CareHomeForm implements OnInit {
     }
 
 
-    this.isSaving = true;
+    this.isSaving.set(true);
 
-    this.errorMessage = '';
+    this.errorMessage.set(null);
 
 
     const value =
@@ -348,7 +354,7 @@ export class CareHomeForm implements OnInit {
         )
         .pipe(
           finalize(() => {
-            this.isSaving = false;
+            this.isSaving.set(false);
           })
         )
         .subscribe({
@@ -365,11 +371,12 @@ export class CareHomeForm implements OnInit {
 
             console.error(error);
 
-            this.errorMessage =
+            this.errorMessage.set(
               getApiErrorMessage(
                 error,
                 'Unable to update care home.'
-              );
+              )
+            );
 
           }
 
@@ -383,7 +390,7 @@ export class CareHomeForm implements OnInit {
       .createCareHome(request)
       .pipe(
         finalize(() => {
-          this.isSaving = false;
+          this.isSaving.set(false);
         })
       )
       .subscribe({
@@ -400,11 +407,12 @@ export class CareHomeForm implements OnInit {
 
           console.error(error);
 
-          this.errorMessage =
+          this.errorMessage.set(
             getApiErrorMessage(
               error,
               'Unable to create care home.'
-            );
+            )
+          );
 
         }
 

@@ -16,14 +16,15 @@ namespace CareHome.Api.Billing
         InvoiceTemplateResolver templateResolver,
         DocumentSequenceService sequences,
         UserAccessService userAccess,
-        AuditService audit)
+        AuditService audit,
+        ILogger<BillingService> logger)
     {
         public async Task<BillingPreviewResponse> PreviewAsync(
             int tenantId,
             BillingPreviewRequest request,
             CancellationToken cancellationToken = default)
         {
-            var (lines, exceptions) = await BuildPreviewAsync(tenantId, request, cancellationToken);
+            var (lines, exceptions, coverage) = await BuildPreviewAsync(tenantId, request, cancellationToken);
 
             var critical = exceptions.Any(x => x.Severity == "Error");
             var total = Money.Round(lines.Sum(x => x.Amount));
@@ -32,6 +33,10 @@ namespace CareHome.Api.Billing
             {
                 PeriodStart = request.PeriodStart,
                 PeriodEnd = request.PeriodEnd,
+                RequestedPeriodStart = request.PeriodStart,
+                RequestedPeriodEnd = request.PeriodEnd,
+                SkippedAlreadyBilledDays = coverage.Sum(x => x.SkippedAlreadyBilledDays),
+                Coverage = coverage,
                 Lines = lines,
                 Exceptions = exceptions,
                 TotalAmount = total,
@@ -49,9 +54,18 @@ namespace CareHome.Api.Billing
                 return (null, "Billing period end cannot be before start.");
             }
 
-            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            logger.LogInformation(
+                "Billing generate started. TenantId={TenantId} CompanyId={CompanyId} CareHomeId={CareHomeId} Period={PeriodStart:yyyy-MM-dd}/{PeriodEnd:yyyy-MM-dd}",
+                tenantId,
+                request.CompanyId,
+                request.CareHomeId,
+                request.PeriodStart,
+                request.PeriodEnd);
 
-            var (lines, exceptions) = await BuildPreviewAsync(tenantId, request, cancellationToken);
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await AcquireBillingLockAsync(tenantId, cancellationToken);
+
+            var (lines, exceptions, _) = await BuildPreviewAsync(tenantId, request, cancellationToken);
             var critical = exceptions.Where(x => x.Severity == "Error").ToList();
 
             foreach (var exception in exceptions)
@@ -75,10 +89,18 @@ namespace CareHome.Api.Billing
             {
                 await dbContext.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
+                var blocked = critical.Any(x => x.Code == "ALREADY_FULLY_BILLED")
+                    ? "The requested period is already fully billed. No unbilled service dates remain."
+                    : "Billing generation was blocked because of critical errors.";
+                logger.LogWarning(
+                    "Billing generate blocked. TenantId={TenantId} Reason={Reason} Errors={ErrorCount}",
+                    tenantId,
+                    blocked,
+                    critical.Count);
                 return (new BillingGenerateResponse
                 {
                     Exceptions = exceptions
-                }, "Billing generation was blocked because of critical errors.");
+                }, blocked);
             }
 
             if (lines.Count == 0)
@@ -211,7 +233,7 @@ namespace CareHome.Api.Billing
                         SnapshotInvoiceCategoryCode = invoice.SnapshotInvoiceCategoryCode,
                         SnapshotInvoiceCategoryName = line.InvoiceCategoryName,
                         SnapshotNominalCode = line.NominalCode,
-                        SnapshotNominalCodeName = line.NominalCode,
+                        SnapshotNominalCodeName = line.NominalCodeName ?? line.NominalCode,
                         ServicePeriodStart = line.ServiceFrom,
                         ServicePeriodEnd = line.ServiceTo,
                         RateFrequency = line.Frequency,
@@ -246,6 +268,12 @@ namespace CareHome.Api.Billing
 
             await transaction.CommitAsync(cancellationToken);
 
+            logger.LogInformation(
+                "Billing generate completed. TenantId={TenantId} InvoiceCount={InvoiceCount} InvoiceIds={InvoiceIds}",
+                tenantId,
+                createdIds.Count,
+                string.Join(",", createdIds));
+
             return (new BillingGenerateResponse
             {
                 InvoiceIds = createdIds,
@@ -255,18 +283,19 @@ namespace CareHome.Api.Billing
             }, null);
         }
 
-        private async Task<(List<BillingPreviewLineDto> Lines, List<BillingExceptionDto> Exceptions)> BuildPreviewAsync(
+        private async Task<(List<BillingPreviewLineDto> Lines, List<BillingExceptionDto> Exceptions, List<BillingCoverageDto> Coverage)> BuildPreviewAsync(
             int tenantId,
             BillingPreviewRequest request,
             CancellationToken cancellationToken)
         {
             var lines = new List<BillingPreviewLineDto>();
             var exceptions = new List<BillingExceptionDto>();
+            var coverage = new List<BillingCoverageDto>();
 
             if (request.PeriodEnd < request.PeriodStart)
             {
                 exceptions.Add(Error("INVALID_PERIOD", "Billing period end cannot be before start."));
-                return (lines, exceptions);
+                return (lines, exceptions, coverage);
             }
 
             var company = await dbContext.Companies.AsNoTracking()
@@ -274,7 +303,7 @@ namespace CareHome.Api.Billing
             if (company is null)
             {
                 exceptions.Add(Error("INVALID_COMPANY", "Selected company was not found in this organisation."));
-                return (lines, exceptions);
+                return (lines, exceptions, coverage);
             }
 
             var settings = await dbContext.TenantSettings.AsNoTracking()
@@ -347,8 +376,73 @@ namespace CareHome.Api.Billing
                     continue;
                 }
 
+                var applicable = contracts
+                    .Where(c => DateRanges.Intersect(
+                        occupancy.Value.Start,
+                        occupancy.Value.End,
+                        c.ContractStartDate,
+                        c.ContractEndDate) is not null)
+                    .ToList();
+
+                var blockedStreams = new HashSet<(int FundingAuthorityId, int InvoiceCategoryId)>();
+                foreach (var stream in applicable.GroupBy(c => (c.FundingAuthorityId, c.InvoiceCategoryId)))
+                {
+                    var streamContracts = stream.ToList();
+                    var pairs = FundingContractOverlap.FindOverlappingPairs(streamContracts);
+                    if (pairs.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    blockedStreams.Add(stream.Key);
+                    var (left, right) = pairs[0];
+                    var contractOverlap = DateRanges.Intersect(
+                        left.ContractStartDate,
+                        left.ContractEndDate,
+                        right.ContractStartDate,
+                        right.ContractEndDate);
+                    var billedOverlap = contractOverlap is null
+                        ? null
+                        : DateRanges.Intersect(
+                            occupancy.Value.Start,
+                            occupancy.Value.End,
+                            contractOverlap.Value.Start,
+                            contractOverlap.Value.End);
+                    var overlapStart = billedOverlap?.Start ?? contractOverlap?.Start;
+                    var overlapEnd = billedOverlap?.End ?? contractOverlap?.End;
+                    var ids = streamContracts.Select(c => c.Id).Distinct().OrderBy(id => id).ToList();
+                    var authorityName = streamContracts[0].FundingAuthority.Name;
+                    var categoryName = streamContracts[0].InvoiceCategory.Name;
+                    var overlapText = overlapStart is null
+                        ? "unknown"
+                        : $"{overlapStart:yyyy-MM-dd} to {FundingContractOverlap.FormatOpenEnded(overlapEnd)}";
+
+                    exceptions.Add(new BillingExceptionDto
+                    {
+                        Severity = "Error",
+                        Code = FundingContractOverlap.BillingCode,
+                        Message =
+                            $"Overlapping funding contracts for {FormatName(client)} / {authorityName} / {categoryName}. " +
+                            $"Contract IDs: {string.Join(", ", ids)}. Overlapping dates: {overlapText}. " +
+                            "Billing is blocked until the overlap is resolved.",
+                        ClientId = client.Id,
+                        ClientName = FormatName(client),
+                        CareHomeId = client.CareHomeId,
+                        ContractIds = ids,
+                        FundingAuthorityName = authorityName,
+                        InvoiceCategoryName = categoryName,
+                        OverlapStart = overlapStart,
+                        OverlapEnd = overlapEnd == DateRanges.OpenEnded ? null : overlapEnd
+                    });
+                }
+
                 foreach (var contract in contracts)
                 {
+                    if (blockedStreams.Contains((contract.FundingAuthorityId, contract.InvoiceCategoryId)))
+                    {
+                        continue;
+                    }
+
                     var contractSlice = DateRanges.Intersect(
                         occupancy.Value.Start,
                         occupancy.Value.End,
@@ -399,22 +493,51 @@ namespace CareHome.Api.Billing
                         contractSlice.Value.End,
                         billed);
 
+                    var alreadyBilledPeriods = billed
+                        .Select(b => DateRanges.Intersect(
+                            b.Start,
+                            b.End,
+                            contractSlice.Value.Start,
+                            contractSlice.Value.End))
+                        .Where(x => x.HasValue)
+                        .Select(x => ToRange(x!.Value.Start, x.Value.End))
+                        .ToList();
+                    var remainingPeriods = remaining.Select(r => ToRange(r.Start, r.End)).ToList();
+                    var skippedDays = alreadyBilledPeriods.Sum(x => x.Days);
+
+                    coverage.Add(new BillingCoverageDto
+                    {
+                        ClientId = client.Id,
+                        ClientName = FormatName(client),
+                        ClientFundingContractId = contract.Id,
+                        RequestedPeriodStart = request.PeriodStart,
+                        RequestedPeriodEnd = request.PeriodEnd,
+                        AlreadyBilledPeriods = alreadyBilledPeriods,
+                        RemainingBillablePeriods = remainingPeriods,
+                        SkippedAlreadyBilledDays = skippedDays
+                    });
+
                     if (remaining.Count == 0)
                     {
+                        if (skippedDays > 0)
+                        {
+                            exceptions.Add(Warning(
+                                "ALREADY_FULLY_BILLED",
+                                $"The requested period is already fully billed for {FormatName(client)}. No unbilled service dates remain.",
+                                client,
+                                contract.Id));
+                        }
+
                         continue;
                     }
 
-                    var overlappingBilled = billed.Any(b =>
-                        DateRanges.Overlaps(contractSlice.Value.Start, contractSlice.Value.End, b.Start, b.End));
-
-                    if (overlappingBilled && remaining.Count == 0)
+                    if (skippedDays > 0)
                     {
-                        exceptions.Add(Error(
-                            "OVERLAP",
-                            $"A finalized invoice already covers this period for {client.FirstName} {client.LastName}.",
+                        exceptions.Add(Info(
+                            "PARTIAL_PERIOD_BILLING",
+                            $"Requested period overlaps already-finalized invoices for {FormatName(client)}. Only previously unbilled dates will be invoiced.",
                             client,
                             contract.Id));
-                        continue;
                     }
 
                     foreach (var fragment in remaining)
@@ -472,6 +595,7 @@ namespace CareHome.Api.Billing
                                 InvoiceCategoryName = contract.InvoiceCategory.Name,
                                 NominalCodeId = contract.NominalCodeId,
                                 NominalCode = contract.NominalCode.Code,
+                                NominalCodeName = contract.NominalCode.Name,
                                 ClientFundingContractId = contract.Id,
                                 FundingRateId = rate.Id,
                                 ServiceFrom = rateSlice.Value.Start,
@@ -507,7 +631,15 @@ namespace CareHome.Api.Billing
                 await AddUnbilledMiscChargesAsync(tenantId, request, allowedHomes, lines, exceptions, cancellationToken);
             }
 
-            return (lines, exceptions);
+            if (lines.Count == 0 && coverage.Any(x => x.SkippedAlreadyBilledDays > 0))
+            {
+                exceptions.RemoveAll(x => x.Code == "ALREADY_FULLY_BILLED");
+                exceptions.Add(Error(
+                    "ALREADY_FULLY_BILLED",
+                    "The requested period is already fully billed. No unbilled service dates remain."));
+            }
+
+            return (lines, exceptions, coverage);
         }
 
         private async Task AddUnbilledMiscChargesAsync(
@@ -701,15 +833,70 @@ namespace CareHome.Api.Billing
                 cancellationToken);
         }
 
+        private async Task AcquireBillingLockAsync(int tenantId, CancellationToken cancellationToken)
+        {
+            var resource = $"billing-generate-{tenantId}";
+            await dbContext.Database.ExecuteSqlInterpolatedAsync(
+                $"""
+                DECLARE @result int;
+                EXEC @result = sp_getapplock
+                    @Resource = {resource},
+                    @LockMode = N'Exclusive',
+                    @LockOwner = N'Transaction',
+                    @LockTimeout = 30000;
+                IF @result < 0
+                    THROW 51000, 'Another billing generation is in progress for this organisation. Retry shortly.', 1;
+                """,
+                cancellationToken);
+        }
+
+        private static BillingDateRangeDto ToRange(DateOnly start, DateOnly end)
+        {
+            return new BillingDateRangeDto
+            {
+                Start = start,
+                End = end,
+                Days = DateRanges.InclusiveDays(start, end)
+            };
+        }
+
         private static BillingExceptionDto Error(
             string code,
             string message,
             Client? client = null,
             int? contractId = null)
         {
+            return Exception("Error", code, message, client, contractId);
+        }
+
+        private static BillingExceptionDto Warning(
+            string code,
+            string message,
+            Client? client = null,
+            int? contractId = null)
+        {
+            return Exception("Warning", code, message, client, contractId);
+        }
+
+        private static BillingExceptionDto Info(
+            string code,
+            string message,
+            Client? client = null,
+            int? contractId = null)
+        {
+            return Exception("Info", code, message, client, contractId);
+        }
+
+        private static BillingExceptionDto Exception(
+            string severity,
+            string code,
+            string message,
+            Client? client,
+            int? contractId)
+        {
             return new BillingExceptionDto
             {
-                Severity = "Error",
+                Severity = severity,
                 Code = code,
                 Message = message,
                 ClientId = client?.Id,
@@ -721,7 +908,7 @@ namespace CareHome.Api.Billing
 
         private static string FormatName(Client client)
         {
-            return string.Join(" ", new[] { client.Title, client.FirstName, client.LastName }
+            return string.Join(" ", new[] { client.FirstName, client.LastName }
                 .Where(x => !string.IsNullOrWhiteSpace(x)));
         }
     }

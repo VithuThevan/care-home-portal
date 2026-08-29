@@ -1,9 +1,13 @@
 <div class="page">
   <div class="form-container">
     <h1>{{ isEditMode ? 'Edit organisation' : 'Add organisation' }}</h1>
-    @if (errorMessage) {
-      <div class="error-message">{{ errorMessage }}</div>
+    @if (isLoading()) {
+      <p>Loading organisation...</p>
     }
+    @if (errorMessage()) {
+      <div class="error-message">{{ errorMessage() }}</div>
+    }
+    @if (!isLoading()) {
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-field">
         <label>Name</label>
@@ -55,9 +59,10 @@
       }
 
       <div class="buttons">
-        <button class="primary-button" type="submit" [disabled]="isSaving">Save</button>
+        <button class="primary-button" type="submit" [disabled]="isSaving()">Save</button>
         <a routerLink="/platform/tenants">Cancel</a>
       </div>
     </form>
+    }
   </div>
 </div>

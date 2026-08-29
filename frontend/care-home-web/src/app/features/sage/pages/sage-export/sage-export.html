@@ -1,13 +1,15 @@
 <div class="page">
   <div class="page-header"><div><h1>Sage50 Export</h1><p>Provisional CSV mapping. Final Sage import layout needs stakeholder confirmation.</p></div></div>
-  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
+  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
   <div class="filters">
     <input type="date" [(ngModel)]="dateFrom" />
     <input type="date" [(ngModel)]="dateTo" />
     <button type="button" (click)="runPreview()">Validate</button>
-    <button type="button" class="primary-button" [disabled]="!preview?.canExport" (click)="exportNow()">Export CSV</button>
+    @if (auth.canWrite()) {
+    <button type="button" class="primary-button" [disabled]="!preview()?.canExport" (click)="exportNow()">Export CSV</button>
+    }
   </div>
-  @if (preview) {
+  @if (preview(); as preview) {
     <p>Eligible {{ preview.eligibleCount }} · Blocked {{ preview.blockedCount }}</p>
     @for (err of preview.errors; track err) { <div class="error-message">{{ err }}</div> }
   }
@@ -15,7 +17,7 @@
   <table>
     <thead><tr><th>When</th><th>File</th><th>Records</th><th></th></tr></thead>
     <tbody>
-      @for (batch of batches; track batch.id) {
+      @for (batch of batches(); track batch.id) {
         <tr>
           <td>{{ batch.exportedAt }}</td>
           <td>{{ batch.fileName }}</td>

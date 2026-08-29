@@ -25,3 +25,32 @@ File-based CSV only. The API never writes to a Sage database.
 | Department | Care home code snapshot |
 
 Final Sage50 import specification **requires stakeholder confirmation**.
+
+## Spreadsheet formula injection
+
+Report CSV/XLSX exports neutralize user-controlled text that starts with `=`, `+`, `-`, or `@` by prefixing `'`.
+
+Sage machine-target fields are **not** prefixed, so Sage 50 import semantics stay intact:
+
+| Field | Neutralized? |
+|---|---|
+| AccountRef, NominalCode, InvoiceNumber, InvoiceDate, NetAmount, TaxCode, Department | No |
+| Details (line description) | Yes |
+
+If a Sage ID or care-home code itself began with `=`, it would be exported unchanged. Those values are operator-controlled identifiers, not free text.
+
+## Sign-off checklist (finance user)
+
+Do not mark Sage as production-ready until every box is confirmed against the **target Sage 50** company.
+
+- [ ] Sample CSV opened in Sage 50 import (not only Excel)
+- [ ] AccountRef matches customer/account records
+- [ ] NominalCode posts to the intended nominal
+- [ ] InvoiceNumber and InvoiceDate accepted
+- [ ] Details text acceptable
+- [ ] NetAmount sign and decimals correct (credits if exported)
+- [ ] TaxCode `T0` accepted (VAT still provisional)
+- [ ] Department = care home code accepted by Sage department map
+- [ ] Re-export without `includeAlreadyExported` skips already exported invoices
+- [ ] Signed off by: _______________ Date: _______________
+

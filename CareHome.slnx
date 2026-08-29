@@ -2,4 +2,5 @@
   <Folder Name="/backend/">
     <Project Path="backend/CareHome.Api/CareHome.Api.csproj" />
   </Folder>
+  <Project Path="CareHome.Api.Tests/CareHome.Api.Tests.csproj" />
 </Solution>

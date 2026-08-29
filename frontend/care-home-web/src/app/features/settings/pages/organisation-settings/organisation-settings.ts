@@ -1,8 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 
 @Component({
   selector: 'app-organisation-settings',
@@ -12,9 +14,11 @@ import { getApiErrorMessage } from '../../../../core/api-error';
 export class OrganisationSettingsPage implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly fb = inject(FormBuilder);
-  errorMessage = '';
-  savedMessage = '';
-  isSaving = false;
+  readonly auth = inject(AuthService);
+  readonly errorMessage = signal<string | null>(null);
+  readonly savedMessage = signal<string | null>(null);
+  readonly isLoading = signal(false);
+  readonly isSaving = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
@@ -37,10 +41,16 @@ export class OrganisationSettingsPage implements OnInit {
   });
 
   ngOnInit(): void {
-    this.http.get<typeof this.form.value>('/api/settings/organisation').subscribe({
-      next: (settings) => this.form.patchValue(settings),
-      error: (error) => (this.errorMessage = getApiErrorMessage(error, 'Unable to load organisation settings.')),
-    });
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.http
+      .get<typeof this.form.value>('/api/settings/organisation')
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (settings) => this.form.patchValue(settings),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load organisation settings.')),
+      });
   }
 
   save(): void {
@@ -49,18 +59,19 @@ export class OrganisationSettingsPage implements OnInit {
       return;
     }
 
-    this.isSaving = true;
-    this.errorMessage = '';
-    this.savedMessage = '';
-    this.http.put('/api/settings/organisation', this.form.getRawValue()).subscribe({
-      next: () => {
-        this.isSaving = false;
-        this.savedMessage = 'Organisation settings saved.';
-      },
-      error: (error) => {
-        this.isSaving = false;
-        this.errorMessage = getApiErrorMessage(error, 'Unable to save organisation settings.');
-      },
-    });
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
+    this.savedMessage.set(null);
+    this.http
+      .put('/api/settings/organisation', this.form.getRawValue())
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.savedMessage.set('Organisation settings saved.');
+        },
+        error: (error) => {
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to save organisation settings.'));
+        },
+      });
   }
 }

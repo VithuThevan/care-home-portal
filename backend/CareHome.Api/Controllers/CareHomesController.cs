@@ -44,7 +44,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, id))
             {
-                return Forbid();
+                return NotFound();
             }
 
             return Ok(careHome);

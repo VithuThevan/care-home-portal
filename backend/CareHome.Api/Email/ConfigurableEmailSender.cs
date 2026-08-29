@@ -19,8 +19,9 @@ public class ConfigurableEmailSender(
 
         if (!string.Equals(mode, "Smtp", StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogInformation(
-                "Email simulated. To={To} Subject={Subject} Attachment={Attachment}",
+            logger.LogWarning(
+                "EMAIL SIMULATED (Email:Mode={Mode}). To={To} Subject={Subject} Attachment={Attachment}. No message was delivered.",
+                mode,
                 to,
                 subject,
                 attachmentFileName);

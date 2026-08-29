@@ -1,9 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { FundingAuthority } from '../../models/funding-authority.model';
 import { FundingAuthorityService } from '../../services/funding-authority.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 
 @Component({
   selector: 'app-funding-authority-list',
@@ -13,37 +15,36 @@ import { getApiErrorMessage } from '../../../../core/api-error';
 })
 export class FundingAuthorityList implements OnInit {
   private readonly fundingAuthorityService = inject(FundingAuthorityService);
+  readonly auth = inject(AuthService);
 
-  fundingAuthorities: FundingAuthority[] = [];
+  readonly fundingAuthorities = signal<FundingAuthority[]>([]);
 
-  isLoading = false;
-  errorMessage = '';
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadFundingAuthorities();
   }
 
   loadFundingAuthorities(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
-    this.fundingAuthorityService.getFundingAuthorities().subscribe({
-      next: (fundingAuthorities) => {
-        this.fundingAuthorities = fundingAuthorities;
-        this.isLoading = false;
-      },
+    this.fundingAuthorityService
+      .getFundingAuthorities()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (fundingAuthorities) => this.fundingAuthorities.set(fundingAuthorities),
 
-      error: (error) => {
-        console.error(error);
+        error: (error) => {
+          console.error(error);
 
-        this.errorMessage = getApiErrorMessage(
-          error,
-          'Unable to load funding authorities.'
-        );
-
-        this.isLoading = false;
-      }
-    });
+          this.errorMessage.set(getApiErrorMessage(
+            error,
+            'Unable to load funding authorities.'
+          ));
+        }
+      });
   }
 
   deactivateFundingAuthority(authority: FundingAuthority): void {
@@ -63,10 +64,10 @@ export class FundingAuthorityList implements OnInit {
         error: (error) => {
           console.error(error);
 
-          this.errorMessage = getApiErrorMessage(
+          this.errorMessage.set(getApiErrorMessage(
             error,
             'Unable to deactivate funding authority.'
-          );
+          ));
         }
       });
   }

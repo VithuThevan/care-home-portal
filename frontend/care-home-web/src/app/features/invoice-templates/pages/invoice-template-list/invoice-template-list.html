@@ -1,10 +1,10 @@
 <div class="page">
   <div class="page-header"><div><h1>Invoice Templates</h1><p>Most specific matching template is used at generation time.</p></div></div>
-  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
+  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
   <table>
     <thead><tr><th>Name</th><th>Category</th><th>Authority</th><th>Home</th><th>Active</th></tr></thead>
     <tbody>
-      @for (item of items; track item.id) {
+      @for (item of items(); track item.id) {
         <tr>
           <td>{{ item.name }}</td>
           <td>{{ item.invoiceCategoryName }}</td>
@@ -15,6 +15,7 @@
       }
     </tbody>
   </table>
+  @if (auth.canWrite()) {
   <h2>Add category default template</h2>
   <form [formGroup]="form" (ngSubmit)="save()">
     <div class="form-row">
@@ -23,7 +24,7 @@
         <label>Category</label>
         <select formControlName="invoiceCategoryId">
           <option [ngValue]="0">Select</option>
-          @for (item of categories; track item.id) {
+          @for (item of categories(); track item.id) {
             <option [ngValue]="item.id">{{ item.name }}</option>
           }
         </select>
@@ -42,4 +43,5 @@
     </div>
     <button class="primary-button" type="submit">Save template</button>
   </form>
+  }
 </div>

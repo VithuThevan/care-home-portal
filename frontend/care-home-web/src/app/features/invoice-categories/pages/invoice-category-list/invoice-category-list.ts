@@ -1,9 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { InvoiceCategory } from '../../models/invoice-category.model';
 import { InvoiceCategoryService } from '../../services/invoice-category.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 
 @Component({
   selector: 'app-invoice-category-list',
@@ -13,37 +15,36 @@ import { getApiErrorMessage } from '../../../../core/api-error';
 })
 export class InvoiceCategoryList implements OnInit {
   private readonly invoiceCategoryService = inject(InvoiceCategoryService);
+  readonly auth = inject(AuthService);
 
-  invoiceCategories: InvoiceCategory[] = [];
+  readonly invoiceCategories = signal<InvoiceCategory[]>([]);
 
-  isLoading = false;
-  errorMessage = '';
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadInvoiceCategories();
   }
 
   loadInvoiceCategories(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
-    this.invoiceCategoryService.getInvoiceCategories().subscribe({
-      next: (invoiceCategories) => {
-        this.invoiceCategories = invoiceCategories;
-        this.isLoading = false;
-      },
+    this.invoiceCategoryService
+      .getInvoiceCategories()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (invoiceCategories) => this.invoiceCategories.set(invoiceCategories),
 
-      error: (error) => {
-        console.error(error);
+        error: (error) => {
+          console.error(error);
 
-        this.errorMessage = getApiErrorMessage(
-          error,
-          'Unable to load invoice categories.'
-        );
-
-        this.isLoading = false;
-      }
-    });
+          this.errorMessage.set(getApiErrorMessage(
+            error,
+            'Unable to load invoice categories.'
+          ));
+        }
+      });
   }
 
   deactivateInvoiceCategory(category: InvoiceCategory): void {
@@ -63,10 +64,10 @@ export class InvoiceCategoryList implements OnInit {
         error: (error) => {
           console.error(error);
 
-          this.errorMessage = getApiErrorMessage(
+          this.errorMessage.set(getApiErrorMessage(
             error,
             'Unable to deactivate invoice category.'
-          );
+          ));
         }
       });
   }

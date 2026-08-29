@@ -2,12 +2,16 @@
   <div class="form-container">
     <h1>Organisation settings</h1>
     <p>These values apply to this organisation only. SMTP credentials stay in server configuration.</p>
-    @if (errorMessage) {
-      <div class="error-message">{{ errorMessage }}</div>
+    @if (isLoading()) {
+      <p>Loading organisation settings...</p>
     }
-    @if (savedMessage) {
-      <p>{{ savedMessage }}</p>
+    @if (errorMessage()) {
+      <div class="error-message">{{ errorMessage() }}</div>
     }
+    @if (savedMessage()) {
+      <p>{{ savedMessage() }}</p>
+    }
+    @if (!isLoading()) {
     <form [formGroup]="form" (ngSubmit)="save()">
       <div class="form-field"><label>Name</label><input formControlName="name" /></div>
       <div class="form-field"><label>Trading name</label><input formControlName="tradingName" /></div>
@@ -27,8 +31,9 @@
       <div class="form-field"><label>Email from address</label><input formControlName="emailFromAddress" /></div>
       <div class="form-field"><label>Primary colour</label><input formControlName="primaryColour" /></div>
       <div class="buttons">
-        <button class="primary-button" type="submit" [disabled]="isSaving">Save</button>
+        <button class="primary-button" type="submit" [disabled]="isSaving() || !auth.canWrite()">Save</button>
       </div>
     </form>
+    }
   </div>
 </div>

@@ -14,6 +14,7 @@ These choices are **implemented so the product works**. They are **not** stakeho
 | “Due” payment status | Derived, not stored | Invoice DTOs |
 | VAT / tax | Not applied. Sage TaxCode placeholder `T0` | `Sage50ColumnMap` |
 | Invoice grouping | One invoice per company+home+authority+category | `BillingService` |
+| Partial-period billing | Overlapping request windows invoice only unbilled remainder; fully billed → `ALREADY_FULLY_BILLED` | `BillingService` / `DateRanges.Subtract` |
 | Credit override | Not allowed above remaining invoiced amount | `CreditNoteService` |
 | Sage50 CSV columns | See `SAGE50_EXPORT.md` | `Sage50ColumnMap.cs` |
 | Email provider | SMTP adapter + Development simulation | `Email/ConfigurableEmailSender.cs` |
@@ -22,7 +23,7 @@ These choices are **implemented so the product works**. They are **not** stakeho
 | Care home bed capacity seed | Operators enter real figures; Development demo uses Sunrise House | `DevelopmentMasterDataSeeder` |
 | Template extra step | Company+Category between home and category-default, filtered by tenant | `InvoiceTemplateResolver` |
 
-When a stakeholder confirms a rule, change the isolated class above and update this file.
+When a stakeholder confirms a rule, change the isolated class above, update this file, and complete `docs/PRODUCTION_BUSINESS_SIGNOFF.md`. Live funder invoicing should not start while those items are PENDING.
 
 ## Not implemented (commercial / later)
 

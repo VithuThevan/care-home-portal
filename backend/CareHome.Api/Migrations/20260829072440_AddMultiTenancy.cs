@@ -100,6 +100,7 @@ namespace CareHome.Api.Migrations
             AddNullableTenantId(migrationBuilder, "FundingAuthorities");
             AddNullableTenantId(migrationBuilder, "InvoiceCategories");
             AddNullableTenantId(migrationBuilder, "NominalCodes");
+            // Operational tables are created later by AddOperationalDomain on a fresh database.
             AddNullableTenantId(migrationBuilder, "ClientFundingContracts");
             AddNullableTenantId(migrationBuilder, "InvoiceTemplates");
             AddNullableTenantId(migrationBuilder, "Invoices");
@@ -111,69 +112,9 @@ namespace CareHome.Api.Migrations
             AddNullableTenantId(migrationBuilder, "BillingExceptionLogs");
             AddNullableTenantId(migrationBuilder, "EmailSendLogs");
 
-            migrationBuilder.AddColumn<int>(
-                name: "TenantId",
-                table: "AspNetUsers",
-                type: "int",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "SnapshotTenantName",
-                table: "Invoices",
-                type: "nvarchar(150)",
-                maxLength: 150,
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AlterColumn<string>(
-                name: "InvoiceNumber",
-                table: "Invoices",
-                type: "nvarchar(40)",
-                maxLength: 40,
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(20)",
-                oldMaxLength: 20);
-
-            migrationBuilder.AlterColumn<string>(
-                name: "CreditNoteNumber",
-                table: "CreditNotes",
-                type: "nvarchar(40)",
-                maxLength: 40,
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(20)",
-                oldMaxLength: 20);
-
-            migrationBuilder.DropIndex(
-                name: "IX_DocumentSequences_Name",
-                table: "DocumentSequences");
-
-            migrationBuilder.RenameColumn(
-                name: "Name",
-                table: "DocumentSequences",
-                newName: "DocumentType");
-
-            migrationBuilder.AddColumn<int>(
-                name: "TenantId",
-                table: "DocumentSequences",
-                type: "int",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "Prefix",
-                table: "DocumentSequences",
-                type: "nvarchar(20)",
-                maxLength: 20,
-                nullable: false,
-                defaultValue: "");
-
-            migrationBuilder.AddColumn<int>(
-                name: "NumberLength",
-                table: "DocumentSequences",
-                type: "int",
-                nullable: false,
-                defaultValue: 4);
+            AddNullableTenantId(migrationBuilder, "AspNetUsers");
+            AddSnapshotAndNumberColumns(migrationBuilder);
+            ReshapeDocumentSequencesIfPresent(migrationBuilder);
 
             migrationBuilder.Sql("""
                 UPDATE Companies SET TenantId = 1 WHERE TenantId IS NULL;
@@ -182,56 +123,65 @@ namespace CareHome.Api.Migrations
                 UPDATE FundingAuthorities SET TenantId = 1 WHERE TenantId IS NULL;
                 UPDATE InvoiceCategories SET TenantId = 1 WHERE TenantId IS NULL;
                 UPDATE NominalCodes SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE ClientFundingContracts SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE InvoiceTemplates SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE Invoices SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE CreditNotes SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE MiscChargeImportBatches SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE MiscCharges SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE SageExportBatches SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE AuditLogs SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE BillingExceptionLogs SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE EmailSendLogs SET TenantId = 1 WHERE TenantId IS NULL;
-                UPDATE DocumentSequences
-                SET TenantId = 1,
-                    Prefix = CASE WHEN DocumentType = 'Invoice' THEN 'INV-' ELSE 'CN-' END,
-                    NumberLength = 4
-                WHERE TenantId IS NULL;
-                UPDATE Invoices SET SnapshotTenantName = N'Existing Organisation'
-                WHERE SnapshotTenantName = '' OR SnapshotTenantName IS NULL;
+                IF OBJECT_ID(N'ClientFundingContracts', 'U') IS NOT NULL UPDATE ClientFundingContracts SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'InvoiceTemplates', 'U') IS NOT NULL UPDATE InvoiceTemplates SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'Invoices', 'U') IS NOT NULL
+                BEGIN
+                    UPDATE Invoices SET TenantId = 1 WHERE TenantId IS NULL;
+                    IF COL_LENGTH(N'Invoices', 'SnapshotTenantName') IS NOT NULL
+                        UPDATE Invoices SET SnapshotTenantName = N'Existing Organisation'
+                        WHERE SnapshotTenantName = '' OR SnapshotTenantName IS NULL;
+                END
+                IF OBJECT_ID(N'CreditNotes', 'U') IS NOT NULL UPDATE CreditNotes SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'MiscChargeImportBatches', 'U') IS NOT NULL UPDATE MiscChargeImportBatches SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'MiscCharges', 'U') IS NOT NULL UPDATE MiscCharges SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'SageExportBatches', 'U') IS NOT NULL UPDATE SageExportBatches SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'AuditLogs', 'U') IS NOT NULL UPDATE AuditLogs SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'BillingExceptionLogs', 'U') IS NOT NULL UPDATE BillingExceptionLogs SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'EmailSendLogs', 'U') IS NOT NULL UPDATE EmailSendLogs SET TenantId = 1 WHERE TenantId IS NULL;
+                IF OBJECT_ID(N'DocumentSequences', 'U') IS NOT NULL AND COL_LENGTH(N'DocumentSequences', 'TenantId') IS NOT NULL
+                    UPDATE DocumentSequences
+                    SET TenantId = 1,
+                        Prefix = CASE WHEN DocumentType = 'Invoice' THEN 'INV-' ELSE 'CN-' END,
+                        NumberLength = 4
+                    WHERE TenantId IS NULL;
                 """);
 
             migrationBuilder.Sql("""
-                IF NOT EXISTS (SELECT 1 FROM AspNetRoles WHERE NormalizedName = 'PLATFORMADMIN')
+                IF OBJECT_ID(N'AspNetRoles', 'U') IS NOT NULL AND OBJECT_ID(N'AspNetUsers', 'U') IS NOT NULL
                 BEGIN
-                    INSERT INTO AspNetRoles (Id, Name, NormalizedName, ConcurrencyStamp)
-                    VALUES (NEWID(), 'PlatformAdmin', 'PLATFORMADMIN', NEWID());
+                    IF NOT EXISTS (SELECT 1 FROM AspNetRoles WHERE NormalizedName = 'PLATFORMADMIN')
+                    BEGIN
+                        INSERT INTO AspNetRoles (Id, Name, NormalizedName, ConcurrencyStamp)
+                        VALUES (NEWID(), 'PlatformAdmin', 'PLATFORMADMIN', NEWID());
+                    END
+
+                    IF NOT EXISTS (SELECT 1 FROM AspNetRoles WHERE NormalizedName = 'TENANTADMIN')
+                    BEGIN
+                        INSERT INTO AspNetRoles (Id, Name, NormalizedName, ConcurrencyStamp)
+                        VALUES (NEWID(), 'TenantAdmin', 'TENANTADMIN', NEWID());
+                    END
+
+                    INSERT INTO AspNetUserRoles (UserId, RoleId)
+                    SELECT ur.UserId, pa.Id
+                    FROM AspNetUserRoles ur
+                    INNER JOIN AspNetRoles sa ON sa.Id = ur.RoleId AND sa.NormalizedName = 'SUPERADMIN'
+                    CROSS JOIN AspNetRoles pa
+                    WHERE pa.NormalizedName = 'PLATFORMADMIN'
+                      AND NOT EXISTS (
+                          SELECT 1 FROM AspNetUserRoles existing
+                          WHERE existing.UserId = ur.UserId AND existing.RoleId = pa.Id);
+
+                    UPDATE AspNetUsers
+                    SET TenantId = 1
+                    WHERE COL_LENGTH(N'AspNetUsers', 'TenantId') IS NOT NULL
+                      AND TenantId IS NULL
+                      AND Id NOT IN (
+                          SELECT ur.UserId
+                          FROM AspNetUserRoles ur
+                          INNER JOIN AspNetRoles r ON r.Id = ur.RoleId
+                          WHERE r.NormalizedName IN ('SUPERADMIN', 'PLATFORMADMIN'));
                 END
-
-                IF NOT EXISTS (SELECT 1 FROM AspNetRoles WHERE NormalizedName = 'TENANTADMIN')
-                BEGIN
-                    INSERT INTO AspNetRoles (Id, Name, NormalizedName, ConcurrencyStamp)
-                    VALUES (NEWID(), 'TenantAdmin', 'TENANTADMIN', NEWID());
-                END
-
-                INSERT INTO AspNetUserRoles (UserId, RoleId)
-                SELECT ur.UserId, pa.Id
-                FROM AspNetUserRoles ur
-                INNER JOIN AspNetRoles sa ON sa.Id = ur.RoleId AND sa.NormalizedName = 'SUPERADMIN'
-                CROSS JOIN AspNetRoles pa
-                WHERE pa.NormalizedName = 'PLATFORMADMIN'
-                  AND NOT EXISTS (
-                      SELECT 1 FROM AspNetUserRoles existing
-                      WHERE existing.UserId = ur.UserId AND existing.RoleId = pa.Id);
-
-                UPDATE AspNetUsers
-                SET TenantId = 1
-                WHERE TenantId IS NULL
-                  AND Id NOT IN (
-                      SELECT ur.UserId
-                      FROM AspNetUserRoles ur
-                      INNER JOIN AspNetRoles r ON r.Id = ur.RoleId
-                      WHERE r.NormalizedName IN ('SUPERADMIN', 'PLATFORMADMIN'));
                 """);
 
             MakeTenantIdRequired(migrationBuilder, "Companies", "FK_Companies_Tenants_TenantId");
@@ -252,18 +202,8 @@ namespace CareHome.Api.Migrations
             MakeTenantIdRequired(migrationBuilder, "EmailSendLogs", "FK_EmailSendLogs_Tenants_TenantId");
             MakeTenantIdRequired(migrationBuilder, "DocumentSequences", "FK_DocumentSequences_Tenants_TenantId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_TenantId",
-                table: "AspNetUsers",
-                column: "TenantId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AspNetUsers_Tenants_TenantId",
-                table: "AspNetUsers",
-                column: "TenantId",
-                principalTable: "Tenants",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+            CreateIndexIfTableExists(migrationBuilder, "IX_AspNetUsers_TenantId", "AspNetUsers", "[TenantId]", unique: false);
+            AddTenantForeignKeyIfMissing(migrationBuilder, "FK_AspNetUsers_Tenants_TenantId", "AspNetUsers");
 
             DropIndexIfExists(migrationBuilder, "IX_Companies_Name", "Companies");
             DropIndexIfExists(migrationBuilder, "IX_CareHomes_Code", "CareHomes");
@@ -275,130 +215,29 @@ namespace CareHome.Api.Migrations
             DropIndexIfExists(migrationBuilder, "IX_Invoices_InvoiceNumber", "Invoices");
             DropIndexIfExists(migrationBuilder, "IX_CreditNotes_CreditNoteNumber", "CreditNotes");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Companies_TenantId_Name",
-                table: "Companies",
-                columns: new[] { "TenantId", "Name" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Companies_TenantId_IsActive",
-                table: "Companies",
-                columns: new[] { "TenantId", "IsActive" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CareHomes_TenantId_Code",
-                table: "CareHomes",
-                columns: new[] { "TenantId", "Code" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CareHomes_TenantId_IsActive",
-                table: "CareHomes",
-                columns: new[] { "TenantId", "IsActive" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Clients_TenantId_SageId",
-                table: "Clients",
-                columns: new[] { "TenantId", "SageId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Clients_TenantId_ReferenceNumber",
-                table: "Clients",
-                columns: new[] { "TenantId", "ReferenceNumber" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Clients_TenantId",
-                table: "Clients",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_FundingAuthorities_TenantId_Code",
-                table: "FundingAuthorities",
-                columns: new[] { "TenantId", "Code" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_InvoiceCategories_TenantId_Code",
-                table: "InvoiceCategories",
-                columns: new[] { "TenantId", "Code" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_NominalCodes_TenantId_Code",
-                table: "NominalCodes",
-                columns: new[] { "TenantId", "Code" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Invoices_TenantId_InvoiceNumber",
-                table: "Invoices",
-                columns: new[] { "TenantId", "InvoiceNumber" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Invoices_TenantId",
-                table: "Invoices",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CreditNotes_TenantId_CreditNoteNumber",
-                table: "CreditNotes",
-                columns: new[] { "TenantId", "CreditNoteNumber" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CreditNotes_TenantId",
-                table: "CreditNotes",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DocumentSequences_TenantId_DocumentType",
-                table: "DocumentSequences",
-                columns: new[] { "TenantId", "DocumentType" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ClientFundingContracts_TenantId",
-                table: "ClientFundingContracts",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_InvoiceTemplates_TenantId",
-                table: "InvoiceTemplates",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MiscChargeImportBatches_TenantId",
-                table: "MiscChargeImportBatches",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MiscCharges_TenantId",
-                table: "MiscCharges",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_SageExportBatches_TenantId",
-                table: "SageExportBatches",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_AuditLogs_TenantId",
-                table: "AuditLogs",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BillingExceptionLogs_TenantId",
-                table: "BillingExceptionLogs",
-                column: "TenantId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmailSendLogs_TenantId",
-                table: "EmailSendLogs",
-                column: "TenantId");
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_Companies_TenantId_Name", "Companies", "[TenantId], [Name]");
+            CreateIndexIfTableExists(migrationBuilder, "IX_Companies_TenantId_IsActive", "Companies", "[TenantId], [IsActive]", unique: false);
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_CareHomes_TenantId_Code", "CareHomes", "[TenantId], [Code]");
+            CreateIndexIfTableExists(migrationBuilder, "IX_CareHomes_TenantId_IsActive", "CareHomes", "[TenantId], [IsActive]", unique: false);
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_Clients_TenantId_SageId", "Clients", "[TenantId], [SageId]");
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_Clients_TenantId_ReferenceNumber", "Clients", "[TenantId], [ReferenceNumber]");
+            CreateIndexIfTableExists(migrationBuilder, "IX_Clients_TenantId", "Clients", "[TenantId]", unique: false);
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_FundingAuthorities_TenantId_Code", "FundingAuthorities", "[TenantId], [Code]");
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_InvoiceCategories_TenantId_Code", "InvoiceCategories", "[TenantId], [Code]");
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_NominalCodes_TenantId_Code", "NominalCodes", "[TenantId], [Code]");
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_Invoices_TenantId_InvoiceNumber", "Invoices", "[TenantId], [InvoiceNumber]");
+            CreateIndexIfTableExists(migrationBuilder, "IX_Invoices_TenantId", "Invoices", "[TenantId]", unique: false);
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_CreditNotes_TenantId_CreditNoteNumber", "CreditNotes", "[TenantId], [CreditNoteNumber]");
+            CreateIndexIfTableExists(migrationBuilder, "IX_CreditNotes_TenantId", "CreditNotes", "[TenantId]", unique: false);
+            CreateUniqueIndexIfTableExists(migrationBuilder, "IX_DocumentSequences_TenantId_DocumentType", "DocumentSequences", "[TenantId], [DocumentType]");
+            CreateIndexIfTableExists(migrationBuilder, "IX_ClientFundingContracts_TenantId", "ClientFundingContracts", "[TenantId]", unique: false);
+            CreateIndexIfTableExists(migrationBuilder, "IX_InvoiceTemplates_TenantId", "InvoiceTemplates", "[TenantId]", unique: false);
+            CreateIndexIfTableExists(migrationBuilder, "IX_MiscChargeImportBatches_TenantId", "MiscChargeImportBatches", "[TenantId]", unique: false);
+            CreateIndexIfTableExists(migrationBuilder, "IX_MiscCharges_TenantId", "MiscCharges", "[TenantId]", unique: false);
+            CreateIndexIfTableExists(migrationBuilder, "IX_SageExportBatches_TenantId", "SageExportBatches", "[TenantId]", unique: false);
+            CreateIndexIfTableExists(migrationBuilder, "IX_AuditLogs_TenantId", "AuditLogs", "[TenantId]", unique: false);
+            CreateIndexIfTableExists(migrationBuilder, "IX_BillingExceptionLogs_TenantId", "BillingExceptionLogs", "[TenantId]", unique: false);
+            CreateIndexIfTableExists(migrationBuilder, "IX_EmailSendLogs_TenantId", "EmailSendLogs", "[TenantId]", unique: false);
         }
 
         /// <inheritdoc />
@@ -410,31 +249,105 @@ namespace CareHome.Api.Migrations
 
         private static void AddNullableTenantId(MigrationBuilder migrationBuilder, string table)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "TenantId",
-                table: table,
-                type: "int",
-                nullable: true);
+            migrationBuilder.Sql($"""
+                IF OBJECT_ID(N'{table}', 'U') IS NOT NULL AND COL_LENGTH(N'{table}', 'TenantId') IS NULL
+                BEGIN
+                    ALTER TABLE [{table}] ADD [TenantId] int NULL;
+                END
+                """);
         }
 
         private static void MakeTenantIdRequired(MigrationBuilder migrationBuilder, string table, string foreignKeyName)
         {
-            migrationBuilder.AlterColumn<int>(
-                name: "TenantId",
-                table: table,
-                type: "int",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "int",
-                oldNullable: true);
+            migrationBuilder.Sql($"""
+                IF OBJECT_ID(N'{table}', 'U') IS NOT NULL AND COL_LENGTH(N'{table}', 'TenantId') IS NOT NULL
+                BEGIN
+                    UPDATE [{table}] SET [TenantId] = 1 WHERE [TenantId] IS NULL;
+                    ALTER TABLE [{table}] ALTER COLUMN [TenantId] int NOT NULL;
+                    IF NOT EXISTS (
+                        SELECT 1 FROM sys.foreign_keys WHERE name = '{foreignKeyName}')
+                    BEGIN
+                        ALTER TABLE [{table}] WITH CHECK ADD CONSTRAINT [{foreignKeyName}]
+                            FOREIGN KEY ([TenantId]) REFERENCES [Tenants] ([Id]);
+                    END
+                END
+                """);
+        }
 
-            migrationBuilder.AddForeignKey(
-                name: foreignKeyName,
-                table: table,
-                column: "TenantId",
-                principalTable: "Tenants",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+        private static void AddSnapshotAndNumberColumns(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.Sql("""
+                IF OBJECT_ID(N'Invoices', 'U') IS NOT NULL
+                BEGIN
+                    IF COL_LENGTH(N'Invoices', 'SnapshotTenantName') IS NULL
+                        ALTER TABLE [Invoices] ADD [SnapshotTenantName] nvarchar(150) NOT NULL CONSTRAINT [DF_Invoices_SnapshotTenantName] DEFAULT(N'');
+                    ALTER TABLE [Invoices] ALTER COLUMN [InvoiceNumber] nvarchar(40) NOT NULL;
+                END
+                IF OBJECT_ID(N'CreditNotes', 'U') IS NOT NULL
+                    ALTER TABLE [CreditNotes] ALTER COLUMN [CreditNoteNumber] nvarchar(40) NOT NULL;
+                """);
+        }
+
+        private static void ReshapeDocumentSequencesIfPresent(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.Sql("""
+                IF OBJECT_ID(N'DocumentSequences', 'U') IS NULL
+                    RETURN;
+
+                IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_DocumentSequences_Name' AND object_id = OBJECT_ID(N'DocumentSequences'))
+                    DROP INDEX [IX_DocumentSequences_Name] ON [DocumentSequences];
+
+                IF COL_LENGTH(N'DocumentSequences', 'Name') IS NOT NULL AND COL_LENGTH(N'DocumentSequences', 'DocumentType') IS NULL
+                    EXEC sp_rename N'DocumentSequences.Name', N'DocumentType', N'COLUMN';
+
+                IF COL_LENGTH(N'DocumentSequences', 'TenantId') IS NULL
+                    ALTER TABLE [DocumentSequences] ADD [TenantId] int NULL;
+
+                IF COL_LENGTH(N'DocumentSequences', 'Prefix') IS NULL
+                    ALTER TABLE [DocumentSequences] ADD [Prefix] nvarchar(20) NOT NULL CONSTRAINT [DF_DocumentSequences_Prefix] DEFAULT(N'');
+
+                IF COL_LENGTH(N'DocumentSequences', 'NumberLength') IS NULL
+                    ALTER TABLE [DocumentSequences] ADD [NumberLength] int NOT NULL CONSTRAINT [DF_DocumentSequences_NumberLength] DEFAULT(4);
+                """);
+        }
+
+        private static void CreateIndexIfTableExists(
+            MigrationBuilder migrationBuilder,
+            string indexName,
+            string table,
+            string columns,
+            bool unique)
+        {
+            var uniqueSql = unique ? "UNIQUE " : "";
+            migrationBuilder.Sql($"""
+                IF OBJECT_ID(N'{table}', 'U') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = '{indexName}' AND object_id = OBJECT_ID(N'{table}'))
+                BEGIN
+                    CREATE {uniqueSql}INDEX [{indexName}] ON [{table}] ({columns});
+                END
+                """);
+        }
+
+        private static void CreateUniqueIndexIfTableExists(
+            MigrationBuilder migrationBuilder,
+            string indexName,
+            string table,
+            string columns)
+        {
+            CreateIndexIfTableExists(migrationBuilder, indexName, table, columns, unique: true);
+        }
+
+        private static void AddTenantForeignKeyIfMissing(MigrationBuilder migrationBuilder, string foreignKeyName, string table)
+        {
+            migrationBuilder.Sql($"""
+                IF OBJECT_ID(N'{table}', 'U') IS NOT NULL
+                   AND COL_LENGTH(N'{table}', 'TenantId') IS NOT NULL
+                   AND NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = '{foreignKeyName}')
+                BEGIN
+                    ALTER TABLE [{table}] WITH CHECK ADD CONSTRAINT [{foreignKeyName}]
+                        FOREIGN KEY ([TenantId]) REFERENCES [Tenants] ([Id]);
+                END
+                """);
         }
 
         private static void DropIndexIfExists(MigrationBuilder migrationBuilder, string indexName, string table)

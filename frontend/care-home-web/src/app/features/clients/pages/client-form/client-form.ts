@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -13,6 +13,7 @@ import { CareHomeService } from '../../../care-homes/services/care-home.service'
 import { ClientService } from '../../services/client.service';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 
 @Component({
   selector: 'app-client-form',
@@ -34,19 +35,21 @@ export class ClientForm implements OnInit {
 
   private readonly router = inject(Router);
 
+  readonly auth = inject(AuthService);
+
   clientId: number | null = null;
 
-  careHomes: CareHomeLocation[] = [];
+  readonly careHomes = signal<CareHomeLocation[]>([]);
 
-  assignedCareHomeId: number | null = null;
+  readonly assignedCareHomeId = signal<number | null>(null);
 
   isEditMode = false;
 
-  isLoading = false;
+  readonly isLoading = signal(false);
 
-  isSaving = false;
+  readonly isSaving = signal(false);
 
-  errorMessage = '';
+  readonly errorMessage = signal<string | null>(null);
 
   readonly form = this.formBuilder.nonNullable.group({
     careHomeId: [0, [Validators.required, Validators.min(1)]],
@@ -83,10 +86,10 @@ export class ClientForm implements OnInit {
   });
 
   get selectableCareHomes(): CareHomeLocation[] {
-    return this.careHomes.filter(
+    return this.careHomes().filter(
       (careHome) =>
         careHome.isActive ||
-        (this.isEditMode && careHome.id === this.assignedCareHomeId),
+        (this.isEditMode && careHome.id === this.assignedCareHomeId()),
     );
   }
 
@@ -132,13 +135,13 @@ export class ClientForm implements OnInit {
   private loadCareHomes(): void {
     this.careHomeService.getCareHomes().subscribe({
       next: (careHomes) => {
-        this.careHomes = careHomes;
+        this.careHomes.set(careHomes);
       },
 
       error: (error) => {
         console.error(error);
 
-        this.errorMessage = getApiErrorMessage(error, 'Unable to load care homes.');
+        this.errorMessage.set(getApiErrorMessage(error, 'Unable to load care homes.'));
       },
     });
   }
@@ -148,18 +151,19 @@ export class ClientForm implements OnInit {
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
     this.clientService
       .getClient(this.clientId)
       .pipe(
         finalize(() => {
-          this.isLoading = false;
+          this.isLoading.set(false);
         }),
       )
       .subscribe({
         next: (client) => {
-          this.assignedCareHomeId = client.careHomeId;
+          this.assignedCareHomeId.set(client.careHomeId);
 
           this.form.patchValue({
             careHomeId: client.careHomeId,
@@ -199,7 +203,7 @@ export class ClientForm implements OnInit {
         error: (error) => {
           console.error(error);
 
-          this.errorMessage = getApiErrorMessage(error, 'Unable to load client.');
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load client.'));
         },
       });
   }
@@ -211,20 +215,21 @@ export class ClientForm implements OnInit {
       return;
     }
 
-    this.errorMessage = '';
+    this.errorMessage.set(null);
 
     const value = this.form.getRawValue();
 
     if (this.isEditMode && value.status !== 'Current' && !value.dischargeDate) {
       this.form.markAllAsTouched();
 
-      this.errorMessage =
-        'Discharge date is required when client is no longer current.';
+      this.errorMessage.set(
+        'Discharge date is required when client is no longer current.',
+      );
 
       return;
     }
 
-    this.isSaving = true;
+    this.isSaving.set(true);
 
     const baseRequest = {
       careHomeId: value.careHomeId,
@@ -269,7 +274,7 @@ export class ClientForm implements OnInit {
         })
         .pipe(
           finalize(() => {
-            this.isSaving = false;
+            this.isSaving.set(false);
           }),
         )
         .subscribe({
@@ -280,10 +285,10 @@ export class ClientForm implements OnInit {
           error: (error) => {
             console.error(error);
 
-            this.errorMessage = getApiErrorMessage(
+            this.errorMessage.set(getApiErrorMessage(
               error,
               'Unable to update client.',
-            );
+            ));
           },
         });
 
@@ -293,7 +298,7 @@ export class ClientForm implements OnInit {
     this.clientService.createClient(baseRequest)
       .pipe(
         finalize(() => {
-          this.isSaving = false;
+          this.isSaving.set(false);
         }),
       )
       .subscribe({
@@ -304,10 +309,10 @@ export class ClientForm implements OnInit {
       error: (error) => {
         console.error(error);
 
-        this.errorMessage = getApiErrorMessage(
+        this.errorMessage.set(getApiErrorMessage(
           error,
           'Unable to create client.',
-        );
+        ));
       },
     });
   }

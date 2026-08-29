@@ -1,6 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { AuthService } from '../../core/auth.service';
 import { getApiErrorMessage } from '../../core/api-error';
@@ -16,11 +17,11 @@ export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  errorMessage = '';
-  isSaving = false;
+  readonly errorMessage = signal<string | null>(null);
+  readonly isSaving = signal(false);
 
   readonly form = this.formBuilder.nonNullable.group({
-    email: ['admin@localhost', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
 
@@ -30,18 +31,20 @@ export class LoginPage {
       return;
     }
 
-    this.isSaving = true;
-    this.errorMessage = '';
+    this.isSaving.set(true);
+    this.errorMessage.set(null);
     const { email, password } = this.form.getRawValue();
 
-    this.auth.login(email, password).subscribe({
-      next: () => {
-        void this.router.navigate(this.auth.homePath());
-      },
-      error: (error) => {
-        this.isSaving = false;
-        this.errorMessage = getApiErrorMessage(error, 'Unable to sign in.');
-      },
-    });
+    this.auth
+      .login(email, password)
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: () => {
+          void this.router.navigate(this.auth.homePath());
+        },
+        error: (error) => {
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to sign in.'));
+        },
+      });
   }
 }

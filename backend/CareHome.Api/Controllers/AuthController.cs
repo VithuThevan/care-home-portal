@@ -8,6 +8,7 @@ using CareHome.Api.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -18,23 +19,51 @@ namespace CareHome.Api.Controllers
     public class AuthController(
         UserManager<ApplicationUser> userManager,
         CareHomeDbContext dbContext,
-        IConfiguration configuration) : ControllerBase
+        IConfiguration configuration,
+        IHostEnvironment environment,
+        ILogger<AuthController> logger) : ControllerBase
     {
         [AllowAnonymous]
+        [EnableRateLimiting("login")]
         [HttpPost("login")]
         public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
         {
-            var user = await userManager.FindByEmailAsync(request.Email.Trim());
+            var email = request.Email.Trim();
+            var user = await userManager.FindByEmailAsync(email);
             if (user is null || !user.IsActive)
             {
+                logger.LogInformation("Login failed for {Email}: unknown or inactive user", email);
+                return Unauthorized(new { message = "Invalid email or password." });
+            }
+
+            if (await userManager.IsLockedOutAsync(user))
+            {
+                logger.LogWarning("Login failed for user {UserId}: account locked", user.Id);
                 return Unauthorized(new { message = "Invalid email or password." });
             }
 
             if (!await userManager.CheckPasswordAsync(user, request.Password))
             {
+                await userManager.AccessFailedAsync(user);
+                logger.LogInformation("Login failed for user {UserId}: invalid password", user.Id);
                 return Unauthorized(new { message = "Invalid email or password." });
             }
 
+            if (user.TenantId is int tenantId)
+            {
+                var tenantActive = await dbContext.Tenants.AsNoTracking()
+                    .Where(x => x.Id == tenantId)
+                    .Select(x => (bool?)x.IsActive)
+                    .FirstOrDefaultAsync();
+                if (tenantActive != true)
+                {
+                    logger.LogInformation("Login failed for user {UserId}: organisation inactive", user.Id);
+                    return Unauthorized(new { message = "Invalid email or password." });
+                }
+            }
+
+            await userManager.ResetAccessFailedCountAsync(user);
+            logger.LogInformation("Login succeeded for user {UserId}", user.Id);
             return Ok(await BuildResponse(user, includeToken: true));
         }
 
@@ -42,7 +71,7 @@ namespace CareHome.Api.Controllers
         public async Task<ActionResult<AuthResponse>> Me()
         {
             var user = await userManager.GetUserAsync(User);
-            if (user is null)
+            if (user is null || !user.IsActive)
             {
                 return Unauthorized();
             }
@@ -56,6 +85,12 @@ namespace CareHome.Api.Controllers
             if (roles.Contains(AppRoles.SuperAdmin) && !roles.Contains(AppRoles.PlatformAdmin))
             {
                 roles.Add(AppRoles.PlatformAdmin);
+            }
+
+            if (roles.Contains(AppRoles.PlatformAdmin) && user.TenantId is not null)
+            {
+                user.TenantId = null;
+                await userManager.UpdateAsync(user);
             }
 
             string? tenantName = null;
@@ -77,7 +112,7 @@ namespace CareHome.Api.Controllers
             };
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            if (user.TenantId is int tid)
+            if (user.TenantId is int tid && !roles.Contains(AppRoles.PlatformAdmin))
             {
                 claims.Add(new Claim(TenantClaimTypes.TenantId, tid.ToString()));
                 if (tenantPublicId is Guid publicId)
@@ -108,15 +143,23 @@ namespace CareHome.Api.Controllers
 
             if (includeToken)
             {
-                var key = configuration["Jwt:Key"]
-                    ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+                var key = JwtSigningKey.Resolve(
+                    configuration["Jwt:Key"],
+                    environment.IsDevelopment());
                 var issuer = configuration["Jwt:Issuer"] ?? "CareHomeApi";
                 var audience = configuration["Jwt:Audience"] ?? "CareHomeWeb";
+                var expiryHours = 8d;
+                if (double.TryParse(configuration["Jwt:ExpiryHours"], out var configuredExpiry)
+                    && configuredExpiry is >= 1 and <= 12)
+                {
+                    expiryHours = configuredExpiry;
+                }
+
                 var token = new JwtSecurityToken(
                     issuer,
                     audience,
                     claims,
-                    expires: DateTime.UtcNow.AddHours(12),
+                    expires: DateTime.UtcNow.AddHours(expiryHours),
                     signingCredentials: new SigningCredentials(
                         new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
                         SecurityAlgorithms.HmacSha256));
@@ -127,4 +170,3 @@ namespace CareHome.Api.Controllers
         }
     }
 }
-

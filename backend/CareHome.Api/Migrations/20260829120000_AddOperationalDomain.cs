@@ -23,26 +23,6 @@ namespace CareHome.Api.Migrations
                 maxLength: 500,
                 nullable: true);
 
-            migrationBuilder.InsertData(
-                table: "CareHomes",
-                columns: new[] { "Id", "Address", "BedCapacity", "Code", "CompanyId", "Email", "IsActive", "LogoPath", "ManagerEmail", "ManagerName", "ManagerPhone", "Name", "Phone" },
-                values: new object[,]
-                {
-                    { 1, null, 0, "FILSHAM", 1, null, true, null, null, null, null, "Filsham House", null },
-                    { 2, null, 0, "AMPERSAND", 1, null, true, null, null, null, null, "Ampersand House", null },
-                    { 3, null, 0, "CAROLINE", 1, null, true, null, null, null, null, "Caroline House", null },
-                    { 4, null, 0, "LUCERNE", 2, null, true, null, null, null, null, "Lucerne", null },
-                    { 5, null, 0, "MITTEN", 2, null, true, null, null, null, null, "Mitten Mews", null },
-                    { 6, null, 0, "PARKVIEW", 2, null, true, null, null, null, null, "Park View", null },
-                    { 7, null, 0, "PARKAPT", 2, null, true, null, null, null, null, "Park Apartments", null },
-                    { 8, null, 0, "EDEN", 2, null, true, null, null, null, null, "Eden Lodge", null },
-                    { 9, null, 0, "BEAU", 2, null, true, null, null, null, null, "Beau Lodge", null },
-                    { 10, null, 0, "ROSE", 2, null, true, null, null, null, null, "Rose Lodge", null },
-                    { 11, null, 0, "ASHLEY", 2, null, true, null, null, null, null, "Ashley", null },
-                    { 12, null, 0, "NEWLEAF", 2, null, true, null, null, null, null, "New Leaf", null },
-                    { 13, null, 0, "SYCAMORE", 2, null, true, null, null, null, null, "Sycamore", null }
-                });
-
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -202,15 +182,6 @@ namespace CareHome.Api.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DocumentSequences", x => x.Id);
-                });
-
-            migrationBuilder.InsertData(
-                table: "DocumentSequences",
-                columns: new[] { "Id", "Name", "NextValue" },
-                values: new object[,]
-                {
-                    { 1, "Invoice", 1 },
-                    { 2, "CreditNote", 1 }
                 });
 
             migrationBuilder.CreateTable(

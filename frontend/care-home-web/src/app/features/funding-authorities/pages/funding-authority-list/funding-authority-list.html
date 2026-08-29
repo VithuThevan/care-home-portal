@@ -5,22 +5,24 @@
       <p>Manage organisations and people that fund client care.</p>
     </div>
 
-    <a routerLink="/funding-authorities/new" class="primary-button">
-      Add Funding Authority
-    </a>
+    @if (auth.canWrite()) {
+      <a routerLink="/funding-authorities/new" class="primary-button">
+        Add Funding Authority
+      </a>
+    }
   </div>
 
-  @if (isLoading) {
+  @if (isLoading()) {
     <p>Loading funding authorities...</p>
   }
 
-  @if (errorMessage) {
+  @if (errorMessage()) {
     <div class="error-message">
-      {{ errorMessage }}
+      {{ errorMessage() }}
     </div>
   }
 
-  @if (!isLoading) {
+  @if (!isLoading()) {
     <div class="table-container">
       <table>
         <thead>
@@ -36,7 +38,7 @@
         </thead>
 
         <tbody>
-          @for (authority of fundingAuthorities; track authority.id) {
+          @for (authority of fundingAuthorities(); track authority.id) {
             <tr>
               <td>{{ authority.code }}</td>
               <td>{{ authority.name }}</td>
@@ -51,17 +53,19 @@
                 }
               </td>
               <td class="actions">
-                <a [routerLink]="['/funding-authorities', authority.id, 'edit']">
-                  Edit
-                </a>
+                @if (auth.canWrite()) {
+                  <a [routerLink]="['/funding-authorities', authority.id, 'edit']">
+                    Edit
+                  </a>
 
-                @if (authority.isActive) {
-                  <button
-                    type="button"
-                    (click)="deactivateFundingAuthority(authority)"
-                  >
-                    Deactivate
-                  </button>
+                  @if (authority.isActive) {
+                    <button
+                      type="button"
+                      (click)="deactivateFundingAuthority(authority)"
+                    >
+                      Deactivate
+                    </button>
+                  }
                 }
               </td>
             </tr>

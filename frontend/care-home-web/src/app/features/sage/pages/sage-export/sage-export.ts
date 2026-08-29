@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 import { PagedResult } from '../../../../core/models';
 
 @Component({
@@ -12,27 +13,34 @@ import { PagedResult } from '../../../../core/models';
 })
 export class SageExportPage implements OnInit {
   private readonly http = inject(HttpClient);
+  readonly auth = inject(AuthService);
   dateFrom = '';
   dateTo = '';
-  preview: any = null;
-  batches: any[] = [];
-  errorMessage = '';
+  readonly preview = signal<any | null>(null);
+  readonly batches = signal<any[]>([]);
+  readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.http.get<PagedResult<any>>('/api/sage-exports').subscribe((x) => (this.batches = x.items));
+    this.http.get<PagedResult<any>>('/api/sage-exports').subscribe({
+      next: (x) => this.batches.set(x.items),
+      error: (error) =>
+        this.errorMessage.set(getApiErrorMessage(error, 'Unable to load exports.')),
+    });
   }
 
   runPreview(): void {
+    this.errorMessage.set(null);
     this.http.post('/api/sage-exports/preview', { dateFrom: this.dateFrom, dateTo: this.dateTo }).subscribe({
-      next: (preview) => (this.preview = preview),
-      error: (error) => (this.errorMessage = getApiErrorMessage(error, 'Preview failed.')),
+      next: (preview) => this.preview.set(preview),
+      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Preview failed.')),
     });
   }
 
   exportNow(): void {
+    this.errorMessage.set(null);
     this.http.post<any>('/api/sage-exports', { dateFrom: this.dateFrom, dateTo: this.dateTo }).subscribe({
       next: () => this.ngOnInit(),
-      error: (error) => (this.errorMessage = getApiErrorMessage(error, 'Export failed.')),
+      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Export failed.')),
     });
   }
 

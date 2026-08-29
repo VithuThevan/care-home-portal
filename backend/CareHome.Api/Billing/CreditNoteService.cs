@@ -11,7 +11,8 @@ namespace CareHome.Api.Billing
     public class CreditNoteService(
         CareHomeDbContext dbContext,
         DocumentSequenceService sequences,
-        AuditService audit)
+        AuditService audit,
+        ILogger<CreditNoteService> logger)
     {
         public async Task<CreditNotePreviewResponse> PreviewAsync(
             int tenantId,
@@ -72,6 +73,12 @@ namespace CareHome.Api.Billing
                 });
             }
 
+            if (lines.Select(x => x.InvoiceNumber).Distinct().Count() > 1)
+            {
+                exceptions.Add(
+                    "A credit note cannot span more than one invoice. Narrow the client or period so only one invoice is included.");
+            }
+
             return new CreditNotePreviewResponse
             {
                 Lines = lines,
@@ -89,13 +96,29 @@ namespace CareHome.Api.Billing
             var preview = await PreviewAsync(tenantId, request, cancellationToken);
             if (!preview.CanGenerate)
             {
+                logger.LogWarning(
+                    "Credit generate blocked. TenantId={TenantId} Reason={Reason}",
+                    tenantId,
+                    preview.Exceptions.FirstOrDefault() ?? "Credit note cannot be generated.");
                 return (null, preview.Exceptions.FirstOrDefault() ?? "Credit note cannot be generated.");
             }
 
             await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            var invoiceId = (await dbContext.InvoiceLines
-                .FirstAsync(x => x.Id == preview.Lines[0].InvoiceLineId, cancellationToken)).InvoiceId;
+            var lineIds = preview.Lines.Select(l => l.InvoiceLineId).ToList();
+            var invoiceIds = await dbContext.InvoiceLines.AsNoTracking()
+                .Where(x => lineIds.Contains(x.Id))
+                .Select(x => x.InvoiceId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (invoiceIds.Count != 1)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return (null, "Credit lines must belong to a single invoice. Narrow the client or period and generate again.");
+            }
+
+            var invoiceId = invoiceIds[0];
 
             var invoice = await dbContext.Invoices
                 .FirstAsync(x => x.Id == invoiceId && x.TenantId == tenantId, cancellationToken);
@@ -146,6 +169,11 @@ namespace CareHome.Api.Billing
                 cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
+            logger.LogInformation(
+                "Credit generate completed. TenantId={TenantId} CreditNoteNumber={CreditNoteNumber} InvoiceId={InvoiceId}",
+                tenantId,
+                note.CreditNoteNumber,
+                invoice.Id);
             return (note, null);
         }
 

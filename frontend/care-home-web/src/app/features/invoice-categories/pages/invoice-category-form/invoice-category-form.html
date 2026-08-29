@@ -8,17 +8,17 @@
       }
     </h1>
 
-    @if (isLoading) {
+    @if (isLoading()) {
       <p>Loading invoice category...</p>
     }
 
-    @if (errorMessage) {
+    @if (errorMessage()) {
       <div class="error-message">
-        {{ errorMessage }}
+        {{ errorMessage() }}
       </div>
     }
 
-    @if (!isLoading) {
+    @if (!isLoading()) {
       <form [formGroup]="form" (ngSubmit)="save()">
         <div class="form-field">
           <label for="code">Code</label>
@@ -88,8 +88,8 @@
             Cancel
           </a>
 
-          <button type="submit" class="primary-button" [disabled]="isSaving">
-            @if (isSaving) {
+          <button type="submit" class="primary-button" [disabled]="isSaving() || !auth.canWrite()">
+            @if (isSaving()) {
               Saving...
             } @else {
               Save Invoice Category

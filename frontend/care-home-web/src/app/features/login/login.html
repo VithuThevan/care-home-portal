@@ -3,8 +3,8 @@
     <h1>Care Home Back Office</h1>
     <p>Sign in to continue.</p>
 
-    @if (errorMessage) {
-      <div class="error-message">{{ errorMessage }}</div>
+    @if (errorMessage()) {
+      <div class="error-message">{{ errorMessage() }}</div>
     }
 
     <div class="form-field">
@@ -17,8 +17,8 @@
       <input type="password" formControlName="password" />
     </div>
 
-    <button class="primary-button" type="submit" [disabled]="isSaving">
-      @if (isSaving) {
+    <button class="primary-button" type="submit" [disabled]="isSaving()">
+      @if (isSaving()) {
         Signing in...
       } @else {
         Sign in

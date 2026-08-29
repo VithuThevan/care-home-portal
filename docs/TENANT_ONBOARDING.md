@@ -6,7 +6,19 @@ UI language: **Organisation**, not Tenant.
 
 - Identity roles: `PlatformAdmin`, `TenantAdmin`, `Administrator`, `LocationManager`, `ReadOnly`
 - Optional `Seed:AdminEmail` / `Seed:AdminPassword` creates a **PlatformAdmin** with no `TenantId`
-- No customer names in product seed
+- No customer names in product seed for **new organisations**
+
+## Fresh generic installation
+
+1. Create an empty database.
+2. Run `dotnet ef database update` (see `docs/RUNBOOK.md`).
+3. `InitialCreate` historically inserts Sovereign Care Homes and Care Pro onto tenant 1. The later cleanup migration removes those companies **if they are unused** (no homes, invoices, templates, or Sage batches).
+4. Create the real organisation with `POST /api/platform/tenants` (or the Organisations screen). Do not rely on tenant 1 historical names.
+5. Add companies, care homes, and users for that organisation.
+
+A completely new product install should not expose Sovereign / Care Pro as live master data after the cleanup migration. Existing customer databases that already use those companies keep them.
+
+If automatic cleanup cannot run because the companies are in use, leave them. Rename or archive in the UI; do not delete financial history.
 
 ## New organisation
 
@@ -17,7 +29,7 @@ UI language: **Organisation**, not Tenant.
 3. Invoice and credit-note document sequences
 4. Optional first `TenantAdmin` if admin email and password are supplied
 
-No care homes or companies are created. Operators add those in the organisation.
+No care homes or companies are created. Operators add those in the organisation. New tenants never receive Sovereign Care Homes or Care Pro automatically.
 
 ## Organisation settings
 

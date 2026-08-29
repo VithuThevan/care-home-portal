@@ -1,7 +1,8 @@
 import { DecimalPipe } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth.service';
@@ -30,8 +31,9 @@ export class DashboardPage implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  data: DashboardDto | null = null;
-  errorMessage = '';
+  readonly dashboard = signal<DashboardDto | null>(null);
+  readonly errorMessage = signal<string | null>(null);
+  readonly isLoading = signal(false);
 
   ngOnInit(): void {
     if (this.auth.isPlatformAdmin() && !this.auth.currentUser()?.tenantPublicId) {
@@ -39,9 +41,15 @@ export class DashboardPage implements OnInit {
       return;
     }
 
-    this.http.get<DashboardDto>('/api/dashboard').subscribe({
-      next: (data) => (this.data = data),
-      error: (error) => (this.errorMessage = getApiErrorMessage(error, 'Unable to load dashboard.')),
-    });
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+    this.http
+      .get<DashboardDto>('/api/dashboard')
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => this.dashboard.set(data),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load dashboard.')),
+      });
   }
 }

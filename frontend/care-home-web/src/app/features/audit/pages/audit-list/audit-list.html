@@ -4,11 +4,17 @@
     <input placeholder="Entity type" [(ngModel)]="entityType" />
     <button type="button" (click)="load()">Filter</button>
   </div>
-  <p>{{ totalCount }} events</p>
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
+  }
+  @if (isLoading()) {
+    <p>Loading audit log...</p>
+  }
+  <p>{{ totalCount() }} events</p>
   <table>
     <thead><tr><th>When</th><th>Entity</th><th>Action</th><th>Description</th></tr></thead>
     <tbody>
-      @for (item of items; track item.id) {
+      @for (item of items(); track item.id) {
         <tr>
           <td>{{ item.loggedAt }}</td>
           <td>{{ item.entityType }} {{ item.entityId }}</td>

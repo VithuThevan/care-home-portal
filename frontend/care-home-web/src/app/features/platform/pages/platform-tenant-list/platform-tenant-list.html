@@ -7,8 +7,8 @@
     <a routerLink="/platform/tenants/new" class="primary-button">Add organisation</a>
   </div>
 
-  @if (errorMessage) {
-    <div class="error-message">{{ errorMessage }}</div>
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
   }
 
   <table>
@@ -22,7 +22,7 @@
       </tr>
     </thead>
     <tbody>
-      @for (tenant of tenants; track tenant.id) {
+      @for (tenant of tenants(); track tenant.id) {
         <tr>
           <td>{{ tenant.name }}</td>
           <td>{{ tenant.tradingName || '—' }}</td>

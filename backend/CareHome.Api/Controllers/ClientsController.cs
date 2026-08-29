@@ -110,7 +110,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, client.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             return Ok(client);

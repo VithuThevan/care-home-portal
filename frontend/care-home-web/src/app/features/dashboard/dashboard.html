@@ -6,11 +6,15 @@
     </div>
   </div>
 
-  @if (errorMessage) {
-    <div class="error-message">{{ errorMessage }}</div>
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
   }
 
-  @if (data) {
+  @if (isLoading()) {
+    <p>Loading dashboard...</p>
+  }
+
+  @if (dashboard(); as data) {
     <div class="cards">
       <div class="card"><h3>Care Homes</h3><p>{{ data.totalCareHomes }}</p></div>
       <div class="card"><h3>Current Clients</h3><p>{{ data.currentClients }}</p></div>

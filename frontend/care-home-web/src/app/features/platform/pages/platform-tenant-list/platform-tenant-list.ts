@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
@@ -20,13 +20,14 @@ interface TenantRow {
 })
 export class PlatformTenantListPage implements OnInit {
   private readonly http = inject(HttpClient);
-  tenants: TenantRow[] = [];
-  errorMessage = '';
+  readonly tenants = signal<TenantRow[]>([]);
+  readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     this.http.get<TenantRow[]>('/api/platform/tenants').subscribe({
-      next: (tenants) => (this.tenants = tenants),
-      error: (error) => (this.errorMessage = getApiErrorMessage(error, 'Unable to load organisations.')),
+      next: (tenants) => this.tenants.set(tenants),
+      error: (error) =>
+        this.errorMessage.set(getApiErrorMessage(error, 'Unable to load organisations.')),
     });
   }
 }

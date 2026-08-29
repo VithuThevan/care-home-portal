@@ -11,7 +11,7 @@
         </h1>
 
 
-        @if (isLoading) {
+        @if (isLoading()) {
 
         <p>
             Loading care home...
@@ -20,16 +20,16 @@
         }
 
 
-        @if (errorMessage) {
+        @if (errorMessage()) {
 
         <div class="error-message">
-            {{ errorMessage }}
+            {{ errorMessage() }}
         </div>
 
         }
 
 
-        @if (!isLoading) {
+        @if (!isLoading()) {
 
         <form [formGroup]="form" (ngSubmit)="save()">
 
@@ -268,9 +268,9 @@
                 </a>
 
 
-                <button type="submit" class="primary-button" [disabled]="isSaving">
+                <button type="submit" class="primary-button" [disabled]="isSaving() || !auth.canWrite()">
 
-                    @if (isSaving) {
+                    @if (isSaving()) {
 
                     Saving...
 

@@ -21,6 +21,14 @@ namespace CareHome.Api.Dtos.Billing
 
         public DateOnly PeriodEnd { get; set; }
 
+        public DateOnly RequestedPeriodStart { get; set; }
+
+        public DateOnly RequestedPeriodEnd { get; set; }
+
+        public int SkippedAlreadyBilledDays { get; set; }
+
+        public List<BillingCoverageDto> Coverage { get; set; } = [];
+
         public List<BillingPreviewLineDto> Lines { get; set; } = [];
 
         public List<BillingExceptionDto> Exceptions { get; set; } = [];
@@ -28,6 +36,34 @@ namespace CareHome.Api.Dtos.Billing
         public decimal TotalAmount { get; set; }
 
         public bool CanGenerate { get; set; }
+    }
+
+    public class BillingCoverageDto
+    {
+        public int ClientId { get; set; }
+
+        public string ClientName { get; set; } = string.Empty;
+
+        public int ClientFundingContractId { get; set; }
+
+        public DateOnly RequestedPeriodStart { get; set; }
+
+        public DateOnly RequestedPeriodEnd { get; set; }
+
+        public List<BillingDateRangeDto> AlreadyBilledPeriods { get; set; } = [];
+
+        public List<BillingDateRangeDto> RemainingBillablePeriods { get; set; } = [];
+
+        public int SkippedAlreadyBilledDays { get; set; }
+    }
+
+    public class BillingDateRangeDto
+    {
+        public DateOnly Start { get; set; }
+
+        public DateOnly End { get; set; }
+
+        public int Days { get; set; }
     }
 
     public class BillingPreviewLineDto
@@ -59,6 +95,8 @@ namespace CareHome.Api.Dtos.Billing
         public int NominalCodeId { get; set; }
 
         public string NominalCode { get; set; } = string.Empty;
+
+        public string? NominalCodeName { get; set; }
 
         public int ClientFundingContractId { get; set; }
 
@@ -98,6 +136,16 @@ namespace CareHome.Api.Dtos.Billing
         public int? CareHomeId { get; set; }
 
         public int? ClientFundingContractId { get; set; }
+
+        public List<int>? ContractIds { get; set; }
+
+        public string? FundingAuthorityName { get; set; }
+
+        public string? InvoiceCategoryName { get; set; }
+
+        public DateOnly? OverlapStart { get; set; }
+
+        public DateOnly? OverlapEnd { get; set; }
     }
 
     public class BillingGenerateResponse

@@ -1,6 +1,6 @@
 <div class="page">
   <div class="page-header"><div><h1>Reports</h1><p>Operational and financial reports with CSV, Excel and PDF export.</p></div></div>
-  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
+  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
   <div class="filters">
     <select [(ngModel)]="report">
       <option value="client-census">Client census</option>
@@ -20,11 +20,11 @@
     <button type="button" (click)="exportFormat('xlsx')">Excel</button>
     <button type="button" (click)="exportFormat('pdf')">PDF</button>
   </div>
-  @if (rows.length) {
+  @if (rows().length) {
     <table>
       <thead><tr>@for (key of keys(); track key) { <th>{{ key }}</th> }</tr></thead>
       <tbody>
-        @for (row of rows; track $index) {
+        @for (row of rows(); track $index) {
           <tr>@for (key of keys(); track key) { <td>{{ row[key] }}</td> }</tr>
         }
       </tbody>

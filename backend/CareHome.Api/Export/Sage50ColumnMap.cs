@@ -31,14 +31,14 @@ namespace CareHome.Api.Export
                 {
                     var values = new[]
                     {
-                        Csv(line.SnapshotSageId),
-                        Csv(line.SnapshotNominalCode),
-                        Csv(invoice.InvoiceNumber),
-                        Csv(invoice.InvoiceDate.ToString("yyyy-MM-dd")),
-                        Csv(line.Description),
-                        Csv(line.LineAmount.ToString("0.00")),
-                        Csv("T0"),
-                        Csv(invoice.SnapshotCareHomeCode)
+                        Csv(line.SnapshotSageId, neutralizeFormula: false),
+                        Csv(line.SnapshotNominalCode, neutralizeFormula: false),
+                        Csv(invoice.InvoiceNumber, neutralizeFormula: false),
+                        Csv(invoice.InvoiceDate.ToString("yyyy-MM-dd"), neutralizeFormula: false),
+                        Csv(line.Description, neutralizeFormula: true),
+                        Csv(line.LineAmount.ToString("0.00"), neutralizeFormula: false),
+                        Csv("T0", neutralizeFormula: false),
+                        Csv(invoice.SnapshotCareHomeCode, neutralizeFormula: false)
                     };
                     builder.AppendLine(string.Join(",", values));
                 }
@@ -47,15 +47,9 @@ namespace CareHome.Api.Export
             return builder.ToString();
         }
 
-        private static string Csv(string? value)
+        private static string Csv(string? value, bool neutralizeFormula)
         {
-            var text = value ?? string.Empty;
-            if (text.Contains(',') || text.Contains('"') || text.Contains('\n'))
-            {
-                return $"\"{text.Replace("\"", "\"\"")}\"";
-            }
-
-            return text;
+            return CsvFormulaSanitizer.CsvField(value, neutralizeFormula);
         }
     }
 }

@@ -183,7 +183,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, invoice.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             return Ok(invoice);
@@ -194,6 +194,9 @@ namespace CareHome.Api.Controllers
         {
             var invoice = await dbContext.Invoices
                 .Include(x => x.Lines)
+                .Include(x => x.InvoiceTemplate)
+                .Include(x => x.CareHome)
+                .Include(x => x.Tenant)
                 .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantContext.TenantId);
 
             if (invoice is null)
@@ -203,7 +206,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, invoice.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             var bytes = await pdfs.GetOrCreateInvoicePdfAsync(invoice, await TenantPublicIdAsync());
@@ -214,7 +217,11 @@ namespace CareHome.Api.Controllers
         [HttpPost("{id:int}/send")]
         public async Task<IActionResult> Send(int id)
         {
-            var invoice = await dbContext.Invoices.Include(x => x.Lines)
+            var invoice = await dbContext.Invoices
+                .Include(x => x.Lines)
+                .Include(x => x.InvoiceTemplate)
+                .Include(x => x.CareHome)
+                .Include(x => x.Tenant)
                 .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantContext.TenantId);
             if (invoice is null)
             {
@@ -223,7 +230,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, invoice.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             if (invoice.Status == "Void")
@@ -275,7 +282,11 @@ namespace CareHome.Api.Controllers
             var summary = new BulkSendResultDto();
             foreach (var id in request.InvoiceIds.Distinct())
             {
-                var invoice = await dbContext.Invoices.Include(x => x.Lines)
+                var invoice = await dbContext.Invoices
+                    .Include(x => x.Lines)
+                    .Include(x => x.InvoiceTemplate)
+                    .Include(x => x.CareHome)
+                    .Include(x => x.Tenant)
                     .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantContext.TenantId);
                 if (invoice is null || !await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, invoice.CareHomeId))
                 {
@@ -358,7 +369,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, invoice.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             if (request.PaymentStatus is not "Paid" and not "NotPaid")
@@ -416,7 +427,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, invoice.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             if (invoice.Status == "Void")

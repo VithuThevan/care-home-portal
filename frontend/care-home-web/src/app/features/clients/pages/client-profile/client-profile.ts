@@ -1,10 +1,12 @@
 import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 import { Client } from '../../models/client.model';
 import { ClientService } from '../../services/client.service';
 
@@ -17,15 +19,18 @@ export class ClientProfilePage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly clients = inject(ClientService);
   private readonly http = inject(HttpClient);
+  readonly auth = inject(AuthService);
 
-  client: Client | null = null;
+  readonly client = signal<Client | null>(null);
+  readonly contracts = signal<any[]>([]);
+  readonly invoices = signal<any[]>([]);
+  readonly authorities = signal<any[]>([]);
+  readonly categories = signal<any[]>([]);
+  readonly nominals = signal<any[]>([]);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+
   tab: 'details' | 'contracts' | 'rates' | 'invoices' = 'details';
-  contracts: any[] = [];
-  invoices: any[] = [];
-  errorMessage = '';
-  authorities: any[] = [];
-  categories: any[] = [];
-  nominals: any[] = [];
   newContract = {
     fundingAuthorityId: 0,
     invoiceCategoryId: 0,
@@ -43,49 +48,75 @@ export class ClientProfilePage implements OnInit {
   };
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.clients.getClient(id).subscribe({
-      next: (client) => {
-        this.client = client;
-        this.loadContracts();
-        this.loadInvoices();
-      },
-      error: (error) => (this.errorMessage = getApiErrorMessage(error, 'Unable to load client.')),
+    this.http
+      .get<any[]>('/api/funding-authorities?activeOnly=true')
+      .subscribe((x) => this.authorities.set(x));
+    this.http
+      .get<any[]>('/api/invoice-categories?activeOnly=true')
+      .subscribe((x) => this.categories.set(x));
+    this.http
+      .get<any[]>('/api/nominal-codes?activeOnly=true')
+      .subscribe((x) => this.nominals.set(x));
+
+    this.route.paramMap.subscribe((params) => {
+      const id = Number(params.get('id'));
+      this.isLoading.set(true);
+      this.errorMessage.set(null);
+      this.client.set(null);
+      this.clients
+        .getClient(id)
+        .pipe(finalize(() => this.isLoading.set(false)))
+        .subscribe({
+          next: (client) => {
+            this.client.set(client);
+            this.loadContracts();
+            this.loadInvoices();
+          },
+          error: (error) =>
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to load client.')),
+        });
     });
-    this.http.get<any[]>('/api/funding-authorities?activeOnly=true').subscribe((x) => (this.authorities = x));
-    this.http.get<any[]>('/api/invoice-categories?activeOnly=true').subscribe((x) => (this.categories = x));
-    this.http.get<any[]>('/api/nominal-codes?activeOnly=true').subscribe((x) => (this.nominals = x));
   }
 
   loadContracts(): void {
-    if (!this.client) return;
-    this.http.get<any[]>(`/api/clients/${this.client.id}/funding-contracts`).subscribe((x) => (this.contracts = x));
+    const current = this.client();
+    if (!current) return;
+    this.http
+      .get<any[]>(`/api/clients/${current.id}/funding-contracts`)
+      .subscribe((x) => this.contracts.set(x));
   }
 
   loadInvoices(): void {
-    if (!this.client) return;
-    this.http.get<any>('/api/invoices', { params: { clientId: this.client.id } }).subscribe((x) => (this.invoices = x.items ?? []));
+    const current = this.client();
+    if (!current) return;
+    this.http
+      .get<any>('/api/invoices', { params: { clientId: current.id } })
+      .subscribe((x) => this.invoices.set(x.items ?? []));
   }
 
   saveContract(): void {
-    if (!this.client) return;
-    this.http.post(`/api/clients/${this.client.id}/funding-contracts`, this.newContract).subscribe({
+    const current = this.client();
+    if (!current) return;
+    this.http.post(`/api/clients/${current.id}/funding-contracts`, this.newContract).subscribe({
       next: () => this.loadContracts(),
-      error: (error) => (this.errorMessage = getApiErrorMessage(error, 'Unable to save contract.')),
+      error: (error) =>
+        this.errorMessage.set(getApiErrorMessage(error, 'Unable to save contract.')),
     });
   }
 
   addRate(): void {
-    this.http.post(`/api/funding-contracts/${this.newRate.contractId}/rates`, {
-      effectiveFrom: this.newRate.effectiveFrom,
-      effectiveTo: this.newRate.effectiveTo || null,
-      frequency: this.newRate.frequency,
-      amount: this.newRate.amount,
-      notes: this.newRate.notes,
-      closePreviousOpenEnded: true,
-    }).subscribe({
-      next: () => this.loadContracts(),
-      error: (error) => (this.errorMessage = getApiErrorMessage(error, 'Unable to add rate.')),
-    });
+    this.http
+      .post(`/api/funding-contracts/${this.newRate.contractId}/rates`, {
+        effectiveFrom: this.newRate.effectiveFrom,
+        effectiveTo: this.newRate.effectiveTo || null,
+        frequency: this.newRate.frequency,
+        amount: this.newRate.amount,
+        notes: this.newRate.notes,
+        closePreviousOpenEnded: true,
+      })
+      .subscribe({
+        next: () => this.loadContracts(),
+        error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Unable to add rate.')),
+      });
   }
 }

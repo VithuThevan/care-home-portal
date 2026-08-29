@@ -5,22 +5,24 @@
       <p>Manage Sage nominal code master data.</p>
     </div>
 
-    <a routerLink="/nominal-codes/new" class="primary-button">
-      Add Nominal Code
-    </a>
+    @if (auth.canWrite()) {
+      <a routerLink="/nominal-codes/new" class="primary-button">
+        Add Nominal Code
+      </a>
+    }
   </div>
 
-  @if (isLoading) {
+  @if (isLoading()) {
     <p>Loading nominal codes...</p>
   }
 
-  @if (errorMessage) {
+  @if (errorMessage()) {
     <div class="error-message">
-      {{ errorMessage }}
+      {{ errorMessage() }}
     </div>
   }
 
-  @if (!isLoading) {
+  @if (!isLoading()) {
     <div class="table-container">
       <table>
         <thead>
@@ -34,7 +36,7 @@
         </thead>
 
         <tbody>
-          @for (nominalCode of nominalCodes; track nominalCode.id) {
+          @for (nominalCode of nominalCodes(); track nominalCode.id) {
             <tr>
               <td>{{ nominalCode.code }}</td>
               <td>{{ nominalCode.name }}</td>
@@ -47,17 +49,19 @@
                 }
               </td>
               <td class="actions">
-                <a [routerLink]="['/nominal-codes', nominalCode.id, 'edit']">
-                  Edit
-                </a>
+                @if (auth.canWrite()) {
+                  <a [routerLink]="['/nominal-codes', nominalCode.id, 'edit']">
+                    Edit
+                  </a>
 
-                @if (nominalCode.isActive) {
-                  <button
-                    type="button"
-                    (click)="deactivateNominalCode(nominalCode)"
-                  >
-                    Deactivate
-                  </button>
+                  @if (nominalCode.isActive) {
+                    <button
+                      type="button"
+                      (click)="deactivateNominalCode(nominalCode)"
+                    >
+                      Deactivate
+                    </button>
+                  }
                 }
               </td>
             </tr>

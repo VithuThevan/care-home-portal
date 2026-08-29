@@ -5,22 +5,24 @@
       <p>Manage invoice category master data.</p>
     </div>
 
-    <a routerLink="/invoice-categories/new" class="primary-button">
-      Add Invoice Category
-    </a>
+    @if (auth.canWrite()) {
+      <a routerLink="/invoice-categories/new" class="primary-button">
+        Add Invoice Category
+      </a>
+    }
   </div>
 
-  @if (isLoading) {
+  @if (isLoading()) {
     <p>Loading invoice categories...</p>
   }
 
-  @if (errorMessage) {
+  @if (errorMessage()) {
     <div class="error-message">
-      {{ errorMessage }}
+      {{ errorMessage() }}
     </div>
   }
 
-  @if (!isLoading) {
+  @if (!isLoading()) {
     <div class="table-container">
       <table>
         <thead>
@@ -34,7 +36,7 @@
         </thead>
 
         <tbody>
-          @for (category of invoiceCategories; track category.id) {
+          @for (category of invoiceCategories(); track category.id) {
             <tr>
               <td>{{ category.code }}</td>
               <td>{{ category.name }}</td>
@@ -47,17 +49,19 @@
                 }
               </td>
               <td class="actions">
-                <a [routerLink]="['/invoice-categories', category.id, 'edit']">
-                  Edit
-                </a>
+                @if (auth.canWrite()) {
+                  <a [routerLink]="['/invoice-categories', category.id, 'edit']">
+                    Edit
+                  </a>
 
-                @if (category.isActive) {
-                  <button
-                    type="button"
-                    (click)="deactivateInvoiceCategory(category)"
-                  >
-                    Deactivate
-                  </button>
+                  @if (category.isActive) {
+                    <button
+                      type="button"
+                      (click)="deactivateInvoiceCategory(category)"
+                    >
+                      Deactivate
+                    </button>
+                  }
                 }
               </td>
             </tr>

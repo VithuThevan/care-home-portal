@@ -23,6 +23,10 @@
 ## Contracts and rates
 
 - One client may have many funding contracts (Council + NHS + Private).
+- Funding-stream identity is **Tenant + Client + Funding Authority + Invoice Category**. Nominal Code is **not** part of that identity: a different nominal must not allow two simultaneously applicable contracts on the same stream. A nominal mapping change is a dated contract/configuration change, not a second live contract.
+- Multiple historical contracts on the same stream are valid only when their inclusive periods do **not** overlap. A null `ContractEndDate` is open-ended. Adjacent periods are allowed (`01-Jan → 31-Mar` then `01-Apr → open`). Overlapping periods are rejected (`01-Jan → 31-Mar` vs `15-Mar → 15-Apr`; `01-Jan → open` vs `01-Apr → open`).
+- Create and update of an **Active** contract return `400` with code `OVERLAPPING_FUNDING_CONTRACT` when another Active contract on the same stream overlaps. Overlap checks always include `TenantId`. Inactivating a mistaken duplicate is allowed so operators can repair configuration; billing ignores Inactive contracts.
+- SQL Server cannot enforce arbitrary date-range overlap with a UNIQUE index. Overlap is therefore enforced in business logic. A uniqueness constraint on identity plus exact dates would not cover open-ended or partial overlaps and would be misleading.
 - After a contract is used on a non-void invoice, core identity fields cannot be rewritten. Close it and add a new contract instead.
 - Rates are versioned. Adding a rate can close the previous open-ended row (`EffectiveTo = newFrom - 1`).
 - Inclusive dates. Overlapping rates on one contract are rejected.
@@ -31,12 +35,33 @@
 ## Billing
 
 - Eligible period = requested period ∩ occupancy ∩ contract ∩ rate period, minus already finalized invoice coverage.
+- If more than one **Active** funding contract is simultaneously applicable for the same Tenant + Client + Funding Authority + Invoice Category on a service date, billing does **not** emit lines. Preview returns `CanGenerate = false` with code `OVERLAPPING_FUNDING_CONTRACTS` (client, authority, category, contract IDs, overlapping dates). The engine never picks the first contract, never sums both, and never silently de-duplicates.
+
+Customer-database identification (do not auto-delete contracts):
+
+```sql
+SELECT a.TenantId, a.ClientId, a.FundingAuthorityId, a.InvoiceCategoryId,
+       a.Id AS ContractIdA, b.Id AS ContractIdB,
+       a.ContractStartDate, a.ContractEndDate, b.ContractStartDate, b.ContractEndDate, a.Status, b.Status
+FROM ClientFundingContracts a
+JOIN ClientFundingContracts b
+  ON a.TenantId = b.TenantId AND a.ClientId = b.ClientId
+ AND a.FundingAuthorityId = b.FundingAuthorityId AND a.InvoiceCategoryId = b.InvoiceCategoryId
+ AND a.Id < b.Id
+ AND a.ContractStartDate <= COALESCE(b.ContractEndDate, '9999-12-31')
+ AND b.ContractStartDate <= COALESCE(a.ContractEndDate, '9999-12-31');
+```
+
+Remediation is operational: inactivate or end-date extras so only one Active contract applies to any given day. Do not delete historical rows automatically.
+- A request **may overlap** an already-finalized invoice window. That is not an error by itself. Only previously unbilled service dates are invoiced.
+- Preview shows requested period, already billed periods, remaining billable periods, and skipped already-billed days.
+- If nothing unbilled remains, generation is blocked with `ALREADY_FULLY_BILLED`. Partial-period billing is allowed when remainder exists.
 - Partial remaining fragments stay as separate lines. They are not merged into a later cycle.
 - Missing rate/contract/nominal/template is a **critical error**. The engine does not invoice at a zero amount (messages use the organisation currency symbol).
 - Miscellaneous billing uses tenant-scoped category **code** `MISC`, not a hardcoded category id.
 - Due date is invoice date plus `TenantSettings.PaymentTermsDays` (default 30).
 - Finalized invoice lines for the same client + contract + category cannot overlap service dates unless the existing document is Void.
-- Generation runs in a database transaction (number + header + lines + totals + overlap check).
+- Generation runs in a database transaction (application lock + number + header + lines + totals + overlap check).
 
 ## Invoice immutability
 
@@ -50,6 +75,7 @@
 
 - Amounts are stored as **negative** adjustments.
 - Credit cannot exceed remaining invoiced amount (invoiced + existing non-void credits).
+- One generate request must target **a single source invoice**. A period that spans two invoices is rejected; credit each invoice separately.
 - **PROVISIONAL:** no unrestricted override.
 
 ## Payment status

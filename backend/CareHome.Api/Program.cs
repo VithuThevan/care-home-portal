@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using CareHome.Api.Audit;
 using CareHome.Api.Billing;
 using CareHome.Api.Common;
@@ -10,9 +11,14 @@ using CareHome.Api.Security;
 using CareHome.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +26,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddProblemDetails();
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 2 * 1024 * 1024;
+    options.ValueLengthLimit = 1024 * 1024;
+});
 
 builder.Services.AddControllers(options =>
 {
@@ -30,15 +42,26 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<ReadOnlyGuardFilter>();
 });
 
+var corsOrigins = ProductionStartupValidator.ResolveOrigins(builder.Configuration);
+if (corsOrigins.Length == 0 && builder.Environment.IsDevelopment())
+{
+    corsOrigins = ["http://localhost:4200", "http://127.0.0.1:4200"];
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp", policy =>
     {
-        var origins = builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
-            ?? ["http://localhost:4200"];
+        if (corsOrigins.Length == 0)
+        {
+            policy.SetIsOriginAllowed(_ => false)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+            return;
+        }
 
         policy
-            .WithOrigins(origins)
+            .WithOrigins(corsOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -59,14 +82,28 @@ builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.User.RequireUniqueEmail = true;
-        options.Password.RequiredLength = 8;
-        options.Password.RequireNonAlphanumeric = false;
+        options.Password.RequiredLength = 12;
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddEntityFrameworkStores<CareHomeDbContext>()
     .AddDefaultTokenProviders();
 
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? "DEVELOPMENT-ONLY-CHANGE-ME-TO-A-LONG-SECRET-KEY";
+var jwtKey = JwtSigningKey.Resolve(
+    builder.Configuration["Jwt:Key"],
+    builder.Environment.IsDevelopment());
+
+var clockSkewMinutes = 2;
+if (int.TryParse(builder.Configuration["Jwt:ClockSkewMinutes"], out var configuredSkew)
+    && configuredSkew is >= 0 and <= 5)
+{
+    clockSkewMinutes = configuredSkew;
+}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -80,6 +117,9 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuer = true,
         ValidateAudience = true,
         ValidateIssuerSigningKey = true,
+        ValidateLifetime = true,
+        RequireExpirationTime = true,
+        ClockSkew = TimeSpan.FromMinutes(clockSkewMinutes),
         ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "CareHomeApi",
         ValidAudience = builder.Configuration["Jwt:Audience"] ?? "CareHomeWeb",
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
@@ -87,6 +127,31 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
+    .AddCheck<SqlReadyHealthCheck>("database", tags: ["ready"]);
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddScoped<ITenantContext, HttpTenantContext>();
 builder.Services.AddScoped<AuditService>();
@@ -109,11 +174,40 @@ builder.Services.AddScoped<DevelopmentMasterDataSeeder>();
 
 var app = builder.Build();
 
+var startupLogger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+ProductionStartupValidator.Validate(app.Configuration, app.Environment, startupLogger);
+
 app.UseExceptionHandler();
+app.UseForwardedHeaders();
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
+if (!app.Environment.IsDevelopment()
+    && app.Configuration.GetValue("Https:Redirect", true))
+{
+    app.UseHttpsRedirection();
+    app.UseHsts();
+}
+
 app.UseCors("AllowAngularApp");
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<RequestLoggingScopeMiddleware>();
+app.UseMiddleware<InactiveTenantMiddleware>();
 app.MapControllers();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live"),
+    ResponseWriter = WriteHealthResponse
+}).AllowAnonymous();
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = WriteHealthResponse
+}).AllowAnonymous();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -128,6 +222,10 @@ using (var scope = app.Services.CreateScope())
         var dataSeeder = scope.ServiceProvider.GetRequiredService<DevelopmentMasterDataSeeder>();
         await dataSeeder.SeedAsync();
     }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("Development platform admin", StringComparison.Ordinal))
+    {
+        throw;
+    }
     catch (Exception ex)
     {
         logger.LogWarning(
@@ -137,3 +235,16 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+static Task WriteHealthResponse(HttpContext context, HealthReport report)
+{
+    context.Response.ContentType = "application/json";
+    var payload = new
+    {
+        status = report.Status.ToString(),
+        correlationId = CorrelationIdMiddleware.Get(context)
+    };
+    return context.Response.WriteAsJsonAsync(payload);
+}
+
+public partial class Program;

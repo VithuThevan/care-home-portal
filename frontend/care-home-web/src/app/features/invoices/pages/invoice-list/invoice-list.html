@@ -5,8 +5,8 @@
       <p>Generated invoices with snapshot history. Void instead of deleting.</p>
     </div>
   </div>
-  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
-  @if (bulkMessage) { <p>{{ bulkMessage }}</p> }
+  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
+  @if (bulkMessage()) { <p>{{ bulkMessage() }}</p> }
   <div class="filters">
     <input placeholder="Invoice number" [(ngModel)]="invoiceNumber" />
     <select [(ngModel)]="status">
@@ -19,16 +19,20 @@
       <option value="Paid">Paid</option>
     </select>
     <button type="button" (click)="load()">Search</button>
+    @if (auth.canWrite()) {
     <button type="button" (click)="bulkSend()">Email selected</button>
     <button type="button" (click)="bulkPay('Paid')">Mark paid</button>
     <button type="button" (click)="bulkPay('NotPaid')">Mark unpaid</button>
+    }
   </div>
+  @if (isLoading()) { <p>Loading invoices...</p> }
+  @if (!isLoading()) {
   <table>
     <thead>
       <tr><th></th><th>Number</th><th>Home</th><th>Authority</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th></tr>
     </thead>
     <tbody>
-      @for (item of items; track item.id) {
+      @for (item of items(); track item.id) {
         <tr>
           <td><input type="checkbox" (change)="toggle(item.id, $any($event.target).checked)" /></td>
           <td><a [routerLink]="['/invoices', item.id]">{{ item.invoiceNumber }}</a></td>
@@ -39,7 +43,10 @@
           <td>{{ item.status }}</td>
           <td>{{ item.paymentStatus }}@if (item.isDue) { / Due }</td>
         </tr>
+      } @empty {
+        <tr><td colspan="8">No invoices found.</td></tr>
       }
     </tbody>
   </table>
+  }
 </div>

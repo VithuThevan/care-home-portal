@@ -11,10 +11,23 @@ namespace CareHome.Api.Security
         RoleManager<IdentityRole> roleManager,
         UserManager<ApplicationUser> userManager,
         IConfiguration configuration,
+        IHostEnvironment environment,
         ILogger<IdentitySeeder> logger)
     {
         public async Task SeedAsync()
         {
+            var email = configuration["Seed:AdminEmail"];
+            var password = configuration["Seed:AdminPassword"];
+
+            if (!environment.IsDevelopment()
+                && !string.IsNullOrWhiteSpace(email)
+                && !string.IsNullOrWhiteSpace(password)
+                && KnownDevelopmentCredentials.IsForbiddenProductionBootstrap(email, password))
+            {
+                throw new InvalidOperationException(
+                    "The Development platform admin credentials cannot be used outside Development. Set Seed__AdminEmail and Seed__AdminPassword to unique bootstrap values, or leave them empty and create the first PlatformAdmin manually.");
+            }
+
             foreach (var role in AppRoles.All)
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -43,13 +56,17 @@ namespace CareHome.Api.Security
                 }
             }
 
-            var email = configuration["Seed:AdminEmail"];
-            var password = configuration["Seed:AdminPassword"];
-
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 logger.LogInformation("Platform admin seed skipped because Seed:AdminEmail or Seed:AdminPassword is not set.");
                 return;
+            }
+
+            if (!environment.IsDevelopment()
+                && KnownDevelopmentCredentials.IsForbiddenProductionBootstrap(email, password))
+            {
+                throw new InvalidOperationException(
+                    "The Development platform admin credentials cannot be used outside Development. Set Seed__AdminEmail and Seed__AdminPassword to unique bootstrap values, or leave them empty and create the first PlatformAdmin manually.");
             }
 
             var existing = await userManager.FindByEmailAsync(email);

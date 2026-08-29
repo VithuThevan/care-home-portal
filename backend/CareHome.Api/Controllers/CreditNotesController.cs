@@ -62,7 +62,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, note.Invoice.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             return Ok(MapDetail(note));
@@ -102,7 +102,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, note.Invoice.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             var bytes = await pdfs.GetOrCreateCreditNotePdfAsync(note, await TenantPublicIdAsync());
@@ -121,7 +121,7 @@ namespace CareHome.Api.Controllers
 
             if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, note.Invoice.CareHomeId))
             {
-                return Forbid();
+                return NotFound();
             }
 
             if (string.IsNullOrWhiteSpace(note.RecipientEmail))

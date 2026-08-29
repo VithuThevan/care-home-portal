@@ -77,6 +77,12 @@ namespace CareHome.Api.Security
             if (!string.IsNullOrWhiteSpace(request.AdminEmail)
                 && !string.IsNullOrWhiteSpace(request.AdminPassword))
             {
+                if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(request.AdminPassword))
+                {
+                    throw new InvalidOperationException(
+                        "This password is not allowed. Choose a unique organisation admin password.");
+                }
+
                 var user = new ApplicationUser
                 {
                     TenantId = tenant.Id,

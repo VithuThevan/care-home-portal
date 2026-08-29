@@ -59,6 +59,18 @@ namespace CareHome.Api.Controllers
                 return relatedError;
             }
 
+            var overlapError = await EnsureNoOverlappingContract(
+                clientId,
+                request.FundingAuthorityId,
+                request.InvoiceCategoryId,
+                request.ContractStartDate,
+                request.ContractEndDate,
+                excludeContractId: null);
+            if (overlapError is not null)
+            {
+                return overlapError;
+            }
+
             var now = DateTimeOffset.UtcNow;
             var contract = new ClientFundingContract
             {
@@ -108,6 +120,21 @@ namespace CareHome.Api.Controllers
             if (relatedError is not null)
             {
                 return relatedError;
+            }
+
+            if (request.Status == "Active")
+            {
+                var overlapError = await EnsureNoOverlappingContract(
+                    contract.ClientId,
+                    request.FundingAuthorityId,
+                    request.InvoiceCategoryId,
+                    request.ContractStartDate,
+                    request.ContractEndDate,
+                    excludeContractId: contract.Id);
+                if (overlapError is not null)
+                {
+                    return overlapError;
+                }
             }
 
             var used = await dbContext.InvoiceLines.AnyAsync(x =>
@@ -293,6 +320,42 @@ namespace CareHome.Api.Controllers
                 && !await dbContext.InvoiceTemplates.AnyAsync(x => x.Id == templateId && x.TenantId == tenantId))
             {
                 return BadRequest(new { message = "Invoice template was not found in this organisation." });
+            }
+
+            return null;
+        }
+
+        private async Task<ActionResult?> EnsureNoOverlappingContract(
+            int clientId,
+            int fundingAuthorityId,
+            int invoiceCategoryId,
+            DateOnly start,
+            DateOnly? end,
+            int? excludeContractId)
+        {
+            var tenantId = tenantContext.TenantId;
+            var others = await dbContext.ClientFundingContracts
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId
+                    && x.ClientId == clientId
+                    && x.FundingAuthorityId == fundingAuthorityId
+                    && x.InvoiceCategoryId == invoiceCategoryId
+                    && x.Status == "Active"
+                    && (excludeContractId == null || x.Id != excludeContractId))
+                .Select(x => new { x.ContractStartDate, x.ContractEndDate })
+                .ToListAsync();
+
+            if (others.Any(x => FundingContractOverlap.PeriodsOverlap(
+                    x.ContractStartDate,
+                    x.ContractEndDate,
+                    start,
+                    end)))
+            {
+                return BadRequest(new
+                {
+                    message = FundingContractOverlap.ConflictMessage,
+                    code = FundingContractOverlap.ConflictCode
+                });
             }
 
             return null;

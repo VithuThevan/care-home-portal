@@ -13,7 +13,8 @@ namespace CareHome.Api.Export
         CareHomeDbContext dbContext,
         IDocumentStore documents,
         AuditService audit,
-        Sage50ColumnMap columnMap)
+        Sage50ColumnMap columnMap,
+        ILogger<SageExportService> logger)
     {
         public async Task<(SageExportPreviewResponse Preview, List<Invoice> Invoices)> PreviewAsync(
             int tenantId,
@@ -111,6 +112,10 @@ namespace CareHome.Api.Export
             var (preview, invoices) = await PreviewAsync(tenantId, request, cancellationToken);
             if (!preview.CanExport)
             {
+                logger.LogWarning(
+                    "Sage export blocked. TenantId={TenantId} Reason={Reason}",
+                    tenantId,
+                    preview.Errors.FirstOrDefault() ?? "Export is blocked until validation errors are resolved.");
                 return (null, preview.Errors.FirstOrDefault() ?? "Export is blocked until validation errors are resolved.");
             }
 
@@ -159,6 +164,12 @@ namespace CareHome.Api.Export
                 new { batch.FileName, batch.RecordCount },
                 $"Exported {batch.RecordCount} Sage50 rows.",
                 cancellationToken);
+
+            logger.LogInformation(
+                "Sage export completed. TenantId={TenantId} BatchId={BatchId} RecordCount={RecordCount}",
+                tenantId,
+                batch.Id,
+                batch.RecordCount);
 
             return (batch, null);
         }

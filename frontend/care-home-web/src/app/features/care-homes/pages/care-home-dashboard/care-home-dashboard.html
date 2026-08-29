@@ -1,28 +1,62 @@
 <div class="page">
-  @if (data) {
+  @if (errorMessage()) {
+    <div class="error-message">{{ errorMessage() }}</div>
+  }
+  @if (isLoading()) {
+    <p>Loading care home dashboard...</p>
+  }
+  @if (data(); as data) {
     <div class="page-header">
       <div>
         <h1>{{ data.name }}</h1>
         <p>Manager: {{ data.managerName || 'Not set' }}</p>
       </div>
-      <a class="secondary-button" [routerLink]="['/care-homes', data.careHomeId, 'edit']">Edit home</a>
+      @if (auth.canWrite()) {
+        <a class="secondary-button" [routerLink]="['/care-homes', data.careHomeId, 'edit']"
+          >Edit home</a
+        >
+      }
     </div>
     <div class="cards">
-      <div class="card"><h3>Capacity</h3><p>{{ data.capacity }}</p></div>
-      <div class="card"><h3>Occupied</h3><p>{{ data.occupied }}</p></div>
-      <div class="card"><h3>Available</h3><p>{{ data.available }}</p></div>
-      <div class="card"><h3>Outstanding</h3><p>{{ data.outstandingAmount | number:'1.2-2' }}</p></div>
+      <div class="card">
+        <h3>Capacity</h3>
+        <p>{{ data.capacity }}</p>
+      </div>
+      <div class="card">
+        <h3>Occupied</h3>
+        <p>{{ data.occupied }}</p>
+      </div>
+      <div class="card">
+        <h3>Available</h3>
+        <p>{{ data.available }}</p>
+      </div>
+      <div class="card">
+        <h3>Outstanding</h3>
+        <p>{{ data.outstandingAmount | number: '1.2-2' }}</p>
+      </div>
     </div>
     <h2>Current clients</h2>
-    <ul>@for (name of data.currentClients; track name) { <li>{{ name }}</li> }</ul>
+    <ul>
+      @for (name of data.currentClients; track name) {
+        <li>{{ name }}</li>
+      }
+    </ul>
     <h2>Recent invoices</h2>
     <table>
-      <thead><tr><th>Number</th><th>Amount</th><th>Status</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Number</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
       <tbody>
         @for (row of data.recentInvoices; track row.id) {
           <tr>
-            <td><a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a></td>
-            <td>{{ row.totalAmount | number:'1.2-2' }}</td>
+            <td>
+              <a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a>
+            </td>
+            <td>{{ row.totalAmount | number: '1.2-2' }}</td>
             <td>{{ row.status }}</td>
           </tr>
         }

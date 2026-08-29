@@ -69,6 +69,11 @@ namespace CareHome.Api.Controllers
                 return homesError;
             }
 
+            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(request.Password))
+            {
+                return BadRequest(new { message = "This password is not allowed. Choose a unique password." });
+            }
+
             var user = new ApplicationUser
             {
                 TenantId = tenantContext.TenantId,
@@ -145,6 +150,11 @@ namespace CareHome.Api.Controllers
             if (user is null)
             {
                 return NotFound();
+            }
+
+            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(request.NewPassword))
+            {
+                return BadRequest(new { message = "This password is not allowed. Choose a unique password." });
             }
 
             var token = await userManager.GeneratePasswordResetTokenAsync(user);

@@ -253,7 +253,14 @@ namespace CareHome.Api.Services
             {
                 for (var c = 0; c < props.Length; c++)
                 {
-                    sheet.Cell(r, c + 1).Value = props[c].GetValue(row)?.ToString() ?? "";
+                    var raw = props[c].GetValue(row);
+                    var text = raw?.ToString() ?? "";
+                    if (raw is not decimal and not DateOnly and not DateTimeOffset and not DateTime and not bool and not int and not long)
+                    {
+                        text = CsvFormulaSanitizer.Neutralize(text);
+                    }
+
+                    sheet.Cell(r, c + 1).Value = text;
                 }
 
                 r++;
@@ -310,12 +317,12 @@ namespace CareHome.Api.Services
         private static string Escape(object? value)
         {
             var text = value?.ToString() ?? "";
-            if (text.Contains(',') || text.Contains('"'))
+            if (value is not decimal and not DateOnly and not DateTimeOffset and not DateTime and not bool and not int and not long)
             {
-                return $"\"{text.Replace("\"", "\"\"")}\"";
+                text = CsvFormulaSanitizer.Neutralize(text);
             }
 
-            return text;
+            return CsvFormulaSanitizer.CsvField(text, neutralizeFormula: false);
         }
     }
 }

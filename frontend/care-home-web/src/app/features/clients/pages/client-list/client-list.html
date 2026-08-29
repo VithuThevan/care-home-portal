@@ -6,7 +6,9 @@
       <p>Manage clients across all care homes.</p>
     </div>
 
+    @if (auth.canWrite()) {
     <a routerLink="/clients/new" class="primary-button"> Add Client </a>
+    }
   </div>
 
   <div class="filters">
@@ -20,7 +22,7 @@
     <select [(ngModel)]="selectedCareHomeId">
       <option [ngValue]="0">All Care Homes</option>
 
-      @for (careHome of careHomes; track careHome.id) {
+      @for (careHome of careHomes(); track careHome.id) {
         <option [ngValue]="careHome.id">
           {{ careHome.name }}
         </option>
@@ -41,17 +43,17 @@
     </label>
   </div>
 
-  @if (isLoading) {
+  @if (isLoading()) {
     <p>Loading clients...</p>
   }
 
-  @if (errorMessage) {
+  @if (errorMessage()) {
     <div class="error-message">
-      {{ errorMessage }}
+      {{ errorMessage() }}
     </div>
   }
 
-  @if (!isLoading) {
+  @if (!isLoading()) {
     <div class="table-container">
       <table>
         <thead>
@@ -68,7 +70,7 @@
         </thead>
 
         <tbody>
-          @for (client of clients; track client.id) {
+          @for (client of clients(); track client.id) {
             <tr>
               <td>
                 {{ client.title }}
@@ -107,10 +109,12 @@
               <td class="actions">
                 <a [routerLink]="['/clients', client.id]"> Open </a>
 
+                @if (auth.canWrite()) {
                 <a [routerLink]="['/clients', client.id, 'edit']"> Edit </a>
 
                 @if (!client.isArchived && client.status !== 'Current') {
                   <button type="button" (click)="archiveClient(client)">Archive</button>
+                }
                 }
               </td>
             </tr>

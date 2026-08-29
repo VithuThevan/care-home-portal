@@ -1,9 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { NominalCode } from '../../models/nominal-code.model';
 import { NominalCodeService } from '../../services/nominal-code.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 
 @Component({
   selector: 'app-nominal-code-list',
@@ -13,37 +15,36 @@ import { getApiErrorMessage } from '../../../../core/api-error';
 })
 export class NominalCodeList implements OnInit {
   private readonly nominalCodeService = inject(NominalCodeService);
+  readonly auth = inject(AuthService);
 
-  nominalCodes: NominalCode[] = [];
+  readonly nominalCodes = signal<NominalCode[]>([]);
 
-  isLoading = false;
-  errorMessage = '';
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadNominalCodes();
   }
 
   loadNominalCodes(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
-    this.nominalCodeService.getNominalCodes().subscribe({
-      next: (nominalCodes) => {
-        this.nominalCodes = nominalCodes;
-        this.isLoading = false;
-      },
+    this.nominalCodeService
+      .getNominalCodes()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (nominalCodes) => this.nominalCodes.set(nominalCodes),
 
-      error: (error) => {
-        console.error(error);
+        error: (error) => {
+          console.error(error);
 
-        this.errorMessage = getApiErrorMessage(
-          error,
-          'Unable to load nominal codes.'
-        );
-
-        this.isLoading = false;
-      }
-    });
+          this.errorMessage.set(getApiErrorMessage(
+            error,
+            'Unable to load nominal codes.'
+          ));
+        }
+      });
   }
 
   deactivateNominalCode(nominalCode: NominalCode): void {
@@ -61,10 +62,10 @@ export class NominalCodeList implements OnInit {
       error: (error) => {
         console.error(error);
 
-        this.errorMessage = getApiErrorMessage(
+        this.errorMessage.set(getApiErrorMessage(
           error,
           'Unable to deactivate nominal code.'
-        );
+        ));
       }
     });
   }

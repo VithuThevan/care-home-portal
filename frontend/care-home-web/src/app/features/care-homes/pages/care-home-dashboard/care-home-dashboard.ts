@@ -1,7 +1,11 @@
 import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
+
+import { getApiErrorMessage } from '../../../../core/api-error';
+import { AuthService } from '../../../../core/auth.service';
 
 @Component({
   selector: 'app-care-home-dashboard',
@@ -11,10 +15,25 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 export class CareHomeDashboardPage implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
-  data: any = null;
+  readonly auth = inject(AuthService);
+  readonly data = signal<any | null>(null);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.http.get(`/api/dashboard/care-homes/${id}`).subscribe((data) => (this.data = data));
+    this.route.paramMap.subscribe((params) => {
+      const id = Number(params.get('id'));
+      this.isLoading.set(true);
+      this.errorMessage.set(null);
+      this.data.set(null);
+      this.http
+        .get(`/api/dashboard/care-homes/${id}`)
+        .pipe(finalize(() => this.isLoading.set(false)))
+        .subscribe({
+          next: (data) => this.data.set(data),
+          error: (error) =>
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to load care home dashboard.')),
+        });
+    });
   }
 }

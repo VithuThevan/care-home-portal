@@ -49,6 +49,7 @@ namespace CareHome.Api.Controllers
         }
 
         [HttpPost("import/preview")]
+        [RequestSizeLimit(2 * 1024 * 1024)]
         public async Task<ActionResult<MiscChargePreviewResponse>> Preview(IFormFile file)
         {
             if (file is null || file.Length == 0)
@@ -56,8 +57,25 @@ namespace CareHome.Api.Controllers
                 return BadRequest(new { message = "A CSV file is required." });
             }
 
+            if (file.Length > 2 * 1024 * 1024)
+            {
+                return BadRequest(new { message = "CSV uploads cannot exceed 2 MB." });
+            }
+
+            var extension = Path.GetExtension(file.FileName);
+            if (!string.Equals(extension, ".csv", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(new { message = "Only .csv files are accepted." });
+            }
+
+            var safeName = Path.GetFileName(file.FileName);
+            if (string.IsNullOrWhiteSpace(safeName) || safeName.Contains("..", StringComparison.Ordinal))
+            {
+                return BadRequest(new { message = "The file name is not valid." });
+            }
+
             await using var stream = file.OpenReadStream();
-            return Ok(await importer.PreviewAsync(tenantContext.TenantId, file.FileName, stream));
+            return Ok(await importer.PreviewAsync(tenantContext.TenantId, safeName, stream));
         }
 
         [HttpPost("import/confirm")]

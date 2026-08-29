@@ -18,7 +18,19 @@ Hidden Angular buttons are **not** security. API tenant filters, `[RequireTenant
 
 Claims: `sub`, roles, `tenant_id` (omitted if null), `tenant_public_id`, `tenant_name`. Angular may display the organisation name from `/api/auth/me`. Normal APIs must not accept `tenantId` from the client.
 
-Configured in `appsettings.json` (`Jwt:Issuer`, `Jwt:Audience`, `Jwt:Key`). Override `Jwt__Key` in production.
+Configured in `appsettings.json` (`Jwt:Issuer`, `Jwt:Audience`). `Jwt:Key` is empty in the shared file. Development may set a placeholder in `appsettings.Development.json`. Production **must** set `Jwt__Key` (environment, user secrets, or secret store). Starting Production with a missing key, a weak key, or the development placeholder fails fast.
+
+Token lifetime defaults to **8 hours** (`Jwt:ExpiryHours`). Clock skew defaults to 2 minutes. Lifetime is validated.
+
+## Location lookups
+
+Lists omit homes the LocationManager cannot access. Resource-by-id lookups for a same-tenant home, client, invoice, credit note, or care-home dashboard that is outside the assignment return **404**, not 403, so the API does not confirm that the object exists.
+
+Hidden Angular buttons are **not** security. API tenant filters, `[RequireTenant]`, care-home checks, and `ReadOnlyGuardFilter` enforce rules. Read-only users receive **403** on all write HTTP methods.
+
+## Inactive organisation
+
+Deactivating a tenant (`IsActive = false`) does not delete data. Tenant users cannot log in (generic 401). Existing JWTs receive 403 on APIs. PlatformAdmin can still list/update tenants and reactivate.
 
 ## Development platform admin
 

@@ -1,85 +1,71 @@
 <div class="page">
-    <div class="page-header">
-        <div>
-            <h1>Companies</h1>
-            <p>Manage care home operating companies.</p>
-        </div>
-
-        <a routerLink="/companies/new" class="primary-button">
-            Add Company
-        </a>
+  <div class="page-header">
+    <div>
+      <h1>Companies</h1>
+      <p>Manage care home operating companies.</p>
     </div>
 
-    @if (isLoading) {
-    <div class="message">
-        Loading companies...
-    </div>
+    @if (auth.canWrite()) {
+      <a routerLink="/companies/new" class="primary-button"> Add Company </a>
     }
+  </div>
 
-    @if (errorMessage) {
+  @if (isLoading()) {
+    <div class="message">Loading companies...</div>
+  }
+
+  @if (errorMessage()) {
     <div class="error-message">
-        {{ errorMessage }}
+      {{ errorMessage() }}
     </div>
-    }
+  }
 
-    @if (!isLoading) {
+  @if (!isLoading()) {
     <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Company</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Company</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
 
-            <tbody>
-                @for (company of companies; track company.id) {
-                <tr>
-                    <td>{{ company.id }}</td>
+        <tbody>
+          @for (company of companies(); track company.id) {
+            <tr>
+              <td>{{ company.id }}</td>
 
-                    <td>
-                        {{ company.name }}
-                    </td>
+              <td>
+                {{ company.name }}
+              </td>
 
-                    <td>
-                        @if (company.isActive) {
-                        <span class="status active">
-                            Active
-                        </span>
-                        } @else {
-                        <span class="status inactive">
-                            Inactive
-                        </span>
-                        }
-                    </td>
-
-                    <td class="actions">
-                        <a [routerLink]="[
-                      '/companies',
-                      company.id,
-                      'edit'
-                    ]">
-                            Edit
-                        </a>
-
-                        @if (company.isActive) {
-                        <button type="button" (click)="deactivateCompany(company)">
-                            Deactivate
-                        </button>
-                        }
-                    </td>
-                </tr>
-                } @empty {
-                <tr>
-                    <td colspan="4">
-                        No companies found.
-                    </td>
-                </tr>
+              <td>
+                @if (company.isActive) {
+                  <span class="status active"> Active </span>
+                } @else {
+                  <span class="status inactive"> Inactive </span>
                 }
-            </tbody>
-        </table>
+              </td>
+
+              <td class="actions">
+                @if (auth.canWrite()) {
+                  <a [routerLink]="['/companies', company.id, 'edit']"> Edit </a>
+
+                  @if (company.isActive) {
+                    <button type="button" (click)="deactivateCompany(company)">Deactivate</button>
+                  }
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4">No companies found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
-    }
+  }
 </div>

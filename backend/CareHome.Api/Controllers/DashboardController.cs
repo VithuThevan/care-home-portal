@@ -91,16 +91,11 @@ namespace CareHome.Api.Controllers
         [HttpGet("care-homes/{id:int}")]
         public async Task<ActionResult<CareHomeDashboardDto>> GetCareHomeDashboard(int id)
         {
-            if (!await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, id))
-            {
-                return Forbid();
-            }
-
             var home = await dbContext.CareHomes.AsNoTracking()
                 .Include(x => x.Clients)
                 .FirstOrDefaultAsync(x => x.Id == id && x.TenantId == tenantContext.TenantId);
 
-            if (home is null)
+            if (home is null || !await userAccess.CanAccessCareHomeAsync(tenantContext.TenantId, id))
             {
                 return NotFound();
             }

@@ -1,9 +1,11 @@
 <div class="page">
   <div class="page-header"><div><h1>Miscellaneous Charges</h1><p>CSV columns: ClientReference, UsedDate, Description, Amount, NominalCode</p></div></div>
-  @if (errorMessage) { <div class="error-message">{{ errorMessage }}</div> }
-  @if (info) { <p>{{ info }}</p> }
+  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
+  @if (info()) { <p>{{ info() }}</p> }
+  @if (auth.canWrite()) {
   <input type="file" accept=".csv,text/csv" (change)="onFile($event)" />
-  @if (preview) {
+  }
+  @if (preview(); as preview) {
     <p>Valid {{ preview.validCount }} · Invalid {{ preview.invalidCount }}</p>
     <table>
       <thead><tr><th>Row</th><th>Status</th><th>Client</th><th>Error</th></tr></thead>
@@ -18,13 +20,15 @@
         }
       </tbody>
     </table>
+    @if (auth.canWrite()) {
     <button class="primary-button" type="button" [disabled]="preview.invalidCount > 0" (click)="confirm()">Confirm import</button>
+    }
   }
   <h2>Import batches</h2>
   <table>
     <thead><tr><th>File</th><th>When</th><th>Accepted</th></tr></thead>
     <tbody>
-      @for (batch of batches; track batch.id) {
+      @for (batch of batches(); track batch.id) {
         <tr><td>{{ batch.fileName }}</td><td>{{ batch.importedAt }}</td><td>{{ batch.acceptedRows }}</td></tr>
       }
     </tbody>

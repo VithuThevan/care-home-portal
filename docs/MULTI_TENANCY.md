@@ -12,6 +12,8 @@ Request → JWT → tenant_id claim → ITenantContext → ForTenant / Id+Tenant
 
 - `HttpTenantContext` reads `tenant_id`, `tenant_public_id`, and `tenant_name` from the token.
 - PlatformAdmin has **no** `tenant_id`. Operational APIs use `[RequireTenant]` and return **403**, not unfiltered data.
+
+Inactive tenants: users cannot log in; existing tokens receive **403**. Data is retained. PlatformAdmin can reactivate.
 - Controllers pass `tenantContext.TenantId` into billing, PDF, Sage, and reports. Request bodies must not supply `tenantId`.
 - Get-by-id for tenant data is always `x.Id == id && x.TenantId == tenantId`. Never `FindAsync(id)` for operational rows.
 

@@ -1,7 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 
+import { getApiErrorMessage } from '../../../../core/api-error';
 import { PagedResult } from '../../../../core/models';
 
 @Component({
@@ -11,8 +13,10 @@ import { PagedResult } from '../../../../core/models';
 })
 export class AuditListPage implements OnInit {
   private readonly http = inject(HttpClient);
-  items: any[] = [];
-  totalCount = 0;
+  readonly items = signal<any[]>([]);
+  readonly totalCount = signal(0);
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
   entityType = '';
   page = 1;
 
@@ -21,11 +25,20 @@ export class AuditListPage implements OnInit {
   }
 
   load(): void {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
     let params = new HttpParams().set('page', this.page).set('pageSize', 50);
     if (this.entityType) params = params.set('entityType', this.entityType);
-    this.http.get<PagedResult<any>>('/api/audit', { params }).subscribe((x) => {
-      this.items = x.items;
-      this.totalCount = x.totalCount;
-    });
+    this.http
+      .get<PagedResult<any>>('/api/audit', { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (x) => {
+          this.items.set(x.items);
+          this.totalCount.set(x.totalCount);
+        },
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load audit log.')),
+      });
   }
 }
