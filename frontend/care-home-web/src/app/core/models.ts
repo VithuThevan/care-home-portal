@@ -13,4 +13,5 @@ export interface AuthUser {
   careHomeIds: number[];
   tenantName?: string | null;
   tenantPublicId?: string | null;
+  mustChangePassword?: boolean;
 }

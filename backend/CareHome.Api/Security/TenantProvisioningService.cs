@@ -1,5 +1,7 @@
+using System.Net.Mail;
 using CareHome.Api.Common;
 using CareHome.Api.Data;
+using CareHome.Api.Email;
 using CareHome.Api.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,12 +10,16 @@ namespace CareHome.Api.Security
 {
     public class TenantProvisioningService(
         CareHomeDbContext dbContext,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        IEmailSender emailSender,
+        IConfiguration configuration,
+        ILogger<TenantProvisioningService> logger)
     {
-        public async Task<Tenant> ProvisionAsync(
+        public async Task<TenantProvisionResult> ProvisionAsync(
             TenantProvisionRequest request,
             CancellationToken cancellationToken = default)
         {
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
             var now = DateTimeOffset.UtcNow;
             var tenant = new Tenant
             {
@@ -74,28 +80,32 @@ namespace CareHome.Api.Security
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            if (!string.IsNullOrWhiteSpace(request.AdminEmail)
-                && !string.IsNullOrWhiteSpace(request.AdminPassword))
+            var result = new TenantProvisionResult { Tenant = tenant };
+            if (!string.IsNullOrWhiteSpace(request.AdminEmail))
             {
-                if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(request.AdminPassword))
+                var adminEmail = request.AdminEmail.Trim();
+                if (!IsValidEmail(adminEmail))
                 {
-                    throw new InvalidOperationException(
-                        "This password is not allowed. Choose a unique organisation admin password.");
+                    throw new InvalidOperationException("A valid administrator email is required.");
                 }
+
+                var temporaryPassword = TemporaryPasswordGenerator.Generate();
+                var displayName = string.IsNullOrWhiteSpace(request.AdminDisplayName)
+                    ? request.Name.Trim() + " Admin"
+                    : request.AdminDisplayName.Trim();
 
                 var user = new ApplicationUser
                 {
                     TenantId = tenant.Id,
-                    UserName = request.AdminEmail.Trim(),
-                    Email = request.AdminEmail.Trim(),
+                    UserName = adminEmail,
+                    Email = adminEmail,
                     EmailConfirmed = true,
-                    DisplayName = string.IsNullOrWhiteSpace(request.AdminDisplayName)
-                        ? request.Name.Trim() + " Admin"
-                        : request.AdminDisplayName.Trim(),
-                    IsActive = true
+                    DisplayName = displayName,
+                    IsActive = true,
+                    MustChangePassword = true
                 };
 
-                var created = await userManager.CreateAsync(user, request.AdminPassword);
+                var created = await userManager.CreateAsync(user, temporaryPassword);
                 if (!created.Succeeded)
                 {
                     throw new InvalidOperationException(
@@ -103,15 +113,93 @@ namespace CareHome.Api.Security
                 }
 
                 await userManager.AddToRoleAsync(user, AppRoles.TenantAdmin);
+
+                var email = await emailSender.SendAsync(
+                    adminEmail,
+                    "Your Care Home Back Office login details",
+                    BuildWelcomeEmail(tenant.Name, displayName, adminEmail, temporaryPassword),
+                    null,
+                    null,
+                    cancellationToken);
+
+                if (!email.Success)
+                {
+                    throw new InvalidOperationException(
+                        email.ErrorMessage ?? "Login details could not be emailed. Check SMTP configuration.");
+                }
+
+                result.CredentialsEmailed = true;
+                result.CredentialsEmailSimulated = email.Simulated;
+                if (email.Simulated)
+                {
+                    result.TemporaryPassword = temporaryPassword;
+                    logger.LogWarning(
+                        "Welcome email simulated for {Email}. Temporary password: {Password}",
+                        adminEmail,
+                        temporaryPassword);
+                }
             }
 
-            return tenant;
+            await transaction.CommitAsync(cancellationToken);
+            return result;
+        }
+
+        private string BuildWelcomeEmail(
+            string organisationName,
+            string displayName,
+            string email,
+            string temporaryPassword)
+        {
+            var signInUrl = configuration["App:PublicUrl"]?.Trim().TrimEnd('/');
+            var signInLine = string.IsNullOrWhiteSpace(signInUrl)
+                ? "Sign in to Care Home Back Office."
+                : $"Sign in at: {signInUrl}/login";
+
+            return
+                $"Hello {displayName}," +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"An organisation account has been created for {organisationName}." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"{signInLine}" +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                $"Email: {email}" +
+                $"{Environment.NewLine}" +
+                $"Temporary password: {temporaryPassword}" +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                "You must change this temporary password after you sign in. " +
+                "You will not have access to the system until you set a new password." +
+                $"{Environment.NewLine}{Environment.NewLine}" +
+                "If you did not expect this email, contact your platform administrator.";
+        }
+
+        private static bool IsValidEmail(string email)
+        {
+            try
+            {
+                _ = new MailAddress(email);
+                return email.Contains('@', StringComparison.Ordinal);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
         }
 
         private static string? NullIfEmpty(string? value)
         {
             return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
+    }
+
+    public class TenantProvisionResult
+    {
+        public required Tenant Tenant { get; init; }
+
+        public bool CredentialsEmailed { get; set; }
+
+        public bool CredentialsEmailSimulated { get; set; }
+
+        public string? TemporaryPassword { get; set; }
     }
 
     public class TenantProvisionRequest
@@ -134,9 +222,6 @@ namespace CareHome.Api.Security
 
         public string? AdminEmail { get; set; }
 
-        public string? AdminPassword { get; set; }
-
         public string? AdminDisplayName { get; set; }
     }
 }
-

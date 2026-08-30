@@ -33,6 +33,15 @@ import {
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { ToastService } from '../../../../shared/ui/toast.service';
 
 
 @Component({
@@ -40,11 +49,18 @@ import { AuthService } from '../../../../core/auth.service';
 
   imports: [
     ReactiveFormsModule,
-    RouterLink
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
   ],
 
   templateUrl: './care-home-form.html',
-  styleUrl: './care-home-form.scss'
 })
 export class CareHomeForm implements OnInit {
 
@@ -64,6 +80,7 @@ export class CareHomeForm implements OnInit {
     inject(Router);
 
   readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
 
 
   careHomeId: number | null = null;
@@ -360,7 +377,7 @@ export class CareHomeForm implements OnInit {
         .subscribe({
 
           next: () => {
-
+            this.toast.success('Care home updated successfully.');
             this.router.navigate([
               '/care-homes'
             ]);
@@ -396,7 +413,7 @@ export class CareHomeForm implements OnInit {
       .subscribe({
 
         next: () => {
-
+          this.toast.success('Care home created successfully.');
           this.router.navigate([
             '/care-homes'
           ]);

@@ -1,46 +1,112 @@
 <div class="page">
-  <div class="page-header"><div><h1>Users</h1><p>Roles are enforced in the API, not only by hiding buttons.</p></div></div>
-  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
-  <table>
-    <thead><tr><th>Name</th><th>Email</th><th>Roles</th><th>Active</th><th></th></tr></thead>
-    <tbody>
-      @for (user of users(); track user.id) {
+  <app-page-header title="Users" subtitle="Roles are enforced in the API, not only by hiding buttons." />
+
+  <app-api-error [message]="errorMessage()" />
+
+  <div class="table-container hidden md:block">
+    <table class="data-table">
+      <thead>
         <tr>
-          <td>{{ user.displayName }}</td>
-          <td>{{ user.email }}</td>
-          <td>{{ user.roles.join(', ') }}</td>
-          <td>{{ user.isActive ? 'Yes' : 'No' }}</td>
-          <td>
-            @if (auth.canWrite()) {
-              <button type="button" (click)="deactivate(user.id)">Deactivate</button>
-            }
-          </td>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Assigned Homes</th>
+          <th>Status</th>
+          <th>Actions</th>
         </tr>
-      }
-    </tbody>
-  </table>
-  @if (auth.canWrite()) {
-  <h2>Create user</h2>
-  <form [formGroup]="form" (ngSubmit)="create()">
-    <div class="form-row">
-      <div class="form-field"><label>Email</label><input formControlName="email" /></div>
-      <div class="form-field"><label>Display name</label><input formControlName="displayName" /></div>
-      <div class="form-field"><label>Password</label><input type="password" formControlName="password" /></div>
-      <div class="form-field">
-        <label>Role</label>
-        <select formControlName="role">
-          <option>TenantAdmin</option><option>Administrator</option><option>LocationManager</option><option>ReadOnly</option>
-        </select>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr [class.inactive-row]="!user.isActive">
+            <td class="font-medium">{{ user.displayName }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+              @for (role of user.roles; track role) {
+                <app-status-badge [value]="role" />
+              }
+            </td>
+            <td>{{ homeNames(user.careHomeIds) }}</td>
+            <td><app-status-badge [value]="user.isActive ? 'Active' : 'Inactive'" /></td>
+            <td>
+              @if (auth.canWrite() && user.isActive) {
+                <button mat-stroked-button color="warn" type="button" (click)="deactivate(user.id)">Deactivate</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid gap-3 md:hidden">
+    @for (user of users(); track user.id) {
+      <div class="entity-card" [class.inactive-row]="!user.isActive">
+        <div class="font-semibold">{{ user.displayName }}</div>
+        <div class="text-sm text-[var(--app-text-muted)]">{{ user.email }}</div>
+        <div class="mt-2 flex flex-wrap gap-2">
+          @for (role of user.roles; track role) {
+            <app-status-badge [value]="role" />
+          }
+          <app-status-badge [value]="user.isActive ? 'Active' : 'Inactive'" />
+        </div>
+        <div class="mt-2 text-sm">Homes: {{ homeNames(user.careHomeIds) }}</div>
       </div>
-    </div>
-    <p>Care home access (Location Managers)</p>
-    @for (home of homes(); track home.id) {
-      <label class="checkbox-filter">
-        <input type="checkbox" (change)="toggleHome(home.id, $any($event.target).checked)" />
-        {{ home.name }}
-      </label>
     }
-    <div class="buttons"><button class="primary-button" type="submit">Create user</button></div>
-  </form>
+  </div>
+
+  @if (auth.canWrite()) {
+    <section class="panel mt-6">
+      <h2 class="mt-0 text-lg font-semibold">Create user</h2>
+      <form [formGroup]="form" (ngSubmit)="create()" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Email address</mat-label>
+          <input matInput type="email" formControlName="email" required />
+          @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+            <mat-error>Email address is required.</mat-error>
+          }
+          @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+            <mat-error>Please enter a valid email address.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Display name</mat-label>
+          <input matInput formControlName="displayName" required />
+          @if (form.controls.displayName.touched && form.controls.displayName.hasError('required')) {
+            <mat-error>Display name is required.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" required />
+          @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+            <mat-error>Password is required.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Role</mat-label>
+          <mat-select formControlName="role">
+            <mat-option value="TenantAdmin">TenantAdmin</mat-option>
+            <mat-option value="Administrator">Administrator</mat-option>
+            <mat-option value="LocationManager">LocationManager</mat-option>
+            <mat-option value="ReadOnly">ReadOnly</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="md:col-span-2">
+          <p class="mb-2 text-sm text-[var(--app-text-muted)]">Care home access (Location Managers)</p>
+          @for (home of homes(); track home.id) {
+            <mat-checkbox (change)="toggleHome(home.id, $any($event).checked)">{{ home.name }}</mat-checkbox>
+          }
+        </div>
+        <div>
+          <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
+            @if (isSaving()) {
+              Saving...
+            } @else {
+              Create user
+            }
+          </button>
+        </div>
+      </form>
+    </section>
   }
 </div>

@@ -1,91 +1,78 @@
 <div class="page">
-  <div class="page-header">
-    <div>
-      <h1>Care Homes</h1>
-
-      <p>Manage care home locations.</p>
-    </div>
-
+  <app-page-header title="Care Homes" subtitle="Manage care home locations.">
     @if (auth.canWrite()) {
-      <a routerLink="/care-homes/new" class="primary-button"> Add Care Home </a>
+      <a mat-flat-button color="primary" routerLink="/care-homes/new">Add Care Home</a>
     }
-  </div>
+  </app-page-header>
+
+  <app-api-error [message]="errorMessage()" />
 
   @if (isLoading()) {
-    <p>Loading care homes...</p>
+    <app-loading-state label="Loading care homes..." />
   }
 
-  @if (errorMessage()) {
-    <div class="error-message">
-      {{ errorMessage() }}
-    </div>
+  @if (!isLoading() && careHomes().length === 0) {
+    <app-empty-state title="No care homes found" message="There are no care homes to display.">
+      @if (auth.canWrite()) {
+        <a mat-flat-button color="primary" routerLink="/care-homes/new">Add Care Home</a>
+      }
+    </app-empty-state>
   }
 
-  @if (!isLoading()) {
-    <div class="table-container">
-      <table>
+  @if (!isLoading() && careHomes().length) {
+    <div class="table-container hidden md:block">
+      <table class="data-table">
         <thead>
           <tr>
             <th>Code</th>
             <th>Care Home</th>
             <th>Company</th>
-            <th>Capacity</th>
+            <th class="num">Capacity</th>
             <th>Manager</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
-
         <tbody>
           @for (careHome of careHomes(); track careHome.id) {
-            <tr>
-              <td>
-                {{ careHome.code }}
-              </td>
-
-              <td>
-                {{ careHome.name }}
-              </td>
-
-              <td>
-                {{ careHome.companyName }}
-              </td>
-
-              <td>
-                {{ careHome.bedCapacity }}
-              </td>
-
-              <td>
-                {{ careHome.managerName || '-' }}
-              </td>
-
-              <td>
-                @if (careHome.isActive) {
-                  <span class="status active"> Active </span>
-                } @else {
-                  <span class="status inactive"> Inactive </span>
-                }
-              </td>
-
-              <td class="actions">
-                <a [routerLink]="['/care-homes', careHome.id, 'dashboard']"> Dashboard </a>
-
+            <tr [class.inactive-row]="!careHome.isActive">
+              <td>{{ careHome.code }}</td>
+              <td class="font-medium">{{ careHome.name }}</td>
+              <td>{{ careHome.companyName }}</td>
+              <td class="num">{{ careHome.bedCapacity }}</td>
+              <td>{{ careHome.managerName || '—' }}</td>
+              <td><app-status-badge [value]="careHome.isActive ? 'Active' : 'Inactive'" /></td>
+              <td class="flex flex-wrap gap-2">
+                <a mat-stroked-button [routerLink]="['/care-homes', careHome.id, 'dashboard']">Dashboard</a>
                 @if (auth.canWrite()) {
-                  <a [routerLink]="['/care-homes', careHome.id, 'edit']"> Edit </a>
-                }
-
-                @if (careHome.isActive) {
-                  <button type="button" (click)="deactivateCareHome(careHome)">Deactivate</button>
+                  <a mat-stroked-button [routerLink]="['/care-homes', careHome.id, 'edit']">Edit</a>
+                  @if (careHome.isActive) {
+                    <button mat-stroked-button color="warn" type="button" (click)="deactivateCareHome(careHome)">
+                      Deactivate
+                    </button>
+                  }
                 }
               </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="7">No care homes found.</td>
             </tr>
           }
         </tbody>
       </table>
+    </div>
+
+    <div class="grid gap-3 md:hidden">
+      @for (careHome of careHomes(); track careHome.id) {
+        <div class="entity-card" [class.inactive-row]="!careHome.isActive">
+          <div class="font-semibold">{{ careHome.name }}</div>
+          <div class="mt-1 text-sm text-[var(--app-text-muted)]">{{ careHome.code }} · {{ careHome.companyName }}</div>
+          <div class="mt-2"><app-status-badge [value]="careHome.isActive ? 'Active' : 'Inactive'" /></div>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <a mat-stroked-button [routerLink]="['/care-homes', careHome.id, 'dashboard']">Dashboard</a>
+            @if (auth.canWrite()) {
+              <a mat-stroked-button [routerLink]="['/care-homes', careHome.id, 'edit']">Edit</a>
+            }
+          </div>
+        </div>
+      }
     </div>
   }
 </div>

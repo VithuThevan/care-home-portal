@@ -1,69 +1,142 @@
-@if (!auth.isLoggedIn()) {
+@if (!auth.isLoggedIn() || auth.mustChangePassword()) {
   <router-outlet />
 } @else {
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand-row">
-        <div class="brand">
-          <div>Care Home Back Office</div>
-          @if (auth.currentUser()?.tenantName) {
-            <div class="org-name">{{ auth.currentUser()?.tenantName }}</div>
-          }
+  <mat-sidenav-container class="app-shell">
+    <mat-sidenav
+      class="app-sidenav"
+      [mode]="isMobile() ? 'over' : 'side'"
+      [opened]="menuOpen()"
+      (closedStart)="isMobile() && menuOpen.set(false)"
+      [fixedInViewport]="true"
+    >
+      <div class="brand">
+        <div class="brand-mark">CH</div>
+        <div>
+          <div class="brand-name">Care Home</div>
+          <div class="brand-sub">{{ auth.currentUser()?.tenantName || 'Back Office' }}</div>
         </div>
-        <button type="button" class="menu-toggle" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen">
-          {{ menuOpen ? 'Close menu' : 'Menu' }}
-        </button>
       </div>
-      <div class="user-chip">{{ auth.currentUser()?.displayName }}</div>
 
-      <nav [class.open]="menuOpen" (click)="closeMenu()">
+      <nav class="nav" (click)="closeMenu()">
         @if (auth.isPlatformAdmin() && !auth.currentUser()?.tenantPublicId) {
-          <a routerLink="/platform/tenants" routerLinkActive="active">Organisations</a>
+          <a routerLink="/platform/tenants" routerLinkActive="active-link">
+            <mat-icon>apartment</mat-icon>
+            Organisations
+          </a>
         } @else {
-        <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+          <a routerLink="/dashboard" routerLinkActive="active-link">
+            <mat-icon>dashboard</mat-icon>
+            Dashboard
+          </a>
 
-        <div class="nav-section-label">Operations</div>
-        <a routerLink="/companies" routerLinkActive="active">Companies</a>
-        <a routerLink="/care-homes" routerLinkActive="active">Care Homes</a>
-        <a routerLink="/clients" routerLinkActive="active">Clients</a>
-
-        <div class="nav-section-label">Billing Setup</div>
-        <a routerLink="/funding-authorities" routerLinkActive="active">Funding Authorities</a>
-        <a routerLink="/invoice-categories" routerLinkActive="active">Invoice Categories</a>
-        <a routerLink="/nominal-codes" routerLinkActive="active">Nominal Codes</a>
-        <a routerLink="/invoice-templates" routerLinkActive="active">Invoice Templates</a>
-
-        <div class="nav-section-label">Billing</div>
-        <a routerLink="/billing" routerLinkActive="active">Billing Workspace</a>
-        <a routerLink="/invoices" routerLinkActive="active">Invoices</a>
-        <a routerLink="/credit-notes" routerLinkActive="active">Credit Notes</a>
-        <a routerLink="/misc-charges" routerLinkActive="active">Miscellaneous Charges</a>
-
-        <div class="nav-section-label">Finance</div>
-        <a routerLink="/reports" routerLinkActive="active">Reports</a>
-        <a routerLink="/sage-exports" routerLinkActive="active">Sage50 Export</a>
-
-        @if (auth.canManageUsers()) {
-          <div class="nav-section-label">Administration</div>
-          <a routerLink="/users" routerLinkActive="active">Users</a>
-          <a routerLink="/audit" routerLinkActive="active">Audit Log</a>
-          @if (auth.canManageOrganisation()) {
-            <a routerLink="/settings/organisation" routerLinkActive="active">Organisation</a>
+          <button type="button" class="nav-section" (click)="$event.stopPropagation(); operationsOpen.update((v) => !v)">
+            Operations
+            <mat-icon>{{ operationsOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (operationsOpen()) {
+            <a routerLink="/companies" routerLinkActive="active-link"><mat-icon>business</mat-icon>Companies</a>
+            <a routerLink="/care-homes" routerLinkActive="active-link"><mat-icon>home_work</mat-icon>Care Homes</a>
+            <a routerLink="/clients" routerLinkActive="active-link"><mat-icon>groups</mat-icon>Clients</a>
           }
-        }
+
+          <button type="button" class="nav-section" (click)="$event.stopPropagation(); billingSetupOpen.update((v) => !v)">
+            Billing Setup
+            <mat-icon>{{ billingSetupOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (billingSetupOpen()) {
+            <a routerLink="/funding-authorities" routerLinkActive="active-link"><mat-icon>account_balance</mat-icon>Funding Authorities</a>
+            <a routerLink="/invoice-categories" routerLinkActive="active-link"><mat-icon>category</mat-icon>Invoice Categories</a>
+            <a routerLink="/nominal-codes" routerLinkActive="active-link"><mat-icon>tag</mat-icon>Nominal Codes</a>
+            <a routerLink="/invoice-templates" routerLinkActive="active-link"><mat-icon>description</mat-icon>Invoice Templates</a>
+          }
+
+          <button type="button" class="nav-section" (click)="$event.stopPropagation(); billingOpen.update((v) => !v)">
+            Billing
+            <mat-icon>{{ billingOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (billingOpen()) {
+            <a routerLink="/billing" routerLinkActive="active-link"><mat-icon>receipt_long</mat-icon>Billing Workspace</a>
+            <a routerLink="/invoices" routerLinkActive="active-link"><mat-icon>request_quote</mat-icon>Invoices</a>
+            <a routerLink="/credit-notes" routerLinkActive="active-link"><mat-icon>undo</mat-icon>Credit Notes</a>
+            <a routerLink="/misc-charges" routerLinkActive="active-link"><mat-icon>playlist_add</mat-icon>Miscellaneous Charges</a>
+          }
+
+          <button type="button" class="nav-section" (click)="$event.stopPropagation(); reportingOpen.update((v) => !v)">
+            Reporting
+            <mat-icon>{{ reportingOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+          @if (reportingOpen()) {
+            <a routerLink="/reports" routerLinkActive="active-link"><mat-icon>bar_chart</mat-icon>Reports</a>
+            <a routerLink="/sage-exports" routerLinkActive="active-link"><mat-icon>file_download</mat-icon>Sage Export</a>
+          }
+
+          @if (auth.canManageUsers()) {
+            <button type="button" class="nav-section" (click)="$event.stopPropagation(); adminOpen.update((v) => !v)">
+              Administration
+              <mat-icon>{{ adminOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+            @if (adminOpen()) {
+              <a routerLink="/users" routerLinkActive="active-link"><mat-icon>manage_accounts</mat-icon>Users</a>
+              <a routerLink="/audit" routerLinkActive="active-link"><mat-icon>history</mat-icon>Audit</a>
+              @if (auth.canManageOrganisation()) {
+                <a routerLink="/settings/organisation" routerLinkActive="active-link"><mat-icon>settings</mat-icon>Organisation Settings</a>
+              }
+            }
+          }
         }
 
         @if (auth.isPlatformAdmin()) {
-          <div class="nav-section-label">Platform</div>
-          <a routerLink="/platform/tenants" routerLinkActive="active">Organisations</a>
+          <div class="nav-section-static">Platform</div>
+          <a routerLink="/platform/tenants" routerLinkActive="active-link">
+            <mat-icon>apartment</mat-icon>
+            Organisations
+          </a>
         }
-
-        <button type="button" class="logout" (click)="auth.logout()">Sign out</button>
       </nav>
-    </aside>
+    </mat-sidenav>
 
-    <main class="main-content">
-      <router-outlet />
-    </main>
-  </div>
+    <mat-sidenav-content class="app-content">
+      <header class="app-toolbar">
+        <button
+          mat-icon-button
+          type="button"
+          (click)="toggleMenu()"
+          [attr.aria-expanded]="menuOpen()"
+          aria-label="Toggle navigation"
+        >
+          <mat-icon>menu</mat-icon>
+        </button>
+        <div class="crumb">
+          <span>Home</span>
+          <mat-icon>chevron_right</mat-icon>
+          <strong>{{ crumb() }}</strong>
+        </div>
+        <span class="flex-1"></span>
+        <button type="button" class="user-chip" [matMenuTriggerFor]="userMenu">
+          <span class="avatar">{{ initials() }}</span>
+          <span class="user-meta">
+            <span class="user-name">{{ auth.currentUser()?.displayName }}</span>
+            <span class="user-role">{{ roleLabel() }}</span>
+          </span>
+          <mat-icon class="user-caret">expand_more</mat-icon>
+        </button>
+        <mat-menu #userMenu="matMenu" panelClass="user-menu-panel" xPosition="before">
+          <div class="user-menu-head">
+            <span class="avatar">{{ initials() }}</span>
+            <div class="user-menu-copy">
+              <div class="user-name">{{ auth.currentUser()?.displayName }}</div>
+              <div class="user-role">{{ roleLabel() }}</div>
+            </div>
+          </div>
+          <button mat-menu-item type="button" class="user-menu-logout" (click)="auth.logout()">
+            <mat-icon>logout</mat-icon>
+            <span>Sign out</span>
+          </button>
+        </mat-menu>
+      </header>
+      <main class="min-w-0">
+        <router-outlet />
+      </main>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
 }

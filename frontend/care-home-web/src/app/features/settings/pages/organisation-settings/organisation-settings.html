@@ -1,39 +1,131 @@
 <div class="page">
-  <div class="form-container">
-    <h1>Organisation settings</h1>
-    <p>These values apply to this organisation only. SMTP credentials stay in server configuration.</p>
-    @if (isLoading()) {
-      <p>Loading organisation settings...</p>
-    }
-    @if (errorMessage()) {
-      <div class="error-message">{{ errorMessage() }}</div>
-    }
-    @if (savedMessage()) {
-      <p>{{ savedMessage() }}</p>
-    }
-    @if (!isLoading()) {
-    <form [formGroup]="form" (ngSubmit)="save()">
-      <div class="form-field"><label>Name</label><input formControlName="name" /></div>
-      <div class="form-field"><label>Trading name</label><input formControlName="tradingName" /></div>
-      <div class="form-field"><label>Registration number</label><input formControlName="registrationNumber" /></div>
-      <div class="form-field"><label>Address</label><input formControlName="address" /></div>
-      <div class="form-field"><label>Phone</label><input formControlName="phone" /></div>
-      <div class="form-field"><label>Email</label><input formControlName="email" /></div>
-      <div class="form-field"><label>Website</label><input formControlName="website" /></div>
-      <div class="form-field"><label>Currency code</label><input formControlName="currencyCode" /></div>
-      <div class="form-field"><label>Currency symbol</label><input formControlName="currencySymbol" /></div>
-      <div class="form-field"><label>Time zone</label><input formControlName="timeZoneId" /></div>
-      <div class="form-field"><label>Invoice prefix</label><input formControlName="invoicePrefix" /></div>
-      <div class="form-field"><label>Credit note prefix</label><input formControlName="creditNotePrefix" /></div>
-      <div class="form-field"><label>Number length</label><input type="number" formControlName="numberLength" /></div>
-      <div class="form-field"><label>Payment terms (days)</label><input type="number" formControlName="paymentTermsDays" /></div>
-      <div class="form-field"><label>Email from name</label><input formControlName="emailFromName" /></div>
-      <div class="form-field"><label>Email from address</label><input formControlName="emailFromAddress" /></div>
-      <div class="form-field"><label>Primary colour</label><input formControlName="primaryColour" /></div>
-      <div class="buttons">
-        <button class="primary-button" type="submit" [disabled]="isSaving() || !auth.canWrite()">Save</button>
+  <app-page-header
+    title="Organisation Settings"
+    subtitle="These values apply to this organisation only. SMTP credentials stay in server configuration."
+  />
+
+  <app-api-error [message]="errorMessage()" />
+
+  @if (isLoading()) {
+    <app-loading-state label="Loading organisation settings..." />
+  }
+
+  @if (!isLoading()) {
+    <form [formGroup]="form" (ngSubmit)="save()" class="grid gap-4">
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Organisation details</h2>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" required />
+            @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+              <mat-error>Organisation name is required.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Trading name</mat-label>
+            <input matInput formControlName="tradingName" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Registration number</mat-label>
+            <input matInput formControlName="registrationNumber" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full md:col-span-2">
+            <mat-label>Address</mat-label>
+            <input matInput formControlName="address" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Contact details</h2>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Phone</mat-label>
+            <input matInput formControlName="phone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full md:col-span-2">
+            <mat-label>Website</mat-label>
+            <input matInput formControlName="website" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Branding</h2>
+        <mat-form-field appearance="outline" class="w-full max-w-xs">
+          <mat-label>Primary colour</mat-label>
+          <input matInput formControlName="primaryColour" />
+        </mat-form-field>
+      </section>
+
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Invoice settings</h2>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Invoice prefix</mat-label>
+            <input matInput formControlName="invoicePrefix" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Credit note prefix</mat-label>
+            <input matInput formControlName="creditNotePrefix" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Number length</mat-label>
+            <input matInput type="number" formControlName="numberLength" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Payment terms</h2>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Payment terms (days)</mat-label>
+            <input matInput type="number" formControlName="paymentTermsDays" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Currency code</mat-label>
+            <input matInput formControlName="currencyCode" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Currency symbol</mat-label>
+            <input matInput formControlName="currencySymbol" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Time zone</mat-label>
+            <input matInput formControlName="timeZoneId" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Email settings</h2>
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Email from name</mat-label>
+            <input matInput formControlName="emailFromName" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Email from address</mat-label>
+            <input matInput formControlName="emailFromAddress" />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <div>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSaving() || !auth.canWrite()">
+          @if (isSaving()) {
+            Saving...
+          } @else {
+            Save
+          }
+        </button>
       </div>
     </form>
-    }
-  </div>
+  }
 </div>

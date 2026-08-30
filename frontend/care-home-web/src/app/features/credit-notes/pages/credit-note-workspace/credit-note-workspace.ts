@@ -5,15 +5,32 @@ import { FormsModule } from '@angular/forms';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
+import { ToastService } from '../../../../shared/ui/toast.service';
 
 @Component({
   selector: 'app-credit-note-workspace',
-  imports: [FormsModule, DecimalPipe],
+  imports: [
+    FormsModule,
+    DecimalPipe,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './credit-note-workspace.html',
 })
 export class CreditNoteWorkspacePage {
   private readonly http = inject(HttpClient);
   readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
   clientId = '';
   periodStart = '';
   periodEnd = '';
@@ -57,7 +74,10 @@ export class CreditNoteWorkspacePage {
       reason: this.reason,
       creditNoteDate: this.periodEnd,
     }).subscribe({
-      next: () => this.loadNotes(),
+      next: () => {
+        this.toast.success('Credit note generated successfully.');
+        this.loadNotes();
+      },
       error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Generate failed.')),
     });
   }

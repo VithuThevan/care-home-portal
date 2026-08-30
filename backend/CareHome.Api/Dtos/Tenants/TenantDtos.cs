@@ -25,6 +25,15 @@ namespace CareHome.Api.Dtos.Tenants
         public DateTimeOffset CreatedAt { get; set; }
     }
 
+    public class CreateTenantResponse : TenantDto
+    {
+        public bool CredentialsEmailed { get; set; }
+
+        public bool CredentialsEmailSimulated { get; set; }
+
+        public string? TemporaryPassword { get; set; }
+    }
+
     public class CreateTenantRequest
     {
         public string Name { get; set; } = string.Empty;

@@ -5,10 +5,27 @@ import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
 
 @Component({
   selector: 'app-platform-tenant-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+  ],
   templateUrl: './platform-tenant-form.html',
 })
 export class PlatformTenantFormPage implements OnInit {
@@ -22,6 +39,11 @@ export class PlatformTenantFormPage implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
+  readonly createdNotice = signal<{
+    email: string;
+    simulated: boolean;
+    temporaryPassword?: string | null;
+  } | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
@@ -32,8 +54,7 @@ export class PlatformTenantFormPage implements OnInit {
     email: [''],
     website: [''],
     isActive: [true],
-    adminEmail: [''],
-    adminPassword: [''],
+    adminEmail: ['', [Validators.required, Validators.email]],
     adminDisplayName: [''],
   });
 
@@ -42,6 +63,8 @@ export class PlatformTenantFormPage implements OnInit {
     if (id) {
       this.tenantId = Number(id);
       this.isEditMode = true;
+      this.form.controls.adminEmail.clearValidators();
+      this.form.controls.adminEmail.updateValueAndValidity();
       this.isLoading.set(true);
       this.errorMessage.set(null);
       this.http
@@ -66,13 +89,31 @@ export class PlatformTenantFormPage implements OnInit {
     const body = this.form.getRawValue();
     const request$ = this.isEditMode
       ? this.http.put(`/api/platform/tenants/${this.tenantId}`, body)
-      : this.http.post('/api/platform/tenants', body);
+      : this.http.post<CreateOrganisationResponse>('/api/platform/tenants', body);
 
     request$.pipe(finalize(() => this.isSaving.set(false))).subscribe({
-      next: () => void this.router.navigate(['/platform/tenants']),
+      next: (result) => {
+        if (this.isEditMode) {
+          void this.router.navigate(['/platform/tenants']);
+          return;
+        }
+
+        const created = result as CreateOrganisationResponse;
+        this.createdNotice.set({
+          email: body.adminEmail,
+          simulated: !!created.credentialsEmailSimulated,
+          temporaryPassword: created.temporaryPassword,
+        });
+      },
       error: (error) => {
         this.errorMessage.set(getApiErrorMessage(error, 'Unable to save organisation.'));
       },
     });
   }
+}
+
+interface CreateOrganisationResponse {
+  credentialsEmailed?: boolean;
+  credentialsEmailSimulated?: boolean;
+  temporaryPassword?: string | null;
 }

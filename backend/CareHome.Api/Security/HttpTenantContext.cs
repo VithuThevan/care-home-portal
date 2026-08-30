@@ -10,6 +10,8 @@ namespace CareHome.Api.Security
         public const string TenantPublicId = "tenant_public_id";
 
         public const string TenantName = "tenant_name";
+
+        public const string MustChangePassword = "must_change_password";
     }
 
     public class HttpTenantContext(IHttpContextAccessor httpContextAccessor) : ITenantContext

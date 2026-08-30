@@ -30,7 +30,7 @@ namespace CareHome.Api.Controllers
         {
             var email = request.Email.Trim();
             var user = await userManager.FindByEmailAsync(email);
-            if (user is null || !user.IsActive)
+            if (user?.IsActive is not true)
             {
                 logger.LogInformation("Login failed for {Email}: unknown or inactive user", email);
                 return Unauthorized(new { message = "Invalid email or password." });
@@ -67,11 +67,56 @@ namespace CareHome.Api.Controllers
             return Ok(await BuildResponse(user, includeToken: true));
         }
 
+        [HttpPost("change-password")]
+        public async Task<ActionResult<AuthResponse>> ChangePassword(ChangePasswordRequest request)
+        {
+            var user = await userManager.GetUserAsync(User);
+            if (user?.IsActive != true)
+            {
+                return Unauthorized();
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword)
+                || string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest(new { message = "Current password and new password are required." });
+            }
+
+            if (request.NewPassword == request.CurrentPassword)
+            {
+                return BadRequest(new { message = "The new password must be different from the temporary password." });
+            }
+
+            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(request.NewPassword))
+            {
+                return BadRequest(new { message = "This password is not allowed. Choose a unique password." });
+            }
+
+            var changed = await userManager.ChangePasswordAsync(
+                user,
+                request.CurrentPassword,
+                request.NewPassword);
+            if (!changed.Succeeded)
+            {
+                return BadRequest(new
+                {
+                    message = string.Join(" ", changed.Errors.Select(e => e.Description))
+                });
+            }
+
+            user.MustChangePassword = false;
+            await userManager.UpdateAsync(user);
+            await userManager.UpdateSecurityStampAsync(user);
+
+            logger.LogInformation("Password changed for user {UserId}", user.Id);
+            return Ok(await BuildResponse(user, includeToken: true));
+        }
+
         [HttpGet("me")]
         public async Task<ActionResult<AuthResponse>> Me()
         {
             var user = await userManager.GetUserAsync(User);
-            if (user is null || !user.IsActive)
+            if (user?.IsActive != true)
             {
                 return Unauthorized();
             }
@@ -112,6 +157,11 @@ namespace CareHome.Api.Controllers
             };
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
+            if (user.MustChangePassword)
+            {
+                claims.Add(new Claim(TenantClaimTypes.MustChangePassword, "true"));
+            }
+
             if (user.TenantId is int tid && !roles.Contains(AppRoles.PlatformAdmin))
             {
                 claims.Add(new Claim(TenantClaimTypes.TenantId, tid.ToString()));
@@ -138,7 +188,8 @@ namespace CareHome.Api.Controllers
                 Roles = roles,
                 CareHomeIds = careHomeIds,
                 TenantName = tenantName,
-                TenantPublicId = tenantPublicId
+                TenantPublicId = tenantPublicId,
+                MustChangePassword = user.MustChangePassword
             };
 
             if (includeToken)

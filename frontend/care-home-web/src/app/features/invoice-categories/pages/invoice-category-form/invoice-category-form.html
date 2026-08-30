@@ -1,102 +1,36 @@
 <div class="page">
-  <div class="form-container">
-    <h1>
-      @if (isEditMode) {
-        Edit Invoice Category
-      } @else {
-        Add Invoice Category
-      }
-    </h1>
-
-    @if (isLoading()) {
-      <p>Loading invoice category...</p>
-    }
-
-    @if (errorMessage()) {
-      <div class="error-message">
-        {{ errorMessage() }}
+  <app-page-header [title]="isEditMode ? 'Edit Invoice Category' : 'Add Invoice Category'" />
+  <app-api-error [message]="errorMessage()" />
+  @if (isLoading()) { <app-loading-state label="Loading invoice category..." /> }
+  @if (!isLoading()) {
+    <form [formGroup]="form" (ngSubmit)="save()" class="panel max-w-3xl">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Code</mat-label>
+          <input matInput formControlName="code" required />
+          @if (form.controls.code.touched && form.controls.code.hasError('required')) {
+            <mat-error>Code is required.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" required />
+          @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+            <mat-error>Name is required.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full md:col-span-2">
+          <mat-label>Description</mat-label>
+          <textarea matInput rows="3" formControlName="description"></textarea>
+        </mat-form-field>
       </div>
-    }
-
-    @if (!isLoading()) {
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <div class="form-field">
-          <label for="code">Code</label>
-          <input id="code" type="text" formControlName="code" />
-
-          @if (
-            form.controls.code.touched &&
-            form.controls.code.hasError('required')
-          ) {
-            <small class="field-error">Code is required.</small>
-          }
-
-          @if (
-            form.controls.code.touched &&
-            form.controls.code.hasError('maxlength')
-          ) {
-            <small class="field-error">Code cannot exceed 30 characters.</small>
-          }
-        </div>
-
-        <div class="form-field">
-          <label for="name">Name</label>
-          <input id="name" type="text" formControlName="name" />
-
-          @if (
-            form.controls.name.touched &&
-            form.controls.name.hasError('required')
-          ) {
-            <small class="field-error">Name is required.</small>
-          }
-
-          @if (
-            form.controls.name.touched &&
-            form.controls.name.hasError('maxlength')
-          ) {
-            <small class="field-error">Name cannot exceed 100 characters.</small>
-          }
-        </div>
-
-        <div class="form-field">
-          <label for="description">Description</label>
-          <textarea
-            id="description"
-            formControlName="description"
-            rows="3"
-          ></textarea>
-
-          @if (
-            form.controls.description.touched &&
-            form.controls.description.hasError('maxlength')
-          ) {
-            <small class="field-error">
-              Description cannot exceed 500 characters.
-            </small>
-          }
-        </div>
-
-        @if (isEditMode) {
-          <div class="checkbox-field">
-            <input id="isActive" type="checkbox" formControlName="isActive" />
-            <label for="isActive">Active</label>
-          </div>
-        }
-
-        <div class="buttons">
-          <a routerLink="/invoice-categories" class="secondary-button">
-            Cancel
-          </a>
-
-          <button type="submit" class="primary-button" [disabled]="isSaving() || !auth.canWrite()">
-            @if (isSaving()) {
-              Saving...
-            } @else {
-              Save Invoice Category
-            }
-          </button>
-        </div>
-      </form>
-    }
-  </div>
+      @if (isEditMode) { <mat-checkbox formControlName="isActive">Active</mat-checkbox> }
+      <div class="mt-4 flex flex-wrap gap-2">
+        <a mat-stroked-button routerLink="/invoice-categories">Cancel</a>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSaving() || !auth.canWrite()">
+          @if (isSaving()) { Saving... } @else { Save }
+        </button>
+      </div>
+    </form>
+  }
 </div>

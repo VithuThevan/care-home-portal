@@ -1,36 +1,67 @@
 <div class="page">
-  <div class="page-header"><div><h1>Miscellaneous Charges</h1><p>CSV columns: ClientReference, UsedDate, Description, Amount, NominalCode</p></div></div>
-  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
-  @if (info()) { <p>{{ info() }}</p> }
+  <app-page-header title="Miscellaneous Charges" subtitle="CSV columns: ClientReference, UsedDate, Description, Amount, NominalCode" />
+  <app-api-error [message]="errorMessage()" />
+  @if (info()) {
+    <div class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm">{{ info() }}</div>
+  }
   @if (auth.canWrite()) {
-  <input type="file" accept=".csv,text/csv" (change)="onFile($event)" />
+    <section class="panel mb-4">
+      <input type="file" accept=".csv,text/csv" (change)="onFile($event)" />
+    </section>
   }
   @if (preview(); as preview) {
-    <p>Valid {{ preview.validCount }} · Invalid {{ preview.invalidCount }}</p>
-    <table>
-      <thead><tr><th>Row</th><th>Status</th><th>Client</th><th>Error</th></tr></thead>
-      <tbody>
-        @for (row of preview.rows; track row.rowNumber) {
-          <tr>
-            <td>{{ row.rowNumber }}</td>
-            <td>{{ row.isValid ? 'Valid' : 'Invalid' }}</td>
-            <td>{{ row.clientName }}</td>
-            <td>{{ row.error }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-    @if (auth.canWrite()) {
-    <button class="primary-button" type="button" [disabled]="preview.invalidCount > 0" (click)="confirm()">Confirm import</button>
-    }
-  }
-  <h2>Import batches</h2>
-  <table>
-    <thead><tr><th>File</th><th>When</th><th>Accepted</th></tr></thead>
-    <tbody>
-      @for (batch of batches(); track batch.id) {
-        <tr><td>{{ batch.fileName }}</td><td>{{ batch.importedAt }}</td><td>{{ batch.acceptedRows }}</td></tr>
+    <section class="panel mb-4">
+      <p>Valid {{ preview.validCount }} · Invalid {{ preview.invalidCount }}</p>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Row</th>
+              <th>Status</th>
+              <th>Client</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of preview.rows; track row.rowNumber) {
+              <tr>
+                <td>{{ row.rowNumber }}</td>
+                <td><app-status-badge [value]="row.isValid ? 'Valid' : 'Invalid'" /></td>
+                <td>{{ row.clientName }}</td>
+                <td>{{ row.error }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (auth.canWrite()) {
+        <button mat-flat-button color="primary" type="button" [disabled]="preview.invalidCount > 0" (click)="confirm()">
+          Confirm import
+        </button>
       }
-    </tbody>
-  </table>
+    </section>
+  }
+  <section class="panel">
+    <h2 class="mt-0 text-lg font-semibold">Import batches</h2>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>When</th>
+            <th class="num">Accepted</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (batch of batches(); track batch.id) {
+            <tr>
+              <td>{{ batch.fileName }}</td>
+              <td>{{ batch.importedAt }}</td>
+              <td class="num">{{ batch.acceptedRows }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>

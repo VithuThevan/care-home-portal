@@ -22,6 +22,10 @@ export class AuthService {
     return !!this.currentUser()?.token;
   }
 
+  mustChangePassword(): boolean {
+    return !!this.currentUser()?.mustChangePassword;
+  }
+
   hasRole(...roles: string[]): boolean {
     const current = this.currentUser()?.roles ?? [];
     return roles.some((role) => current.includes(role));
@@ -48,6 +52,10 @@ export class AuthService {
   }
 
   homePath(): string[] {
+    if (this.mustChangePassword()) {
+      return ['/change-password'];
+    }
+
     if (this.isPlatformAdmin() && !this.currentUser()?.tenantPublicId) {
       return ['/platform/tenants'];
     }
@@ -57,17 +65,25 @@ export class AuthService {
 
   login(email: string, password: string) {
     return this.http.post<AuthUser>('/api/auth/login', { email, password }).pipe(
-      tap((user) => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-        this.currentUser.set(user);
-      }),
+      tap((user) => this.storeUser(user)),
     );
+  }
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.http
+      .post<AuthUser>('/api/auth/change-password', { currentPassword, newPassword })
+      .pipe(tap((user) => this.storeUser(user)));
   }
 
   logout(): void {
     localStorage.removeItem(STORAGE_KEY);
     this.currentUser.set(null);
     void this.router.navigate(['/login']);
+  }
+
+  private storeUser(user: AuthUser): void {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    this.currentUser.set(user);
   }
 }
 

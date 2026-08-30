@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard, adminGuard, platformGuard, organisationSettingsGuard } from './core/auth.guard';
+import { authGuard, guestGuard, adminGuard, platformGuard, organisationSettingsGuard, passwordChangeGuard } from './core/auth.guard';
 import { LoginPage } from './features/login/login';
+import { ChangePasswordPage } from './features/login/change-password';
 import { ForbiddenPage } from './features/forbidden/forbidden';
 import { DashboardPage } from './features/dashboard/dashboard';
 import { CompanyList } from './features/companies/pages/company-list/company-list';
@@ -34,6 +35,7 @@ import { OrganisationSettingsPage } from './features/settings/pages/organisation
 
 export const routes: Routes = [
   { path: 'login', component: LoginPage, canActivate: [guestGuard] },
+  { path: 'change-password', component: ChangePasswordPage, canActivate: [passwordChangeGuard] },
   { path: 'forbidden', component: ForbiddenPage, canActivate: [authGuard] },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardPage, canActivate: [authGuard] },

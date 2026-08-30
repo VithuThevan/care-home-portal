@@ -1,11 +1,17 @@
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 
 import { getApiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth.service';
+import { PageHeaderComponent } from '../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../shared/ui/loading-state';
+import { StatusBadgeComponent } from '../../shared/ui/status-badge';
 
 interface DashboardDto {
   totalCareHomes: number;
@@ -24,7 +30,17 @@ interface DashboardDto {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RouterLink, DecimalPipe],
+  imports: [
+    RouterLink,
+    DatePipe,
+    DecimalPipe,
+    MatButtonModule,
+    MatIconModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './dashboard.html',
 })
 export class DashboardPage implements OnInit {
@@ -34,6 +50,7 @@ export class DashboardPage implements OnInit {
   readonly dashboard = signal<DashboardDto | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly isLoading = signal(false);
+  readonly today = new Date();
 
   ngOnInit(): void {
     if (this.auth.isPlatformAdmin() && !this.auth.currentUser()?.tenantPublicId) {

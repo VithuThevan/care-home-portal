@@ -120,12 +120,13 @@ namespace CareHome.Api.Security
                 return;
             }
 
-            var tenant = await provisioning.ProvisionAsync(new TenantProvisionRequest
+            var provisioned = await provisioning.ProvisionAsync(new TenantProvisionRequest
             {
                 Name = "Demo Care Group",
                 TradingName = "Demo Care Group",
                 IsActive = true
             });
+            var tenant = provisioned.Tenant;
 
             var company = new Company
             {

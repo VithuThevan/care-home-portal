@@ -6,15 +6,21 @@ import { NominalCode } from '../../models/nominal-code.model';
 import { NominalCodeService } from '../../services/nominal-code.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
+import { ConfirmDialogService } from '../../../../shared/ui/confirm-dialog.service';
 
 @Component({
   selector: 'app-nominal-code-list',
-  imports: [RouterLink],
+  imports: [RouterLink, MatButtonModule, PageHeaderComponent, ApiErrorComponent, LoadingStateComponent, StatusBadgeComponent],
   templateUrl: './nominal-code-list.html',
-  styleUrl: './nominal-code-list.scss'
 })
 export class NominalCodeList implements OnInit {
   private readonly nominalCodeService = inject(NominalCodeService);
+  private readonly confirm = inject(ConfirmDialogService);
   readonly auth = inject(AuthService);
 
   readonly nominalCodes = signal<NominalCode[]>([]);
@@ -48,25 +54,21 @@ export class NominalCodeList implements OnInit {
   }
 
   deactivateNominalCode(nominalCode: NominalCode): void {
-    const confirmed = window.confirm(`Deactivate ${nominalCode.name}?`);
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.nominalCodeService.deactivateNominalCode(nominalCode.id).subscribe({
-      next: () => {
-        this.loadNominalCodes();
-      },
-
-      error: (error) => {
-        console.error(error);
-
-        this.errorMessage.set(getApiErrorMessage(
-          error,
-          'Unable to deactivate nominal code.'
-        ));
-      }
-    });
+    this.confirm
+      .confirm({
+        title: 'Deactivate nominal code',
+        message: `Deactivate ${nominalCode.name}? It will no longer be available for new billing.`,
+        confirmLabel: 'Deactivate',
+      })
+      .subscribe((ok) => {
+        if (!ok) {
+          return;
+        }
+        this.nominalCodeService.deactivateNominalCode(nominalCode.id).subscribe({
+          next: () => this.loadNominalCodes(),
+          error: (error) =>
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to deactivate nominal code.')),
+        });
+      });
   }
 }

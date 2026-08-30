@@ -14,15 +14,33 @@ import { ClientService } from '../../services/client.service';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { ToastService } from '../../../../shared/ui/toast.service';
 
 @Component({
   selector: 'app-client-form',
 
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+  ],
 
   templateUrl: './client-form.html',
-
-  styleUrl: './client-form.scss',
 })
 export class ClientForm implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
@@ -36,6 +54,7 @@ export class ClientForm implements OnInit {
   private readonly router = inject(Router);
 
   readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
 
   clientId: number | null = null;
 
@@ -279,6 +298,7 @@ export class ClientForm implements OnInit {
         )
         .subscribe({
           next: () => {
+            this.toast.success('Client updated successfully.');
             this.router.navigate(['/clients']);
           },
 
@@ -303,6 +323,7 @@ export class ClientForm implements OnInit {
       )
       .subscribe({
       next: () => {
+        this.toast.success('Client created successfully.');
         this.router.navigate(['/clients']);
       },
 

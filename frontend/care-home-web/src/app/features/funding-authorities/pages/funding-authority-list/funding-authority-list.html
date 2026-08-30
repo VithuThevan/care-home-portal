@@ -1,78 +1,41 @@
 <div class="page">
-  <div class="page-header">
-    <div>
-      <h1>Funding Authorities</h1>
-      <p>Manage organisations and people that fund client care.</p>
-    </div>
-
+  <app-page-header title="Funding Authorities" subtitle="Manage organisations and people that fund client care.">
     @if (auth.canWrite()) {
-      <a routerLink="/funding-authorities/new" class="primary-button">
-        Add Funding Authority
-      </a>
+      <a mat-flat-button color="primary" routerLink="/funding-authorities/new">Add Authority</a>
     }
-  </div>
-
+  </app-page-header>
+  <app-api-error [message]="errorMessage()" />
   @if (isLoading()) {
-    <p>Loading funding authorities...</p>
+    <app-loading-state label="Loading funding authorities..." />
   }
-
-  @if (errorMessage()) {
-    <div class="error-message">
-      {{ errorMessage() }}
-    </div>
-  }
-
   @if (!isLoading()) {
     <div class="table-container">
-      <table>
+      <table class="data-table">
         <thead>
           <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Billing Frequency</th>
-            <th>Contact</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>Code</th><th>Name</th><th>Type</th><th>Billing Frequency</th><th>Contact</th><th>Status</th><th>Actions</th>
           </tr>
         </thead>
-
         <tbody>
           @for (authority of fundingAuthorities(); track authority.id) {
-            <tr>
+            <tr [class.inactive-row]="!authority.isActive">
               <td>{{ authority.code }}</td>
-              <td>{{ authority.name }}</td>
+              <td class="font-medium">{{ authority.name }}</td>
               <td>{{ authority.type }}</td>
               <td>{{ authority.billingFrequency }}</td>
-              <td>{{ authority.contactName || '-' }}</td>
-              <td>
-                @if (authority.isActive) {
-                  <span class="status active">Active</span>
-                } @else {
-                  <span class="status inactive">Inactive</span>
-                }
-              </td>
-              <td class="actions">
+              <td>{{ authority.contactName || '—' }}</td>
+              <td><app-status-badge [value]="authority.isActive ? 'Active' : 'Inactive'" /></td>
+              <td class="flex flex-wrap gap-2">
                 @if (auth.canWrite()) {
-                  <a [routerLink]="['/funding-authorities', authority.id, 'edit']">
-                    Edit
-                  </a>
-
+                  <a mat-stroked-button [routerLink]="['/funding-authorities', authority.id, 'edit']">Edit</a>
                   @if (authority.isActive) {
-                    <button
-                      type="button"
-                      (click)="deactivateFundingAuthority(authority)"
-                    >
-                      Deactivate
-                    </button>
+                    <button mat-stroked-button color="warn" type="button" (click)="deactivateFundingAuthority(authority)">Deactivate</button>
                   }
                 }
               </td>
             </tr>
           } @empty {
-            <tr>
-              <td colspan="7">No funding authorities found.</td>
-            </tr>
+            <tr><td colspan="7">No funding authorities found.</td></tr>
           }
         </tbody>
       </table>

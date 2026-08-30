@@ -1,33 +1,58 @@
 <div class="page">
-  <div class="page-header"><div><h1>Reports</h1><p>Operational and financial reports with CSV, Excel and PDF export.</p></div></div>
-  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
-  <div class="filters">
-    <select [(ngModel)]="report">
-      <option value="client-census">Client census</option>
-      <option value="current-rates">Current rates</option>
-      <option value="invoices-by-client">Invoices by client</option>
-      <option value="invoices-by-care-home">Invoices by care home</option>
-      <option value="income-by-category">Income by category</option>
-      <option value="occupancy">Occupancy / availability</option>
-      <option value="rate-history">Funding rate history</option>
-      <option value="billing-exceptions">Billing exceptions</option>
-      <option value="outstanding">Payment status / outstanding</option>
-    </select>
-    <input type="date" [(ngModel)]="from" />
-    <input type="date" [(ngModel)]="to" />
-    <button type="button" (click)="load()">Run</button>
-    <button type="button" (click)="exportFormat('csv')">CSV</button>
-    <button type="button" (click)="exportFormat('xlsx')">Excel</button>
-    <button type="button" (click)="exportFormat('pdf')">PDF</button>
-  </div>
+  <app-page-header title="Reports" subtitle="Operational and financial reports with CSV, Excel and PDF export." />
+  <app-api-error [message]="errorMessage()" />
+  <section class="panel mb-4">
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Report</mat-label>
+        <mat-select [(ngModel)]="report">
+          <mat-option value="client-census">Client census</mat-option>
+          <mat-option value="current-rates">Current rates</mat-option>
+          <mat-option value="invoices-by-client">Invoices by client</mat-option>
+          <mat-option value="invoices-by-care-home">Invoices by care home</mat-option>
+          <mat-option value="income-by-category">Income by category</mat-option>
+          <mat-option value="occupancy">Occupancy / availability</mat-option>
+          <mat-option value="rate-history">Funding rate history</mat-option>
+          <mat-option value="billing-exceptions">Billing exceptions</mat-option>
+          <mat-option value="outstanding">Payment status / outstanding</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>From</mat-label>
+        <input matInput type="date" [(ngModel)]="from" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>To</mat-label>
+        <input matInput type="date" [(ngModel)]="to" />
+      </mat-form-field>
+      <div class="flex flex-wrap items-center gap-2">
+        <button mat-flat-button color="primary" type="button" (click)="load()">Run</button>
+        <button mat-stroked-button type="button" (click)="exportFormat('csv')">CSV</button>
+        <button mat-stroked-button type="button" (click)="exportFormat('xlsx')">Excel</button>
+        <button mat-stroked-button type="button" (click)="exportFormat('pdf')">PDF</button>
+      </div>
+    </div>
+  </section>
   @if (rows().length) {
-    <table>
-      <thead><tr>@for (key of keys(); track key) { <th>{{ key }}</th> }</tr></thead>
-      <tbody>
-        @for (row of rows(); track $index) {
-          <tr>@for (key of keys(); track key) { <td>{{ row[key] }}</td> }</tr>
-        }
-      </tbody>
-    </table>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            @for (key of keys(); track key) {
+              <th>{{ key }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track $index) {
+            <tr>
+              @for (key of keys(); track key) {
+                <td>{{ row[key] }}</td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </div>

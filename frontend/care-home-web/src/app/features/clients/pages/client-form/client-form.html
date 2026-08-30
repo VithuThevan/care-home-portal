@@ -1,259 +1,166 @@
 <div class="page">
-  <div class="form-container">
-    <h1>
-      @if (isEditMode) {
-        Edit Client
-      } @else {
-        Add Client
-      }
-    </h1>
+  <app-page-header
+    [title]="isEditMode ? 'Edit Client' : 'Add Client'"
+    subtitle="Resident records used for funding, rates, and invoicing."
+  />
 
-    @if (errorMessage()) {
-      <div class="error-message">
-        {{ errorMessage() }}
-      </div>
-    }
+  <app-api-error [message]="errorMessage()" />
 
-    @if (isLoading()) {
-      <p>Loading client...</p>
-    } @else {
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <h2>Location</h2>
-
-        <div class="form-field">
-          <label> Care Home </label>
-
-          <select formControlName="careHomeId">
-            <option [ngValue]="0">Select Care Home</option>
-
+  @if (isLoading()) {
+    <app-loading-state label="Loading client..." />
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()" class="panel max-w-5xl">
+      <h2 class="mt-0 mb-3 text-lg font-semibold">Location</h2>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <mat-form-field appearance="outline" class="w-full md:col-span-2">
+          <mat-label>Care home</mat-label>
+          <mat-select formControlName="careHomeId" required>
+            <mat-option [value]="0">Select care home</mat-option>
             @for (careHome of selectableCareHomes; track careHome.id) {
-              <option [ngValue]="careHome.id">
-                {{ careHome.companyName }}
-                -
-                {{ careHome.name }}
+              <mat-option [value]="careHome.id">
+                {{ careHome.companyName }} - {{ careHome.name }}
                 @if (!careHome.isActive) {
                   (Inactive)
                 }
-              </option>
+              </mat-option>
             }
-          </select>
-
-          @if (
-            form.controls.careHomeId.touched &&
-            form.controls.careHomeId.hasError('min')
-          ) {
-            <small class="field-error">Care home is required.</small>
+          </mat-select>
+          @if (form.controls.careHomeId.touched && form.controls.careHomeId.hasError('min')) {
+            <mat-error>Care home is required.</mat-error>
           }
-        </div>
+        </mat-form-field>
+      </div>
 
-        <h2>Client Identification</h2>
+      <h2 class="mb-3 text-lg font-semibold">Client identification</h2>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Sage ID</mat-label>
+          <input matInput formControlName="sageId" required />
+          @if (form.controls.sageId.touched && form.controls.sageId.hasError('required')) {
+            <mat-error>Sage ID is required.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Client reference number</mat-label>
+          <input matInput formControlName="referenceNumber" required />
+          @if (form.controls.referenceNumber.touched && form.controls.referenceNumber.hasError('required')) {
+            <mat-error>Client Reference Number is required.</mat-error>
+          }
+        </mat-form-field>
+      </div>
 
-        <div class="form-row">
-          <div class="form-field">
-            <label> Sage ID </label>
+      <h2 class="mb-3 text-lg font-semibold">Personal information</h2>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Title</mat-label>
+          <mat-select formControlName="title">
+            <mat-option value="">Select</mat-option>
+            <mat-option value="Mr">Mr</mat-option>
+            <mat-option value="Mrs">Mrs</mat-option>
+            <mat-option value="Miss">Miss</mat-option>
+            <mat-option value="Ms">Ms</mat-option>
+            <mat-option value="Dr">Dr</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>First name</mat-label>
+          <input matInput formControlName="firstName" required />
+          @if (form.controls.firstName.touched && form.controls.firstName.hasError('required')) {
+            <mat-error>First name is required.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Last name</mat-label>
+          <input matInput formControlName="lastName" required />
+          @if (form.controls.lastName.touched && form.controls.lastName.hasError('required')) {
+            <mat-error>Last name is required.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Date of birth</mat-label>
+          <input matInput type="date" formControlName="dateOfBirth" />
+        </mat-form-field>
+      </div>
 
-            <input type="text" formControlName="sageId" />
-
-            @if (
-              form.controls.sageId.touched &&
-              form.controls.sageId.hasError('required')
-            ) {
-              <small class="field-error">Sage ID is required.</small>
-            }
-          </div>
-
-          <div class="form-field">
-            <label> Client Reference Number </label>
-
-            <input type="text" formControlName="referenceNumber" />
-
-            @if (
-              form.controls.referenceNumber.touched &&
-              form.controls.referenceNumber.hasError('required')
-            ) {
-              <small class="field-error">Reference number is required.</small>
-            }
-          </div>
-        </div>
-
-        <h2>Personal Details</h2>
-
-        <div class="form-row">
-          <div class="form-field">
-            <label> Title </label>
-
-            <select formControlName="title">
-              <option value="">Select</option>
-
-              <option value="Mr">Mr</option>
-
-              <option value="Mrs">Mrs</option>
-
-              <option value="Miss">Miss</option>
-
-              <option value="Ms">Ms</option>
-
-              <option value="Dr">Dr</option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label> First Name </label>
-
-            <input type="text" formControlName="firstName" />
-
-            @if (
-              form.controls.firstName.touched &&
-              form.controls.firstName.hasError('required')
-            ) {
-              <small class="field-error">First name is required.</small>
-            }
-          </div>
-
-          <div class="form-field">
-            <label> Last Name </label>
-
-            <input type="text" formControlName="lastName" />
-
-            @if (
-              form.controls.lastName.touched &&
-              form.controls.lastName.hasError('required')
-            ) {
-              <small class="field-error">Last name is required.</small>
-            }
-          </div>
-        </div>
-
-        <div class="form-field">
-          <label> Date of Birth </label>
-
-          <input type="date" formControlName="dateOfBirth" />
-        </div>
-
-        <h2>Care Details</h2>
-
-        <div class="form-row">
-          <div class="form-field">
-            <label> Care Type </label>
-
-            <select formControlName="careType">
-              <option value="">Select</option>
-
-              <option value="Nursing">Nursing</option>
-
-              <option value="Residential">Residential</option>
-            </select>
-
-            @if (
-              form.controls.careType.touched &&
-              form.controls.careType.hasError('required')
-            ) {
-              <small class="field-error">Care type is required.</small>
-            }
-          </div>
-
-          <div class="form-field">
-            <label> Admission Date </label>
-
-            <input type="date" formControlName="admissionDate" />
-
-            @if (
-              form.controls.admissionDate.touched &&
-              form.controls.admissionDate.hasError('required')
-            ) {
-              <small class="field-error">Admission date is required.</small>
-            }
-          </div>
-        </div>
+      <h2 class="mb-3 text-lg font-semibold">Care information</h2>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Care type</mat-label>
+          <mat-select formControlName="careType" required>
+            <mat-option value="">Select</mat-option>
+            <mat-option value="Nursing">Nursing</mat-option>
+            <mat-option value="Residential">Residential</mat-option>
+          </mat-select>
+          @if (form.controls.careType.touched && form.controls.careType.hasError('required')) {
+            <mat-error>Care type is required.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Admission date</mat-label>
+          <input matInput type="date" formControlName="admissionDate" required />
+          @if (form.controls.admissionDate.touched && form.controls.admissionDate.hasError('required')) {
+            <mat-error>Admission date is required.</mat-error>
+          }
+        </mat-form-field>
 
         @if (isEditMode) {
-          <div class="form-row">
-            <div class="form-field">
-              <label> Status </label>
-
-              <select formControlName="status">
-                <option value="Current">Current</option>
-
-                <option value="Left">Left</option>
-
-                <option value="Deceased">Deceased</option>
-              </select>
-            </div>
-
-            @if (!isCurrentStatus) {
-              <div class="form-field">
-                <label> Discharge Date </label>
-
-                <input type="date" formControlName="dischargeDate" />
-
-                @if (
-                  form.controls.dischargeDate.touched &&
-                  form.controls.dischargeDate.hasError('required')
-                ) {
-                  <small class="field-error">Discharge date is required.</small>
-                }
-              </div>
-            }
-          </div>
-
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="Current">Current</mat-option>
+              <mat-option value="Left">Left</mat-option>
+              <mat-option value="Deceased">Deceased</mat-option>
+            </mat-select>
+          </mat-form-field>
           @if (!isCurrentStatus) {
-            <div class="form-field">
-              <label> Discharge Reason </label>
-
-              <input type="text" formControlName="dischargeReason" />
-            </div>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Discharge date</mat-label>
+              <input matInput type="date" formControlName="dischargeDate" />
+              @if (form.controls.dischargeDate.touched && form.controls.dischargeDate.hasError('required')) {
+                <mat-error>Discharge date cannot be earlier than admission date.</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full md:col-span-2">
+              <mat-label>Discharge reason</mat-label>
+              <input matInput formControlName="dischargeReason" />
+            </mat-form-field>
           }
         }
+      </div>
 
-        <h2>Contact Details</h2>
+      <h2 class="mb-3 text-lg font-semibold">Contact information</h2>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Email address</mat-label>
+          <input matInput type="email" formControlName="email" />
+          @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+            <mat-error>Please enter a valid email address.</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Phone</mat-label>
+          <input matInput formControlName="phone" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w-full md:col-span-2">
+          <mat-label>Notes</mat-label>
+          <textarea matInput rows="4" formControlName="notes"></textarea>
+        </mat-form-field>
+      </div>
 
-        <div class="form-row">
-          <div class="form-field">
-            <label> Email </label>
+      @if (isEditMode && !isCurrentStatus) {
+        <mat-checkbox formControlName="isArchived">Archived</mat-checkbox>
+      }
 
-            <input type="email" formControlName="email" />
-
-            @if (
-              form.controls.email.touched &&
-              form.controls.email.hasError('email')
-            ) {
-              <small class="field-error">Enter a valid email address.</small>
-            }
-          </div>
-
-          <div class="form-field">
-            <label> Phone </label>
-
-            <input type="text" formControlName="phone" />
-          </div>
-        </div>
-
-        <div class="form-field">
-          <label> Notes </label>
-
-          <textarea rows="4" formControlName="notes"></textarea>
-        </div>
-
-        @if (isEditMode && !isCurrentStatus) {
-          <div class="checkbox-field">
-            <input id="isArchived" type="checkbox" formControlName="isArchived" />
-
-            <label for="isArchived"> Archived </label>
-          </div>
-        }
-
-        <div class="buttons">
-          <a routerLink="/clients" class="secondary-button"> Cancel </a>
-
-          <button type="submit" class="primary-button" [disabled]="isSaving() || !auth.canWrite()">
-            @if (isSaving()) {
-              Saving...
-            } @else {
-              Save Client
-            }
-          </button>
-        </div>
-      </form>
-    }
-  </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <a mat-stroked-button routerLink="/clients">Cancel</a>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isSaving() || !auth.canWrite()">
+          @if (isSaving()) {
+            Saving...
+          } @else {
+            Save
+          }
+        </button>
+      </div>
+    </form>
+  }
 </div>

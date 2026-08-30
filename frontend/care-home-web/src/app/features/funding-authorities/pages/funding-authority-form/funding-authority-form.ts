@@ -10,12 +10,30 @@ import { finalize } from 'rxjs';
 import { FundingAuthorityService } from '../../services/funding-authority.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
 
 @Component({
   selector: 'app-funding-authority-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+  ],
   templateUrl: './funding-authority-form.html',
-  styleUrl: './funding-authority-form.scss'
 })
 export class FundingAuthorityForm implements OnInit {
   private readonly formBuilder = inject(FormBuilder);

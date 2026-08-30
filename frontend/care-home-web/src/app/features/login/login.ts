@@ -2,15 +2,18 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 
 import { AuthService } from '../../core/auth.service';
 import { getApiErrorMessage } from '../../core/api-error';
+import { ApiErrorComponent } from '../../shared/ui/api-error';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, ApiErrorComponent],
   templateUrl: './login.html',
-  styleUrl: './login.scss',
 })
 export class LoginPage {
   private readonly formBuilder = inject(FormBuilder);

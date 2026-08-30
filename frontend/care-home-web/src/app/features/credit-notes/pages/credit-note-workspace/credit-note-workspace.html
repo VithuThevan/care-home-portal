@@ -1,44 +1,99 @@
 <div class="page">
-  <div class="page-header"><div><h1>Credit Notes</h1><p>Credits cannot exceed remaining invoiced amounts.</p></div></div>
-  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
-  <div class="filters">
-    <input placeholder="Client ID (optional)" [(ngModel)]="clientId" />
-    <input type="date" [(ngModel)]="periodStart" />
-    <input type="date" [(ngModel)]="periodEnd" />
-    <input placeholder="Reason" [(ngModel)]="reason" />
-    <button type="button" (click)="runPreview()">Preview</button>
-    @if (auth.canWrite()) {
-      <button type="button" class="primary-button" [disabled]="!preview()?.canGenerate" (click)="generate()">Generate</button>
-    }
-  </div>
-  @if (preview(); as preview) {
-    <table>
-      <thead><tr><th>Invoice</th><th>Client</th><th>Remaining</th><th>Credit</th></tr></thead>
-      <tbody>
-        @for (line of preview.lines; track line.invoiceLineId) {
-          <tr>
-            <td>{{ line.invoiceNumber }}</td>
-            <td>{{ line.clientName }}</td>
-            <td>{{ line.remainingAmount | number:'1.2-2' }}</td>
-            <td>{{ line.creditAmount | number:'1.2-2' }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  }
-  <h2>Existing credit notes</h2>
-  <table>
-    <thead><tr><th>Number</th><th>Invoice</th><th>Date</th><th>Amount</th><th></th></tr></thead>
-    <tbody>
-      @for (note of notes(); track note.id) {
-        <tr>
-          <td>{{ note.creditNoteNumber }}</td>
-          <td>{{ note.invoiceNumber }}</td>
-          <td>{{ note.creditNoteDate }}</td>
-          <td>{{ note.totalAmount | number:'1.2-2' }}</td>
-          <td><button type="button" (click)="pdf(note.id)">PDF</button></td>
-        </tr>
+  <app-page-header title="Credit Notes" subtitle="Credits cannot exceed remaining invoiced amounts." />
+
+  <app-api-error [message]="errorMessage()" />
+
+  <section class="panel credit-accent mb-4">
+    <div class="mb-3"><app-status-badge value="Sent" label="Credit Note" /></div>
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Client ID (optional)</mat-label>
+        <input matInput [(ngModel)]="clientId" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Period start</mat-label>
+        <input matInput type="date" [(ngModel)]="periodStart" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Period end</mat-label>
+        <input matInput type="date" [(ngModel)]="periodEnd" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Reason</mat-label>
+        <input matInput [(ngModel)]="reason" />
+      </mat-form-field>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button mat-stroked-button type="button" (click)="runPreview()">Preview</button>
+      @if (auth.canWrite()) {
+        <button mat-flat-button color="primary" type="button" [disabled]="!preview()?.canGenerate" (click)="generate()">
+          Generate
+        </button>
       }
-    </tbody>
-  </table>
+    </div>
+  </section>
+
+  @if (preview(); as preview) {
+    <section class="panel mb-4">
+      <h2 class="mt-0 text-lg font-semibold">Preview credit</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Client</th>
+              <th class="num">Remaining</th>
+              <th class="num">Credit</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of preview.lines; track line.invoiceLineId) {
+              <tr>
+                <td>{{ line.invoiceNumber }}</td>
+                <td>{{ line.clientName }}</td>
+                <td class="num">£{{ line.remainingAmount | number: '1.2-2' }}</td>
+                <td class="num">£{{ line.creditAmount | number: '1.2-2' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  <section class="panel">
+    <h2 class="mt-0 text-lg font-semibold">Existing credit notes</h2>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Credit Number</th>
+            <th>Original Invoice</th>
+            <th>Date</th>
+            <th>Reason</th>
+            <th>Status</th>
+            <th class="num">Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (note of notes(); track note.id) {
+            <tr>
+              <td>{{ note.creditNoteNumber }}</td>
+              <td>{{ note.invoiceNumber }}</td>
+              <td>{{ note.creditNoteDate }}</td>
+              <td>{{ note.reason }}</td>
+              <td><app-status-badge [value]="note.status" /></td>
+              <td class="num">£{{ note.totalAmount | number: '1.2-2' }}</td>
+              <td><button mat-stroked-button type="button" (click)="pdf(note.id)">PDF</button></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">No credit notes found.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>

@@ -4,11 +4,23 @@ import { FormsModule } from '@angular/forms';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
 import { PagedResult } from '../../../../core/models';
 
 @Component({
   selector: 'app-sage-export',
-  imports: [FormsModule],
+  imports: [
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+  ],
   templateUrl: './sage-export.html',
 })
 export class SageExportPage implements OnInit {

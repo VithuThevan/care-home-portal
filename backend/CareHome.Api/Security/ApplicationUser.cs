@@ -11,6 +11,8 @@ namespace CareHome.Api.Security
 
         public bool IsActive { get; set; } = true;
 
+        public bool MustChangePassword { get; set; }
+
         public Tenant? Tenant { get; set; }
 
         public ICollection<UserCareHomeAccess> CareHomeAccess { get; set; }

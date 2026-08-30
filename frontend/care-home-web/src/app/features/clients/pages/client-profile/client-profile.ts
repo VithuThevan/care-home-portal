@@ -7,12 +7,32 @@ import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
 import { Client } from '../../models/client.model';
 import { ClientService } from '../../services/client.service';
 
 @Component({
   selector: 'app-client-profile',
-  imports: [RouterLink, FormsModule, DecimalPipe],
+  imports: [
+    RouterLink,
+    FormsModule,
+    DecimalPipe,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './client-profile.html',
 })
 export class ClientProfilePage implements OnInit {

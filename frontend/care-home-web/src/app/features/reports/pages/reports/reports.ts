@@ -3,10 +3,24 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
 
 @Component({
   selector: 'app-reports',
-  imports: [FormsModule],
+  imports: [
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+  ],
   templateUrl: './reports.html',
 })
 export class ReportsPage {

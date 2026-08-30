@@ -6,15 +6,21 @@ import { FundingAuthority } from '../../models/funding-authority.model';
 import { FundingAuthorityService } from '../../services/funding-authority.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
+import { ConfirmDialogService } from '../../../../shared/ui/confirm-dialog.service';
 
 @Component({
   selector: 'app-funding-authority-list',
-  imports: [RouterLink],
+  imports: [RouterLink, MatButtonModule, PageHeaderComponent, ApiErrorComponent, LoadingStateComponent, StatusBadgeComponent],
   templateUrl: './funding-authority-list.html',
-  styleUrl: './funding-authority-list.scss'
 })
 export class FundingAuthorityList implements OnInit {
   private readonly fundingAuthorityService = inject(FundingAuthorityService);
+  private readonly confirm = inject(ConfirmDialogService);
   readonly auth = inject(AuthService);
 
   readonly fundingAuthorities = signal<FundingAuthority[]>([]);
@@ -48,27 +54,21 @@ export class FundingAuthorityList implements OnInit {
   }
 
   deactivateFundingAuthority(authority: FundingAuthority): void {
-    const confirmed = window.confirm(`Deactivate ${authority.name}?`);
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.fundingAuthorityService
-      .deactivateFundingAuthority(authority.id)
-      .subscribe({
-        next: () => {
-          this.loadFundingAuthorities();
-        },
-
-        error: (error) => {
-          console.error(error);
-
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to deactivate funding authority.'
-          ));
+    this.confirm
+      .confirm({
+        title: 'Deactivate funding authority',
+        message: `Deactivate ${authority.name}? It will no longer be available for new contracts.`,
+        confirmLabel: 'Deactivate',
+      })
+      .subscribe((ok) => {
+        if (!ok) {
+          return;
         }
+        this.fundingAuthorityService.deactivateFundingAuthority(authority.id).subscribe({
+          next: () => this.loadFundingAuthorities(),
+          error: (error) =>
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to deactivate funding authority.')),
+        });
       });
   }
 }

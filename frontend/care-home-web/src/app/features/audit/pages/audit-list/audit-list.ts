@@ -4,11 +4,25 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
 import { PagedResult } from '../../../../core/models';
 
 @Component({
   selector: 'app-audit-list',
-  imports: [FormsModule],
+  imports: [
+    FormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+  ],
   templateUrl: './audit-list.html',
 })
 export class AuditListPage implements OnInit {

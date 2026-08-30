@@ -2,22 +2,40 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
 
 import { CompanyService } from '../../services/company.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { ToastService } from '../../../../shared/ui/toast.service';
 
 @Component({
   selector: 'app-company-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+  ],
   templateUrl: './company-form.html',
-  styleUrl: './company-form.scss'
 })
 export class CompanyForm implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly companyService = inject(CompanyService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
   readonly auth = inject(AuthService);
 
   companyId: number | null = null;
@@ -83,11 +101,13 @@ export class CompanyForm implements OnInit {
         })
         .pipe(finalize(() => this.isSaving.set(false)))
         .subscribe({
-          next: () => this.router.navigate(['/companies']),
+          next: () => {
+            this.toast.success('Company updated successfully.');
+            this.router.navigate(['/companies']);
+          },
           error: (error) => {
-            console.error(error);
             this.errorMessage.set(getApiErrorMessage(error, 'Unable to update company.'));
-          }
+          },
         });
       return;
     }
@@ -96,11 +116,13 @@ export class CompanyForm implements OnInit {
       .createCompany({ name: formValue.name })
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
-        next: () => this.router.navigate(['/companies']),
+        next: () => {
+          this.toast.success('Company created successfully.');
+          this.router.navigate(['/companies']);
+        },
         error: (error) => {
-          console.error(error);
           this.errorMessage.set(getApiErrorMessage(error, 'Unable to create company.'));
-        }
+        },
       });
   }
 }

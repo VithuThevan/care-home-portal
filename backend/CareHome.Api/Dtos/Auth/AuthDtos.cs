@@ -22,6 +22,15 @@ namespace CareHome.Api.Dtos.Auth
         public string? TenantName { get; set; }
 
         public Guid? TenantPublicId { get; set; }
+
+        public bool MustChangePassword { get; set; }
+    }
+
+    public class ChangePasswordRequest
+    {
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        public string NewPassword { get; set; } = string.Empty;
     }
 }
 

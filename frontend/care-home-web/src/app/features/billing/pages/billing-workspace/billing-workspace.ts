@@ -7,6 +7,14 @@ import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { ToastService } from '../../../../shared/ui/toast.service';
+import { billingExceptionLabel } from '../../../../shared/ui/billing-exception';
 import { Company } from '../../../companies/models/company.model';
 import { CompanyService } from '../../../companies/services/company.service';
 import { CareHomeLocation } from '../../../care-homes/models/care-home.model';
@@ -18,7 +26,17 @@ import { Client } from '../../../clients/models/client.model';
 
 @Component({
   selector: 'app-billing-workspace',
-  imports: [FormsModule, RouterLink, DecimalPipe],
+  imports: [
+    FormsModule,
+    RouterLink,
+    DecimalPipe,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+  ],
   templateUrl: './billing-workspace.html',
 })
 export class BillingWorkspacePage implements OnInit {
@@ -28,6 +46,7 @@ export class BillingWorkspacePage implements OnInit {
   private readonly categoriesApi = inject(InvoiceCategoryService);
   private readonly clientsApi = inject(ClientService);
   readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
 
   readonly companies = signal<Company[]>([]);
   readonly careHomes = signal<CareHomeLocation[]>([]);
@@ -82,10 +101,15 @@ export class BillingWorkspacePage implements OnInit {
       .subscribe({
         next: (result) => {
           this.generateResult.set(result);
+          this.toast.success('Invoice generated successfully.');
           this.runPreview();
         },
         error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Generation failed.')),
       });
+  }
+
+  exceptionLabel(code: string, message: string): string {
+    return billingExceptionLabel(code, message);
   }
 
   private body() {

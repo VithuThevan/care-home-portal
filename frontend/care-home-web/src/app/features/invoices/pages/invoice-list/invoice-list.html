@@ -1,52 +1,88 @@
 <div class="page">
-  <div class="page-header">
-    <div>
-      <h1>Invoices</h1>
-      <p>Generated invoices with snapshot history. Void instead of deleting.</p>
+  <app-page-header title="Invoices" subtitle="Generated invoices with snapshot history. Void instead of deleting." />
+
+  <app-api-error [message]="errorMessage()" />
+  @if (bulkMessage()) {
+    <div class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm">{{ bulkMessage() }}</div>
+  }
+
+  <section class="panel mb-4">
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Invoice number</mat-label>
+        <input matInput [(ngModel)]="invoiceNumber" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Status</mat-label>
+        <mat-select [(ngModel)]="status">
+          <mat-option value="">All statuses</mat-option>
+          <mat-option value="Generated">Generated</mat-option>
+          <mat-option value="Sent">Sent</mat-option>
+          <mat-option value="Void">Void</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Payment status</mat-label>
+        <mat-select [(ngModel)]="paymentStatus">
+          <mat-option value="">All payment</mat-option>
+          <mat-option value="NotPaid">Not paid</mat-option>
+          <mat-option value="Paid">Paid</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="flex flex-wrap items-center gap-2">
+        <button mat-flat-button color="primary" type="button" (click)="load()">Search</button>
+        @if (auth.canWrite()) {
+          <button mat-stroked-button type="button" (click)="bulkSend()">Email selected</button>
+          <button mat-stroked-button type="button" (click)="bulkPay('Paid')">Mark paid</button>
+          <button mat-stroked-button type="button" (click)="bulkPay('NotPaid')">Mark unpaid</button>
+        }
+      </div>
     </div>
-  </div>
-  @if (errorMessage()) { <div class="error-message">{{ errorMessage() }}</div> }
-  @if (bulkMessage()) { <p>{{ bulkMessage() }}</p> }
-  <div class="filters">
-    <input placeholder="Invoice number" [(ngModel)]="invoiceNumber" />
-    <select [(ngModel)]="status">
-      <option value="">All statuses</option>
-      <option>Generated</option><option>Sent</option><option>Void</option>
-    </select>
-    <select [(ngModel)]="paymentStatus">
-      <option value="">All payment</option>
-      <option value="NotPaid">Not paid</option>
-      <option value="Paid">Paid</option>
-    </select>
-    <button type="button" (click)="load()">Search</button>
-    @if (auth.canWrite()) {
-    <button type="button" (click)="bulkSend()">Email selected</button>
-    <button type="button" (click)="bulkPay('Paid')">Mark paid</button>
-    <button type="button" (click)="bulkPay('NotPaid')">Mark unpaid</button>
-    }
-  </div>
-  @if (isLoading()) { <p>Loading invoices...</p> }
-  @if (!isLoading()) {
-  <table>
-    <thead>
-      <tr><th></th><th>Number</th><th>Home</th><th>Authority</th><th>Date</th><th>Amount</th><th>Status</th><th>Payment</th></tr>
-    </thead>
-    <tbody>
-      @for (item of items(); track item.id) {
-        <tr>
-          <td><input type="checkbox" (change)="toggle(item.id, $any($event.target).checked)" /></td>
-          <td><a [routerLink]="['/invoices', item.id]">{{ item.invoiceNumber }}</a></td>
-          <td>{{ item.careHomeName }}</td>
-          <td>{{ item.fundingAuthorityName }}</td>
-          <td>{{ item.invoiceDate }}</td>
-          <td>{{ item.totalAmount | number:'1.2-2' }}</td>
-          <td>{{ item.status }}</td>
-          <td>{{ item.paymentStatus }}@if (item.isDue) { / Due }</td>
-        </tr>
-      } @empty {
-        <tr><td colspan="8">No invoices found.</td></tr>
-      }
-    </tbody>
-  </table>
+  </section>
+
+  @if (isLoading()) {
+    <app-loading-state label="Loading invoices..." />
+  }
+
+  @if (!isLoading() && items().length === 0) {
+    <app-empty-state title="No invoices found" message="There are no invoices matching the current filters." />
+  }
+
+  @if (!isLoading() && items().length) {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Invoice Number</th>
+            <th>Invoice Date</th>
+            <th>Care Home</th>
+            <th>Funding Authority</th>
+            <th>Status</th>
+            <th>Payment Status</th>
+            <th class="num">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <td><mat-checkbox (change)="toggle(item.id, $any($event).checked)" /></td>
+              <td><a [routerLink]="['/invoices', item.id]">{{ item.invoiceNumber }}</a></td>
+              <td>{{ item.invoiceDate }}</td>
+              <td>{{ item.careHomeName }}</td>
+              <td>{{ item.fundingAuthorityName }}</td>
+              <td><app-status-badge [value]="item.status" /></td>
+              <td>
+                <app-status-badge [value]="item.paymentStatus" />
+                @if (item.isDue) {
+                  <app-status-badge value="Due" />
+                }
+              </td>
+              <td class="num">£{{ item.totalAmount | number: '1.2-2' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </div>

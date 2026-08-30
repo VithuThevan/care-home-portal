@@ -4,10 +4,26 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
 
 @Component({
   selector: 'app-invoice-template-list',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './invoice-template-list.html',
 })
 export class InvoiceTemplateListPage implements OnInit {

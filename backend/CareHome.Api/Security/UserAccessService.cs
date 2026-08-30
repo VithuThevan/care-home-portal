@@ -114,7 +114,7 @@ namespace CareHome.Api.Security
             }
 
             var allowed = await GetAllowedCareHomeIdsAsync(cancellationToken);
-            return allowed is null || allowed.Contains(careHomeId);
+            return allowed?.Contains(careHomeId) != false;
         }
     }
 }

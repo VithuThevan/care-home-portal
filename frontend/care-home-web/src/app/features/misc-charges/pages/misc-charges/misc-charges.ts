@@ -3,10 +3,15 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
 import { PagedResult } from '../../../../core/models';
 
 @Component({
   selector: 'app-misc-charges',
+  imports: [MatButtonModule, PageHeaderComponent, ApiErrorComponent, StatusBadgeComponent],
   templateUrl: './misc-charges.html',
 })
 export class MiscChargesPage implements OnInit {

@@ -2,6 +2,11 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { Client } from '../../models/client.model';
 import { ClientService } from '../../services/client.service';
@@ -9,16 +14,37 @@ import { CareHomeLocation } from '../../../care-homes/models/care-home.model';
 import { CareHomeService } from '../../../care-homes/services/care-home.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { EmptyStateComponent } from '../../../../shared/ui/empty-state';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
+import { ConfirmDialogService } from '../../../../shared/ui/confirm-dialog.service';
+import { ToastService } from '../../../../shared/ui/toast.service';
 
 @Component({
   selector: 'app-client-list',
-  imports: [FormsModule, RouterLink],
+  imports: [
+    FormsModule,
+    RouterLink,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+    EmptyStateComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './client-list.html',
-  styleUrl: './client-list.scss',
 })
 export class ClientList implements OnInit {
   private readonly clientService = inject(ClientService);
   private readonly careHomeService = inject(CareHomeService);
+  private readonly confirm = inject(ConfirmDialogService);
+  private readonly toast = inject(ToastService);
   readonly auth = inject(AuthService);
 
   readonly clients = signal<Client[]>([]);
@@ -39,7 +65,6 @@ export class ClientList implements OnInit {
   loadCareHomes(): void {
     this.careHomeService.getCareHomes().subscribe({
       next: (careHomes) => this.careHomes.set(careHomes.filter((x) => x.isActive)),
-      error: (error) => console.error(error),
     });
   }
 
@@ -60,7 +85,6 @@ export class ClientList implements OnInit {
           this.totalCount.set(page.totalCount);
         },
         error: (error) => {
-          console.error(error);
           this.errorMessage.set(getApiErrorMessage(error, 'Unable to load clients.'));
         },
       });
@@ -77,17 +101,25 @@ export class ClientList implements OnInit {
   }
 
   archiveClient(client: Client): void {
-    const confirmed = window.confirm(`Archive ${client.firstName} ${client.lastName}?`);
-    if (!confirmed) {
-      return;
-    }
-
-    this.clientService.archiveClient(client.id).subscribe({
-      next: () => this.loadClients(),
-      error: (error) => {
-        console.error(error);
-        this.errorMessage.set(getApiErrorMessage(error, 'Unable to archive client.'));
-      },
-    });
+    this.confirm
+      .confirm({
+        title: 'Archive client',
+        message: `Archive ${client.firstName} ${client.lastName}? The record is retained but hidden from the default list.`,
+        confirmLabel: 'Archive',
+      })
+      .subscribe((ok) => {
+        if (!ok) {
+          return;
+        }
+        this.clientService.archiveClient(client.id).subscribe({
+          next: () => {
+            this.toast.success('Client archived successfully.');
+            this.loadClients();
+          },
+          error: (error) => {
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to archive client.'));
+          },
+        });
+      });
   }
 }

@@ -1,66 +1,96 @@
 <div class="page">
-  @if (errorMessage()) {
-    <div class="error-message">{{ errorMessage() }}</div>
-  }
+  <app-api-error [message]="errorMessage()" />
+
   @if (isLoading()) {
-    <p>Loading care home dashboard...</p>
+    <app-loading-state label="Loading care home dashboard..." />
   }
+
   @if (data(); as data) {
-    <div class="page-header">
-      <div>
-        <h1>{{ data.name }}</h1>
-        <p>Manager: {{ data.managerName || 'Not set' }}</p>
-      </div>
+    <app-page-header [title]="data.name" [subtitle]="profileLine()">
       @if (auth.canWrite()) {
-        <a class="secondary-button" [routerLink]="['/care-homes', data.careHomeId, 'edit']"
-          >Edit home</a
-        >
+        <a mat-stroked-button [routerLink]="['/care-homes', data.careHomeId, 'edit']">Edit home</a>
       }
-    </div>
-    <div class="cards">
-      <div class="card">
-        <h3>Capacity</h3>
-        <p>{{ data.capacity }}</p>
-      </div>
-      <div class="card">
-        <h3>Occupied</h3>
-        <p>{{ data.occupied }}</p>
-      </div>
-      <div class="card">
-        <h3>Available</h3>
-        <p>{{ data.available }}</p>
-      </div>
-      <div class="card">
-        <h3>Outstanding</h3>
-        <p>{{ data.outstandingAmount | number: '1.2-2' }}</p>
-      </div>
-    </div>
-    <h2>Current clients</h2>
-    <ul>
-      @for (name of data.currentClients; track name) {
-        <li>{{ name }}</li>
+    </app-page-header>
+
+    <div class="mb-4 flex flex-wrap gap-2 text-sm text-[var(--app-text-muted)]">
+      @if (home()) {
+        <span>{{ home()!.code }}</span>
+        <span>·</span>
+        <span>{{ home()!.companyName }}</span>
+        <span>·</span>
+        <app-status-badge [value]="home()!.isActive ? 'Active' : 'Inactive'" />
       }
-    </ul>
-    <h2>Recent invoices</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Number</th>
-          <th>Amount</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of data.recentInvoices; track row.id) {
-          <tr>
-            <td>
-              <a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a>
-            </td>
-            <td>{{ row.totalAmount | number: '1.2-2' }}</td>
-            <td>{{ row.status }}</td>
-          </tr>
+      <span>Manager: {{ data.managerName || 'Not set' }}</span>
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="panel kpi-card">
+        <div class="kpi-icon"><mat-icon>hotel</mat-icon></div>
+        <div>
+          <h3 class="m-0 text-sm font-medium text-[var(--app-text-muted)]">Capacity</h3>
+          <p class="mt-1 mb-0 text-2xl font-semibold">{{ data.capacity }}</p>
+          <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">Registered beds</p>
+        </div>
+      </div>
+      <div class="panel kpi-card">
+        <div class="kpi-icon"><mat-icon>groups</mat-icon></div>
+        <div>
+          <h3 class="m-0 text-sm font-medium text-[var(--app-text-muted)]">Occupancy</h3>
+          <p class="mt-1 mb-0 text-2xl font-semibold">{{ data.occupied }}</p>
+          <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">Current residents</p>
+        </div>
+      </div>
+      <div class="panel kpi-card">
+        <div class="kpi-icon"><mat-icon>bed</mat-icon></div>
+        <div>
+          <h3 class="m-0 text-sm font-medium text-[var(--app-text-muted)]">Available beds</h3>
+          <p class="mt-1 mb-0 text-2xl font-semibold">{{ data.available }}</p>
+          <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">Capacity remaining</p>
+        </div>
+      </div>
+      <div class="panel kpi-card">
+        <div class="kpi-icon"><mat-icon>request_quote</mat-icon></div>
+        <div>
+          <h3 class="m-0 text-sm font-medium text-[var(--app-text-muted)]">Outstanding</h3>
+          <p class="mt-1 mb-0 text-2xl font-semibold">£{{ data.outstandingAmount | number: '1.2-2' }}</p>
+          <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">Unpaid invoices</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="panel mt-4">
+      <h2 class="mt-0 mb-3 text-lg font-semibold">Current clients</h2>
+      <ul class="m-0 list-disc pl-5">
+        @for (name of data.currentClients; track name) {
+          <li>{{ name }}</li>
+        } @empty {
+          <li>No current clients.</li>
         }
-      </tbody>
-    </table>
+      </ul>
+    </section>
+
+    <section class="panel mt-4">
+      <h2 class="mt-0 mb-3 text-lg font-semibold">Recent invoices</h2>
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Number</th>
+              <th class="num">Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of data.recentInvoices; track row.id) {
+              <tr>
+                <td><a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a></td>
+                <td class="num">£{{ row.totalAmount | number: '1.2-2' }}</td>
+                <td><app-status-badge [value]="row.status" /></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   }
 </div>

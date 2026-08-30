@@ -1,74 +1,32 @@
 <div class="page">
-  <div class="page-header">
-    <div>
-      <h1>Nominal Codes</h1>
-      <p>Manage Sage nominal code master data.</p>
-    </div>
-
+  <app-page-header title="Nominal Codes" subtitle="Codes used on invoices and Sage export.">
     @if (auth.canWrite()) {
-      <a routerLink="/nominal-codes/new" class="primary-button">
-        Add Nominal Code
-      </a>
+      <a mat-flat-button color="primary" routerLink="/nominal-codes/new">Add Nominal Code</a>
     }
-  </div>
-
-  @if (isLoading()) {
-    <p>Loading nominal codes...</p>
-  }
-
-  @if (errorMessage()) {
-    <div class="error-message">
-      {{ errorMessage() }}
-    </div>
-  }
-
+  </app-page-header>
+  <app-api-error [message]="errorMessage()" />
+  @if (isLoading()) { <app-loading-state label="Loading nominal codes..." /> }
   @if (!isLoading()) {
     <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
+      <table class="data-table">
+        <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
           @for (nominalCode of nominalCodes(); track nominalCode.id) {
-            <tr>
+            <tr [class.inactive-row]="!nominalCode.isActive">
               <td>{{ nominalCode.code }}</td>
-              <td>{{ nominalCode.name }}</td>
-              <td>{{ nominalCode.description || '-' }}</td>
-              <td>
-                @if (nominalCode.isActive) {
-                  <span class="status active">Active</span>
-                } @else {
-                  <span class="status inactive">Inactive</span>
-                }
-              </td>
-              <td class="actions">
+              <td class="font-medium">{{ nominalCode.name }}</td>
+              <td><app-status-badge [value]="nominalCode.isActive ? 'Active' : 'Inactive'" /></td>
+              <td class="flex flex-wrap gap-2">
                 @if (auth.canWrite()) {
-                  <a [routerLink]="['/nominal-codes', nominalCode.id, 'edit']">
-                    Edit
-                  </a>
-
+                  <a mat-stroked-button [routerLink]="['/nominal-codes', nominalCode.id, 'edit']">Edit</a>
                   @if (nominalCode.isActive) {
-                    <button
-                      type="button"
-                      (click)="deactivateNominalCode(nominalCode)"
-                    >
-                      Deactivate
-                    </button>
+                    <button mat-stroked-button color="warn" type="button" (click)="deactivateNominalCode(nominalCode)">Deactivate</button>
                   }
                 }
               </td>
             </tr>
           } @empty {
-            <tr>
-              <td colspan="5">No nominal codes found.</td>
-            </tr>
+            <tr><td colspan="4">No nominal codes found.</td></tr>
           }
         </tbody>
       </table>

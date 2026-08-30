@@ -52,16 +52,21 @@ namespace CareHome.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<TenantDto>> Create(CreateTenantRequest request)
+        public async Task<ActionResult<CreateTenantResponse>> Create(CreateTenantRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
             {
                 return BadRequest(new { message = "Organisation name is required." });
             }
 
+            if (string.IsNullOrWhiteSpace(request.AdminEmail))
+            {
+                return BadRequest(new { message = "Administrator email is required so login details can be sent." });
+            }
+
             try
             {
-                var tenant = await provisioning.ProvisionAsync(new TenantProvisionRequest
+                var provisioned = await provisioning.ProvisionAsync(new TenantProvisionRequest
                 {
                     Name = request.Name,
                     TradingName = request.TradingName,
@@ -72,10 +77,10 @@ namespace CareHome.Api.Controllers
                     Website = request.Website,
                     IsActive = request.IsActive,
                     AdminEmail = request.AdminEmail,
-                    AdminPassword = request.AdminPassword,
                     AdminDisplayName = request.AdminDisplayName
                 });
 
+                var tenant = provisioned.Tenant;
                 await audit.LogAsync(
                     "Tenant",
                     tenant.Id.ToString(),
@@ -85,7 +90,7 @@ namespace CareHome.Api.Controllers
                     "Created organisation.",
                     tenantId: tenant.Id);
 
-                return CreatedAtAction(nameof(Get), new { id = tenant.Id }, ToDto(tenant));
+                return CreatedAtAction(nameof(Get), new { id = tenant.Id }, ToCreateResponse(provisioned));
             }
             catch (InvalidOperationException ex)
             {
@@ -145,6 +150,28 @@ namespace CareHome.Api.Controllers
                 Website = tenant.Website,
                 IsActive = tenant.IsActive,
                 CreatedAt = tenant.CreatedAt
+            };
+        }
+
+        private static CreateTenantResponse ToCreateResponse(TenantProvisionResult provisioned)
+        {
+            var tenant = provisioned.Tenant;
+            return new CreateTenantResponse
+            {
+                Id = tenant.Id,
+                PublicId = tenant.PublicId,
+                Name = tenant.Name,
+                TradingName = tenant.TradingName,
+                RegistrationNumber = tenant.RegistrationNumber,
+                Address = tenant.Address,
+                Phone = tenant.Phone,
+                Email = tenant.Email,
+                Website = tenant.Website,
+                IsActive = tenant.IsActive,
+                CreatedAt = tenant.CreatedAt,
+                CredentialsEmailed = provisioned.CredentialsEmailed,
+                CredentialsEmailSimulated = provisioned.CredentialsEmailSimulated,
+                TemporaryPassword = provisioned.TemporaryPassword
             };
         }
 

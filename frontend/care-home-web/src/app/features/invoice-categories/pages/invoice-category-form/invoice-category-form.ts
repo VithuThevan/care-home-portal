@@ -10,12 +10,28 @@ import { finalize } from 'rxjs';
 import { InvoiceCategoryService } from '../../services/invoice-category.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
 
 @Component({
   selector: 'app-invoice-category-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+  ],
   templateUrl: './invoice-category-form.html',
-  styleUrl: './invoice-category-form.scss'
 })
 export class InvoiceCategoryForm implements OnInit {
   private readonly formBuilder = inject(FormBuilder);

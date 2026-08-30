@@ -1,36 +1,30 @@
 <div class="page">
-  <div class="page-header">
-    <div>
-      <h1>Organisations</h1>
-      <p>Platform administration for purchasing organisations.</p>
-    </div>
-    <a routerLink="/platform/tenants/new" class="primary-button">Add organisation</a>
-  </div>
-
-  @if (errorMessage()) {
-    <div class="error-message">{{ errorMessage() }}</div>
-  }
-
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Trading name</th>
-        <th>Email</th>
-        <th>Active</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (tenant of tenants(); track tenant.id) {
+  <app-page-header title="Organisations" subtitle="Platform administration for purchasing organisations.">
+    <a mat-flat-button color="primary" routerLink="/platform/tenants/new">Add organisation</a>
+  </app-page-header>
+  <app-api-error [message]="errorMessage()" />
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
         <tr>
-          <td>{{ tenant.name }}</td>
-          <td>{{ tenant.tradingName || '—' }}</td>
-          <td>{{ tenant.email || '—' }}</td>
-          <td>{{ tenant.isActive ? 'Yes' : 'No' }}</td>
-          <td><a [routerLink]="['/platform/tenants', tenant.id]">Edit</a></td>
+          <th>Name</th>
+          <th>Trading name</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th></th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (tenant of tenants(); track tenant.id) {
+          <tr [class.inactive-row]="!tenant.isActive">
+            <td class="font-medium">{{ tenant.name }}</td>
+            <td>{{ tenant.tradingName || '—' }}</td>
+            <td>{{ tenant.email || '—' }}</td>
+            <td><app-status-badge [value]="tenant.isActive ? 'Active' : 'Inactive'" /></td>
+            <td><a mat-stroked-button [routerLink]="['/platform/tenants', tenant.id]">Edit</a></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </div>

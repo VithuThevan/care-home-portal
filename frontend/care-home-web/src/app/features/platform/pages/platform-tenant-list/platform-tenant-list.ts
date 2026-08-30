@@ -3,6 +3,10 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
 
 interface TenantRow {
   id: number;
@@ -15,7 +19,7 @@ interface TenantRow {
 
 @Component({
   selector: 'app-platform-tenant-list',
-  imports: [RouterLink],
+  imports: [RouterLink, MatButtonModule, PageHeaderComponent, ApiErrorComponent, StatusBadgeComponent],
   templateUrl: './platform-tenant-list.html',
 })
 export class PlatformTenantListPage implements OnInit {

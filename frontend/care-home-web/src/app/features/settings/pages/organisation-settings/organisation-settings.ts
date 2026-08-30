@@ -5,16 +5,32 @@ import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { ToastService } from '../../../../shared/ui/toast.service';
 
 @Component({
   selector: 'app-organisation-settings',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+  ],
   templateUrl: './organisation-settings.html',
 })
 export class OrganisationSettingsPage implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly fb = inject(FormBuilder);
   readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
   readonly errorMessage = signal<string | null>(null);
   readonly savedMessage = signal<string | null>(null);
   readonly isLoading = signal(false);
@@ -68,6 +84,7 @@ export class OrganisationSettingsPage implements OnInit {
       .subscribe({
         next: () => {
           this.savedMessage.set('Organisation settings saved.');
+          this.toast.success('Organisation updated successfully.');
         },
         error: (error) => {
           this.errorMessage.set(getApiErrorMessage(error, 'Unable to save organisation settings.'));

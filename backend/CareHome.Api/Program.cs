@@ -195,6 +195,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<RequestLoggingScopeMiddleware>();
 app.UseMiddleware<InactiveTenantMiddleware>();
+app.UseMiddleware<MustChangePasswordMiddleware>();
 app.MapControllers();
 
 app.MapHealthChecks("/health/live", new HealthCheckOptions

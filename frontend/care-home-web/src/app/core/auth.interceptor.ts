@@ -21,7 +21,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       if (error.status === 403) {
-        void router.navigate(['/forbidden']);
+        void router.navigate([auth.mustChangePassword() ? '/change-password' : '/forbidden']);
       }
 
       return throwError(() => error);

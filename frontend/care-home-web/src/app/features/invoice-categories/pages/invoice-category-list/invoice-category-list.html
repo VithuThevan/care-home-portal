@@ -1,74 +1,32 @@
 <div class="page">
-  <div class="page-header">
-    <div>
-      <h1>Invoice Categories</h1>
-      <p>Manage invoice category master data.</p>
-    </div>
-
+  <app-page-header title="Invoice Categories" subtitle="Categories used when grouping invoice lines.">
     @if (auth.canWrite()) {
-      <a routerLink="/invoice-categories/new" class="primary-button">
-        Add Invoice Category
-      </a>
+      <a mat-flat-button color="primary" routerLink="/invoice-categories/new">Add Category</a>
     }
-  </div>
-
-  @if (isLoading()) {
-    <p>Loading invoice categories...</p>
-  }
-
-  @if (errorMessage()) {
-    <div class="error-message">
-      {{ errorMessage() }}
-    </div>
-  }
-
+  </app-page-header>
+  <app-api-error [message]="errorMessage()" />
+  @if (isLoading()) { <app-loading-state label="Loading invoice categories..." /> }
   @if (!isLoading()) {
     <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
+      <table class="data-table">
+        <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>
           @for (category of invoiceCategories(); track category.id) {
-            <tr>
+            <tr [class.inactive-row]="!category.isActive">
               <td>{{ category.code }}</td>
-              <td>{{ category.name }}</td>
-              <td>{{ category.description || '-' }}</td>
-              <td>
-                @if (category.isActive) {
-                  <span class="status active">Active</span>
-                } @else {
-                  <span class="status inactive">Inactive</span>
-                }
-              </td>
-              <td class="actions">
+              <td class="font-medium">{{ category.name }}</td>
+              <td><app-status-badge [value]="category.isActive ? 'Active' : 'Inactive'" /></td>
+              <td class="flex flex-wrap gap-2">
                 @if (auth.canWrite()) {
-                  <a [routerLink]="['/invoice-categories', category.id, 'edit']">
-                    Edit
-                  </a>
-
+                  <a mat-stroked-button [routerLink]="['/invoice-categories', category.id, 'edit']">Edit</a>
                   @if (category.isActive) {
-                    <button
-                      type="button"
-                      (click)="deactivateInvoiceCategory(category)"
-                    >
-                      Deactivate
-                    </button>
+                    <button mat-stroked-button color="warn" type="button" (click)="deactivateInvoiceCategory(category)">Deactivate</button>
                   }
                 }
               </td>
             </tr>
           } @empty {
-            <tr>
-              <td colspan="5">No invoice categories found.</td>
-            </tr>
+            <tr><td colspan="4">No invoice categories found.</td></tr>
           }
         </tbody>
       </table>

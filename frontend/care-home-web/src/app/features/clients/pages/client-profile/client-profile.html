@@ -1,170 +1,218 @@
 <div class="page">
-  @if (errorMessage()) {
-    <div class="error-message">{{ errorMessage() }}</div>
-  }
+  <app-api-error [message]="errorMessage()" />
 
   @if (isLoading()) {
-    <p>Loading client...</p>
+    <app-loading-state label="Loading client..." />
   }
 
   @if (client(); as client) {
-    <div class="page-header">
-      <div>
-        <h1>{{ client.firstName }} {{ client.lastName }}</h1>
-        <p>{{ client.referenceNumber }} · {{ client.sageId }} · {{ client.careHomeName }}</p>
-      </div>
+    <app-page-header [title]="client.firstName + ' ' + client.lastName" [subtitle]="client.referenceNumber + ' · ' + client.sageId + ' · ' + client.careHomeName">
       @if (auth.canWrite()) {
-        <a class="secondary-button" [routerLink]="['/clients', client.id, 'edit']">Edit details</a>
+        <a mat-stroked-button [routerLink]="['/clients', client.id, 'edit']">Edit details</a>
       }
+    </app-page-header>
+
+    <div class="mb-4">
+      <app-status-badge [value]="client.status" />
     </div>
 
-    <div class="tabs">
-      <button type="button" [class.active]="tab === 'details'" (click)="tab = 'details'">
-        Details
-      </button>
-      <button type="button" [class.active]="tab === 'contracts'" (click)="tab = 'contracts'">
-        Funding contracts
-      </button>
-      <button type="button" [class.active]="tab === 'rates'" (click)="tab = 'rates'">
-        Rate history
-      </button>
-      <button type="button" [class.active]="tab === 'invoices'" (click)="tab = 'invoices'">
-        Invoices
-      </button>
+    <div class="mb-4 flex flex-wrap gap-2">
+      <button mat-stroked-button type="button" [class.mat-mdc-button-base]="true" [color]="tab === 'details' ? 'primary' : undefined" (click)="tab = 'details'">Details</button>
+      <button mat-stroked-button type="button" (click)="tab = 'contracts'">Funding contracts</button>
+      <button mat-stroked-button type="button" (click)="tab = 'rates'">Rate history</button>
+      <button mat-stroked-button type="button" (click)="tab = 'invoices'">Invoices</button>
     </div>
 
     @if (tab === 'details') {
-      <p>Status: {{ client.status }} · Care type: {{ client.careType }}</p>
-      <p>Admitted: {{ client.admissionDate }} · DOB: {{ client.dateOfBirth || '—' }}</p>
-      <p>{{ client.email }} {{ client.phone }}</p>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <section class="panel">
+          <h2 class="mt-0 text-lg font-semibold">Personal information</h2>
+          <p class="mb-1 text-sm">{{ client.title }} {{ client.firstName }} {{ client.lastName }}</p>
+          <p class="mb-0 text-sm text-[var(--app-text-muted)]">DOB: {{ client.dateOfBirth || '—' }}</p>
+        </section>
+        <section class="panel">
+          <h2 class="mt-0 text-lg font-semibold">Care information</h2>
+          <p class="mb-1 text-sm">{{ client.careType }}</p>
+          <p class="mb-0 text-sm text-[var(--app-text-muted)]">Admitted: {{ client.admissionDate }}</p>
+        </section>
+        <section class="panel">
+          <h2 class="mt-0 text-lg font-semibold">Contact information</h2>
+          <p class="mb-1 text-sm">{{ client.email || '—' }}</p>
+          <p class="mb-0 text-sm text-[var(--app-text-muted)]">{{ client.phone || '—' }}</p>
+        </section>
+      </div>
     }
 
     @if (tab === 'contracts') {
-      <table>
-        <thead>
-          <tr>
-            <th>Authority</th>
-            <th>Category</th>
-            <th>Nominal</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (contract of contracts(); track contract.id) {
-            <tr>
-              <td>{{ contract.fundingAuthorityName }}</td>
-              <td>{{ contract.invoiceCategoryName }}</td>
-              <td>{{ contract.nominalCode }}</td>
-              <td>{{ contract.contractStartDate }}</td>
-              <td>{{ contract.contractEndDate || 'Open' }}</td>
-              <td>{{ contract.status }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-      @if (auth.canWrite()) {
-        <h2>Add contract</h2>
-        <div class="filters">
-          <select [(ngModel)]="newContract.fundingAuthorityId">
-            <option [ngValue]="0">Authority</option>
-            @for (item of authorities(); track item.id) {
-              <option [ngValue]="item.id">{{ item.name }}</option>
-            }
-          </select>
-          <select [(ngModel)]="newContract.invoiceCategoryId">
-            <option [ngValue]="0">Category</option>
-            @for (item of categories(); track item.id) {
-              <option [ngValue]="item.id">{{ item.name }}</option>
-            }
-          </select>
-          <select [(ngModel)]="newContract.nominalCodeId">
-            <option [ngValue]="0">Nominal</option>
-            @for (item of nominals(); track item.id) {
-              <option [ngValue]="item.id">{{ item.code }}</option>
-            }
-          </select>
-          <input type="date" [(ngModel)]="newContract.contractStartDate" />
-          <input type="date" [(ngModel)]="newContract.contractEndDate" />
-          <button type="button" class="primary-button" (click)="saveContract()">
-            Save contract
-          </button>
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Funding contracts</h2>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Authority</th>
+                <th>Category</th>
+                <th>Nominal</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (contract of contracts(); track contract.id) {
+                <tr>
+                  <td>{{ contract.fundingAuthorityName }}</td>
+                  <td>{{ contract.invoiceCategoryName }}</td>
+                  <td>{{ contract.nominalCode }}</td>
+                  <td>{{ contract.contractStartDate }}</td>
+                  <td>{{ contract.contractEndDate || 'Open' }}</td>
+                  <td><app-status-badge [value]="contract.status" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
-      }
+        @if (auth.canWrite()) {
+          <h3 class="mt-6 text-base font-semibold">Add contract</h3>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Authority</mat-label>
+              <mat-select [(ngModel)]="newContract.fundingAuthorityId">
+                <mat-option [value]="0">Authority</mat-option>
+                @for (item of authorities(); track item.id) {
+                  <mat-option [value]="item.id">{{ item.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Category</mat-label>
+              <mat-select [(ngModel)]="newContract.invoiceCategoryId">
+                <mat-option [value]="0">Category</mat-option>
+                @for (item of categories(); track item.id) {
+                  <mat-option [value]="item.id">{{ item.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Nominal</mat-label>
+              <mat-select [(ngModel)]="newContract.nominalCodeId">
+                <mat-option [value]="0">Nominal</mat-option>
+                @for (item of nominals(); track item.id) {
+                  <mat-option [value]="item.id">{{ item.code }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Start</mat-label>
+              <input matInput type="date" [(ngModel)]="newContract.contractStartDate" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>End</mat-label>
+              <input matInput type="date" [(ngModel)]="newContract.contractEndDate" />
+            </mat-form-field>
+          </div>
+          <button mat-flat-button color="primary" type="button" (click)="saveContract()">Save contract</button>
+        }
+      </section>
     }
 
     @if (tab === 'rates') {
-      @for (contract of contracts(); track contract.id) {
-        <h3>{{ contract.fundingAuthorityName }} / {{ contract.invoiceCategoryName }}</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>From</th>
-              <th>To</th>
-              <th>Frequency</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (rate of contract.rates; track rate.id) {
-              <tr>
-                <td>{{ rate.effectiveFrom }}</td>
-                <td>{{ rate.effectiveTo || 'Open' }}</td>
-                <td>{{ rate.frequency }}</td>
-                <td>{{ rate.amount | number: '1.2-2' }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-      @if (auth.canWrite()) {
-        <h2>Add rate</h2>
-        <div class="filters">
-          <select [(ngModel)]="newRate.contractId">
-            <option [ngValue]="0">Contract</option>
-            @for (contract of contracts(); track contract.id) {
-              <option [ngValue]="contract.id">
-                {{ contract.fundingAuthorityName }} / {{ contract.invoiceCategoryName }}
-              </option>
-            }
-          </select>
-          <input type="date" [(ngModel)]="newRate.effectiveFrom" />
-          <input type="date" [(ngModel)]="newRate.effectiveTo" />
-          <select [(ngModel)]="newRate.frequency">
-            <option>Daily</option>
-            <option>Weekly</option>
-            <option>Monthly</option>
-          </select>
-          <input type="number" step="0.01" [(ngModel)]="newRate.amount" />
-          <button type="button" class="primary-button" (click)="addRate()">Add rate</button>
-        </div>
-      }
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Funding rates</h2>
+        @for (contract of contracts(); track contract.id) {
+          <h3 class="text-base font-medium">{{ contract.fundingAuthorityName }} / {{ contract.invoiceCategoryName }}</h3>
+          <div class="table-container mb-4">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Frequency</th>
+                  <th class="num">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (rate of contract.rates; track rate.id) {
+                  <tr>
+                    <td>{{ rate.effectiveFrom }}</td>
+                    <td>{{ rate.effectiveTo || 'Open' }}</td>
+                    <td>{{ rate.frequency }}</td>
+                    <td class="num">£{{ rate.amount | number: '1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+        @if (auth.canWrite()) {
+          <h3 class="text-base font-semibold">Add rate</h3>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Contract</mat-label>
+              <mat-select [(ngModel)]="newRate.contractId">
+                <mat-option [value]="0">Contract</mat-option>
+                @for (contract of contracts(); track contract.id) {
+                  <mat-option [value]="contract.id">
+                    {{ contract.fundingAuthorityName }} / {{ contract.invoiceCategoryName }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>From</mat-label>
+              <input matInput type="date" [(ngModel)]="newRate.effectiveFrom" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>To</mat-label>
+              <input matInput type="date" [(ngModel)]="newRate.effectiveTo" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Frequency</mat-label>
+              <mat-select [(ngModel)]="newRate.frequency">
+                <mat-option value="Daily">Daily</mat-option>
+                <mat-option value="Weekly">Weekly</mat-option>
+                <mat-option value="Monthly">Monthly</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Amount</mat-label>
+              <input matInput type="number" step="0.01" [(ngModel)]="newRate.amount" />
+            </mat-form-field>
+          </div>
+          <button mat-flat-button color="primary" type="button" (click)="addRate()">Add rate</button>
+        }
+      </section>
     }
 
     @if (tab === 'invoices') {
-      <table>
-        <thead>
-          <tr>
-            <th>Number</th>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (invoice of invoices(); track invoice.id) {
-            <tr>
-              <td>
-                <a [routerLink]="['/invoices', invoice.id]">{{ invoice.invoiceNumber }}</a>
-              </td>
-              <td>{{ invoice.invoiceDate }}</td>
-              <td>{{ invoice.totalAmount | number: '1.2-2' }}</td>
-              <td>{{ invoice.status }} / {{ invoice.paymentStatus }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      <section class="panel">
+        <h2 class="mt-0 text-lg font-semibold">Invoices</h2>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Number</th>
+                <th>Date</th>
+                <th class="num">Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (invoice of invoices(); track invoice.id) {
+                <tr>
+                  <td><a [routerLink]="['/invoices', invoice.id]">{{ invoice.invoiceNumber }}</a></td>
+                  <td>{{ invoice.invoiceDate }}</td>
+                  <td class="num">£{{ invoice.totalAmount | number: '1.2-2' }}</td>
+                  <td>
+                    <app-status-badge [value]="invoice.status" />
+                    <app-status-badge [value]="invoice.paymentStatus" />
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
     }
   }
 </div>

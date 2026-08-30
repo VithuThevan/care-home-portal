@@ -11,6 +11,12 @@ namespace CareHome.Api.Security
             ActionExecutionDelegate next)
         {
             var method = context.HttpContext.Request.Method;
+            if (context.HttpContext.Request.Path.StartsWithSegments("/api/auth/change-password"))
+            {
+                await next();
+                return;
+            }
+
             if (HttpMethods.IsGet(method) || HttpMethods.IsHead(method) || HttpMethods.IsOptions(method))
             {
                 await next();

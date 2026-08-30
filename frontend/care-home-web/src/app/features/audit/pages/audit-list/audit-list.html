@@ -1,27 +1,37 @@
 <div class="page">
-  <div class="page-header"><div><h1>Audit Log</h1><p>Append-only. Records cannot be edited.</p></div></div>
-  <div class="filters">
-    <input placeholder="Entity type" [(ngModel)]="entityType" />
-    <button type="button" (click)="load()">Filter</button>
-  </div>
-  @if (errorMessage()) {
-    <div class="error-message">{{ errorMessage() }}</div>
-  }
+  <app-page-header title="Audit" subtitle="Append-only. Records cannot be edited." />
+  <section class="panel mb-4 flex flex-wrap items-center gap-3">
+    <mat-form-field appearance="outline">
+      <mat-label>Entity type</mat-label>
+      <input matInput [(ngModel)]="entityType" />
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="button" (click)="load()">Filter</button>
+  </section>
+  <app-api-error [message]="errorMessage()" />
   @if (isLoading()) {
-    <p>Loading audit log...</p>
+    <app-loading-state label="Loading audit log..." />
   }
-  <p>{{ totalCount() }} events</p>
-  <table>
-    <thead><tr><th>When</th><th>Entity</th><th>Action</th><th>Description</th></tr></thead>
-    <tbody>
-      @for (item of items(); track item.id) {
+  <p class="text-sm text-[var(--app-text-muted)]">{{ totalCount() }} events</p>
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
         <tr>
-          <td>{{ item.loggedAt }}</td>
-          <td>{{ item.entityType }} {{ item.entityId }}</td>
-          <td>{{ item.action }}</td>
-          <td>{{ item.description }}</td>
+          <th>When</th>
+          <th>Entity</th>
+          <th>Action</th>
+          <th>Description</th>
         </tr>
-      }
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr>
+            <td>{{ item.loggedAt }}</td>
+            <td>{{ item.entityType }} {{ item.entityId }}</td>
+            <td>{{ item.action }}</td>
+            <td>{{ item.description }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </div>

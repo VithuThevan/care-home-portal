@@ -7,16 +7,42 @@ import { finalize } from 'rxjs';
 
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatButtonModule } from '@angular/material/button';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { EmptyStateComponent } from '../../../../shared/ui/empty-state';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
+import { ToastService } from '../../../../shared/ui/toast.service';
 import { PagedResult } from '../../../../core/models';
 
 @Component({
   selector: 'app-invoice-list',
-  imports: [FormsModule, RouterLink, DecimalPipe],
+  imports: [
+    FormsModule,
+    RouterLink,
+    DecimalPipe,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCheckboxModule,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+    EmptyStateComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './invoice-list.html',
 })
 export class InvoiceListPage implements OnInit {
   private readonly http = inject(HttpClient);
   readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
   readonly items = signal<any[]>([]);
   readonly totalCount = signal(0);
   readonly isLoading = signal(false);
@@ -59,10 +85,12 @@ export class InvoiceListPage implements OnInit {
 
   bulkSend(): void {
     this.http.post<any>('/api/invoices/bulk-send', { invoiceIds: [...this.selected] }).subscribe({
-      next: (result) =>
+      next: (result) => {
         this.bulkMessage.set(
           `Succeeded ${result.succeeded}, failed ${result.failed}, skipped ${result.skipped}.`,
-        ),
+        );
+        this.toast.success('Email queued/sent successfully.');
+      },
       error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Bulk send failed.')),
     });
   }

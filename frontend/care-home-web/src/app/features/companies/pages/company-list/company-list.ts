@@ -1,20 +1,37 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
+import { MatButtonModule } from '@angular/material/button';
 
 import { Company } from '../../models/company.model';
 import { CompanyService } from '../../services/company.service';
 import { getApiErrorMessage } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
+import { PageHeaderComponent } from '../../../../shared/ui/page-header';
+import { ApiErrorComponent } from '../../../../shared/ui/api-error';
+import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
+import { EmptyStateComponent } from '../../../../shared/ui/empty-state';
+import { StatusBadgeComponent } from '../../../../shared/ui/status-badge';
+import { ConfirmDialogService } from '../../../../shared/ui/confirm-dialog.service';
+import { ToastService } from '../../../../shared/ui/toast.service';
 
 @Component({
   selector: 'app-company-list',
-  imports: [RouterLink],
+  imports: [
+    RouterLink,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+    EmptyStateComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './company-list.html',
-  styleUrl: './company-list.scss',
 })
 export class CompanyList implements OnInit {
   private readonly companyService = inject(CompanyService);
+  private readonly confirm = inject(ConfirmDialogService);
+  private readonly toast = inject(ToastService);
   readonly auth = inject(AuthService);
 
   readonly companies = signal<Company[]>([]);
@@ -35,24 +52,31 @@ export class CompanyList implements OnInit {
       .subscribe({
         next: (companies) => this.companies.set(companies),
         error: (error) => {
-          console.error(error);
           this.errorMessage.set(getApiErrorMessage(error, 'Unable to load companies.'));
         },
       });
   }
 
   deactivateCompany(company: Company): void {
-    const confirmed = window.confirm(`Are you sure you want to deactivate ${company.name}?`);
-    if (!confirmed) {
-      return;
-    }
-
-    this.companyService.deactivateCompany(company.id).subscribe({
-      next: () => this.loadCompanies(),
-      error: (error) => {
-        console.error(error);
-        this.errorMessage.set(getApiErrorMessage(error, 'Unable to deactivate company.'));
-      },
-    });
+    this.confirm
+      .confirm({
+        title: 'Deactivate company',
+        message: `Deactivate ${company.name}? It will no longer be available for new work.`,
+        confirmLabel: 'Deactivate',
+      })
+      .subscribe((ok) => {
+        if (!ok) {
+          return;
+        }
+        this.companyService.deactivateCompany(company.id).subscribe({
+          next: () => {
+            this.toast.success('Company deactivated successfully.');
+            this.loadCompanies();
+          },
+          error: (error) => {
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to deactivate company.'));
+          },
+        });
+      });
   }
 }
