@@ -11,6 +11,7 @@
   <ItemGroup>
     <Using Include="CareHome.Api.Common" />
     <Using Include="CareHome.Api.Security" />
+    <InternalsVisibleTo Include="CareHome.Api.Tests" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,8 +1,9 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs';
+import { from, switchMap, tap } from 'rxjs';
 
+import { encryptLoginPassword, LoginPublicKey } from './login-password-cipher';
 import { AuthUser } from './models';
 
 const STORAGE_KEY = 'carehome.auth';
@@ -64,7 +65,11 @@ export class AuthService {
   }
 
   login(email: string, password: string) {
-    return this.http.post<AuthUser>('/api/auth/login', { email, password }).pipe(
+    return this.http.get<LoginPublicKey>('/api/auth/login-key').pipe(
+      switchMap((key) => from(encryptLoginPassword(key, password))),
+      switchMap((passwordCipher) =>
+        this.http.post<AuthUser>('/api/auth/login', { email, passwordCipher }),
+      ),
       tap((user) => this.storeUser(user)),
     );
   }

@@ -4,6 +4,7 @@ import { authGuard, guestGuard, adminGuard, platformGuard, organisationSettingsG
 import { LoginPage } from './features/login/login';
 import { ChangePasswordPage } from './features/login/change-password';
 import { ForbiddenPage } from './features/forbidden/forbidden';
+import { NotFoundPage } from './features/not-found/not-found';
 import { DashboardPage } from './features/dashboard/dashboard';
 import { CompanyList } from './features/companies/pages/company-list/company-list';
 import { CompanyForm } from './features/companies/pages/company-form/company-form';
@@ -73,4 +74,5 @@ export const routes: Routes = [
   { path: 'platform/tenants', component: PlatformTenantListPage, canActivate: [authGuard, platformGuard] },
   { path: 'platform/tenants/new', component: PlatformTenantFormPage, canActivate: [authGuard, platformGuard] },
   { path: 'platform/tenants/:id', component: PlatformTenantFormPage, canActivate: [authGuard, platformGuard] },
+  { path: '**', component: NotFoundPage },
 ];

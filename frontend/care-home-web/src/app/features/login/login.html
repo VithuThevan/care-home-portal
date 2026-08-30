@@ -1,5 +1,12 @@
 <div class="flex min-h-full items-center justify-center p-6">
-  <form [formGroup]="form" (ngSubmit)="submit()" class="panel w-full max-w-md">
+  <form
+    method="post"
+    action="/login"
+    [formGroup]="form"
+    (ngSubmit)="submit($event)"
+    class="panel w-full max-w-md"
+    [attr.aria-busy]="isSaving()"
+  >
     <div class="mb-5 flex items-center gap-3">
       <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--app-primary)] text-sm font-bold text-white">CH</div>
       <div>
@@ -24,15 +31,34 @@
 
     <mat-form-field appearance="outline" class="w-full">
       <mat-label>Password</mat-label>
-      <input matInput type="password" formControlName="password" autocomplete="current-password" />
+      <input
+        matInput
+        type="password"
+        [attr.type]="'password'"
+        formControlName="password"
+        autocomplete="current-password"
+        spellcheck="false"
+        autocapitalize="off"
+        autocorrect="off"
+      />
       @if (form.controls.password.touched && form.controls.password.hasError('required')) {
         <mat-error>Password is required.</mat-error>
       }
     </mat-form-field>
 
-    <button mat-flat-button color="primary" type="submit" class="w-full" [disabled]="isSaving()">
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      class="w-full"
+      [disabled]="isSaving()"
+      [attr.aria-busy]="isSaving()"
+    >
       @if (isSaving()) {
-        Signing in...
+        <span class="inline-flex items-center justify-center gap-2">
+          <mat-progress-spinner diameter="18" mode="indeterminate" />
+          Signing in...
+        </span>
       } @else {
         Sign in
       }

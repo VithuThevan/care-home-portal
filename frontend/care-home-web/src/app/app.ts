@@ -95,6 +95,8 @@ export class App {
     if (path.startsWith('/audit')) return 'Audit';
     if (path.startsWith('/settings')) return 'Organisation Settings';
     if (path.startsWith('/platform')) return 'Organisations';
-    return 'Dashboard';
+    if (path.startsWith('/dashboard') || path === '/') return 'Dashboard';
+    if (path.startsWith('/forbidden')) return 'Access denied';
+    return 'Page not found';
   }
 }

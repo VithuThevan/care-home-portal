@@ -171,6 +171,7 @@ builder.Services.AddScoped<MiscChargeImportService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<IdentitySeeder>();
 builder.Services.AddScoped<DevelopmentMasterDataSeeder>();
+builder.Services.AddSingleton<LoginPasswordCipher>();
 
 var app = builder.Build();
 

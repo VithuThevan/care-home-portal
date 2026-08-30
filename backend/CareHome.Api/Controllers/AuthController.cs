@@ -21,13 +21,26 @@ namespace CareHome.Api.Controllers
         CareHomeDbContext dbContext,
         IConfiguration configuration,
         IHostEnvironment environment,
+        LoginPasswordCipher loginPasswordCipher,
         ILogger<AuthController> logger) : ControllerBase
     {
         [AllowAnonymous]
+        [HttpGet("login-key")]
+        public ActionResult<LoginPublicKeyDto> LoginKey()
+        {
+            return Ok(loginPasswordCipher.PublicKey());
+        }
+
+        [AllowAnonymous]
         [EnableRateLimiting("login")]
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
+        public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
         {
+            if (!TryResolvePassword(request, out var password))
+            {
+                return Unauthorized(new { message = "Invalid email or password." });
+            }
+
             var email = request.Email.Trim();
             var user = await userManager.FindByEmailAsync(email);
             if (user?.IsActive is not true)
@@ -42,7 +55,7 @@ namespace CareHome.Api.Controllers
                 return Unauthorized(new { message = "Invalid email or password." });
             }
 
-            if (!await userManager.CheckPasswordAsync(user, request.Password))
+            if (!await userManager.CheckPasswordAsync(user, password))
             {
                 await userManager.AccessFailedAsync(user);
                 logger.LogInformation("Login failed for user {UserId}: invalid password", user.Id);
@@ -218,6 +231,17 @@ namespace CareHome.Api.Controllers
             }
 
             return response;
+        }
+
+        private bool TryResolvePassword(LoginRequest request, out string password)
+        {
+            if (!string.IsNullOrWhiteSpace(request.PasswordCipher))
+            {
+                return loginPasswordCipher.TryDecrypt(request.PasswordCipher, out password);
+            }
+
+            password = request.Password ?? string.Empty;
+            return password.Length > 0;
         }
     }
 }
