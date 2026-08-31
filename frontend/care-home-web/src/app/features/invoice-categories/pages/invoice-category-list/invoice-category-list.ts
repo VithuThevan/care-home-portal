@@ -4,7 +4,7 @@ import { finalize } from 'rxjs';
 
 import { InvoiceCategory } from '../../models/invoice-category.model';
 import { InvoiceCategoryService } from '../../services/invoice-category.service';
-import { getApiErrorMessage } from '../../../../core/api-error';
+import { getApiErrorMessage, logApiFailure } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
 import { MatButtonModule } from '@angular/material/button';
 import { PageHeaderComponent } from '../../../../shared/ui/page-header';
@@ -43,7 +43,7 @@ export class InvoiceCategoryList implements OnInit {
         next: (invoiceCategories) => this.invoiceCategories.set(invoiceCategories),
 
         error: (error) => {
-          console.error(error);
+          logApiFailure(error);
 
           this.errorMessage.set(getApiErrorMessage(
             error,

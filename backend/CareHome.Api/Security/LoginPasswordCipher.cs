@@ -24,6 +24,17 @@ public sealed class LoginPasswordCipher : IDisposable
         };
     }
 
+    public bool TryResolve(string? cipher, string? plaintext, out string password)
+    {
+        if (!string.IsNullOrWhiteSpace(cipher))
+        {
+            return TryDecrypt(cipher, out password);
+        }
+
+        password = plaintext ?? string.Empty;
+        return password.Length > 0;
+    }
+
     public bool TryDecrypt(string? cipher, out string password)
     {
         password = string.Empty;

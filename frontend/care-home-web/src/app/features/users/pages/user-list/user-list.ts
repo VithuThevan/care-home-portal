@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -75,16 +75,29 @@ export class UserListPage implements OnInit {
     else this.selectedHomes = this.selectedHomes.filter((x) => x !== id);
   }
 
-  create(): void {
+  create(event?: Event): void {
+    event?.preventDefault();
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
     this.errorMessage.set(null);
     this.isSaving.set(true);
-    this.http
-      .post('/api/users', { ...this.form.getRawValue(), careHomeIds: this.selectedHomes })
-      .pipe(finalize(() => this.isSaving.set(false)))
+    const { email, displayName, password, role } = this.form.getRawValue();
+    this.auth
+      .encryptSecret(password)
+      .pipe(
+        switchMap((passwordCipher) =>
+          this.http.post('/api/users', {
+            email,
+            displayName,
+            role,
+            careHomeIds: this.selectedHomes,
+            passwordCipher,
+          }),
+        ),
+        finalize(() => this.isSaving.set(false)),
+      )
       .subscribe({
         next: () => {
           this.toast.success('User created successfully.');

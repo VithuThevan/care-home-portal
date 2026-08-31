@@ -34,7 +34,9 @@ export class ChangePasswordPage {
     { validators: passwordsMatch },
   );
 
-  submit(): void {
+  submit(event?: Event): void {
+    event?.preventDefault();
+
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

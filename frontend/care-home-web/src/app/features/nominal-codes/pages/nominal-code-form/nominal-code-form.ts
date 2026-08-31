@@ -8,7 +8,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { NominalCodeService } from '../../services/nominal-code.service';
-import { getApiErrorMessage } from '../../../../core/api-error';
+import { getApiErrorMessage, logApiFailure } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -90,7 +90,7 @@ export class NominalCodeForm implements OnInit {
         },
 
         error: (error) => {
-          console.error(error);
+          logApiFailure(error);
 
           this.errorMessage.set(getApiErrorMessage(
             error,
@@ -134,7 +134,7 @@ export class NominalCodeForm implements OnInit {
           },
 
           error: (error) => {
-            console.error(error);
+            logApiFailure(error);
 
             this.errorMessage.set(getApiErrorMessage(
               error,
@@ -159,7 +159,7 @@ export class NominalCodeForm implements OnInit {
         },
 
         error: (error) => {
-          console.error(error);
+          logApiFailure(error);
 
           this.errorMessage.set(getApiErrorMessage(
             error,

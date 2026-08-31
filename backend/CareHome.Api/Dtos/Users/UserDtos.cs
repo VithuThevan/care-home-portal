@@ -21,7 +21,9 @@ namespace CareHome.Api.Dtos.Users
 
         public string DisplayName { get; set; } = string.Empty;
 
-        public string Password { get; set; } = string.Empty;
+        public string? Password { get; set; }
+
+        public string? PasswordCipher { get; set; }
 
         public string Role { get; set; } = string.Empty;
 
@@ -41,7 +43,9 @@ namespace CareHome.Api.Dtos.Users
 
     public class ResetPasswordRequest
     {
-        public string NewPassword { get; set; } = string.Empty;
+        public string? NewPassword { get; set; }
+
+        public string? NewPasswordCipher { get; set; }
     }
 }
 

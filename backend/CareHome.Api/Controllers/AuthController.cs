@@ -89,26 +89,26 @@ namespace CareHome.Api.Controllers
                 return Unauthorized();
             }
 
-            if (string.IsNullOrWhiteSpace(request.CurrentPassword)
-                || string.IsNullOrWhiteSpace(request.NewPassword))
+            if (!loginPasswordCipher.TryResolve(request.CurrentPasswordCipher, request.CurrentPassword, out var currentPassword)
+                || !loginPasswordCipher.TryResolve(request.NewPasswordCipher, request.NewPassword, out var newPassword))
             {
                 return BadRequest(new { message = "Current password and new password are required." });
             }
 
-            if (request.NewPassword == request.CurrentPassword)
+            if (newPassword == currentPassword)
             {
                 return BadRequest(new { message = "The new password must be different from the temporary password." });
             }
 
-            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(request.NewPassword))
+            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(newPassword))
             {
                 return BadRequest(new { message = "This password is not allowed. Choose a unique password." });
             }
 
             var changed = await userManager.ChangePasswordAsync(
                 user,
-                request.CurrentPassword,
-                request.NewPassword);
+                currentPassword,
+                newPassword);
             if (!changed.Succeeded)
             {
                 return BadRequest(new
@@ -235,13 +235,7 @@ namespace CareHome.Api.Controllers
 
         private bool TryResolvePassword(LoginRequest request, out string password)
         {
-            if (!string.IsNullOrWhiteSpace(request.PasswordCipher))
-            {
-                return loginPasswordCipher.TryDecrypt(request.PasswordCipher, out password);
-            }
-
-            password = request.Password ?? string.Empty;
-            return password.Length > 0;
+            return loginPasswordCipher.TryResolve(request.PasswordCipher, request.Password, out password);
         }
     }
 }

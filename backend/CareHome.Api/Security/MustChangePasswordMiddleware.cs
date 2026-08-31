@@ -30,6 +30,7 @@ public class MustChangePasswordMiddleware(RequestDelegate next)
     private static bool IsAllowedWhilePasswordChangeRequired(PathString path)
     {
         return path.StartsWithSegments("/api/auth/change-password")
+            || path.StartsWithSegments("/api/auth/login-key")
             || path.StartsWithSegments("/api/auth/me");
     }
 }

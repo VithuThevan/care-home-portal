@@ -65,8 +65,7 @@ export class AuthService {
   }
 
   login(email: string, password: string) {
-    return this.http.get<LoginPublicKey>('/api/auth/login-key').pipe(
-      switchMap((key) => from(encryptLoginPassword(key, password))),
+    return this.encryptSecret(password).pipe(
       switchMap((passwordCipher) =>
         this.http.post<AuthUser>('/api/auth/login', { email, passwordCipher }),
       ),
@@ -75,9 +74,27 @@ export class AuthService {
   }
 
   changePassword(currentPassword: string, newPassword: string) {
-    return this.http
-      .post<AuthUser>('/api/auth/change-password', { currentPassword, newPassword })
-      .pipe(tap((user) => this.storeUser(user)));
+    return this.encryptSecrets([currentPassword, newPassword]).pipe(
+      switchMap(([currentPasswordCipher, newPasswordCipher]) =>
+        this.http.post<AuthUser>('/api/auth/change-password', {
+          currentPasswordCipher,
+          newPasswordCipher,
+        }),
+      ),
+      tap((user) => this.storeUser(user)),
+    );
+  }
+
+  encryptSecret(plaintext: string) {
+    return this.http.get<LoginPublicKey>('/api/auth/login-key').pipe(
+      switchMap((key) => from(encryptLoginPassword(key, plaintext))),
+    );
+  }
+
+  private encryptSecrets(values: string[]) {
+    return this.http.get<LoginPublicKey>('/api/auth/login-key').pipe(
+      switchMap((key) => from(Promise.all(values.map((value) => encryptLoginPassword(key, value))))),
+    );
   }
 
   logout(): void {

@@ -5,14 +5,34 @@ import { catchError, throwError } from 'rxjs';
 
 import { AuthService } from './auth.service';
 
+const SECRET_QUERY_KEYS = new Set([
+  'password',
+  'currentpassword',
+  'newpassword',
+  'confirmpassword',
+  'passwordcipher',
+  'token',
+  'access_token',
+  'refresh_token',
+  'jwt',
+  'authorization',
+]);
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const token = auth.token;
 
-  const authorized = token
-    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-    : req;
+  let params = req.params;
+  for (const key of params.keys()) {
+    if (SECRET_QUERY_KEYS.has(key.toLowerCase()) || key.toLowerCase().includes('password')) {
+      params = params.delete(key);
+    }
+  }
+
+  const authorized = (token
+    ? req.clone({ params, setHeaders: { Authorization: `Bearer ${token}` } })
+    : req.clone({ params }));
 
   return next(authorized).pipe(
     catchError((error: HttpErrorResponse) => {

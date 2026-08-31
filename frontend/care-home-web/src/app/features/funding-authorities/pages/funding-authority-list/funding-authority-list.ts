@@ -4,7 +4,7 @@ import { finalize } from 'rxjs';
 
 import { FundingAuthority } from '../../models/funding-authority.model';
 import { FundingAuthorityService } from '../../services/funding-authority.service';
-import { getApiErrorMessage } from '../../../../core/api-error';
+import { getApiErrorMessage, logApiFailure } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
 import { MatButtonModule } from '@angular/material/button';
 import { PageHeaderComponent } from '../../../../shared/ui/page-header';
@@ -43,7 +43,7 @@ export class FundingAuthorityList implements OnInit {
         next: (fundingAuthorities) => this.fundingAuthorities.set(fundingAuthorities),
 
         error: (error) => {
-          console.error(error);
+          logApiFailure(error);
 
           this.errorMessage.set(getApiErrorMessage(
             error,

@@ -8,7 +8,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 
 import { CompanyService } from '../../services/company.service';
-import { getApiErrorMessage } from '../../../../core/api-error';
+import { getApiErrorMessage, logApiFailure } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
 import { PageHeaderComponent } from '../../../../shared/ui/page-header';
 import { ApiErrorComponent } from '../../../../shared/ui/api-error';
@@ -77,7 +77,7 @@ export class CompanyForm implements OnInit {
           });
         },
         error: (error) => {
-          console.error(error);
+          logApiFailure(error);
           this.errorMessage.set(getApiErrorMessage(error, 'Unable to load company.'));
         }
       });

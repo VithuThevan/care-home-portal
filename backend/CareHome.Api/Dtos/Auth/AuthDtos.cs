@@ -30,9 +30,13 @@ namespace CareHome.Api.Dtos.Auth
 
     public class ChangePasswordRequest
     {
-        public string CurrentPassword { get; set; } = string.Empty;
+        public string? CurrentPassword { get; set; }
 
-        public string NewPassword { get; set; } = string.Empty;
+        public string? NewPassword { get; set; }
+
+        public string? CurrentPasswordCipher { get; set; }
+
+        public string? NewPasswordCipher { get; set; }
     }
 }
 

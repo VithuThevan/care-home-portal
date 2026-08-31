@@ -19,7 +19,8 @@ namespace CareHome.Api.Controllers
         UserManager<ApplicationUser> userManager,
         CareHomeDbContext dbContext,
         AuditService audit,
-        ITenantContext tenantContext) : ControllerBase
+        ITenantContext tenantContext,
+        LoginPasswordCipher loginPasswordCipher) : ControllerBase
     {
         private static readonly string[] AssignableRoles =
         [
@@ -69,7 +70,12 @@ namespace CareHome.Api.Controllers
                 return homesError;
             }
 
-            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(request.Password))
+            if (!loginPasswordCipher.TryResolve(request.PasswordCipher, request.Password, out var password))
+            {
+                return BadRequest(new { message = "Password is required." });
+            }
+
+            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(password))
             {
                 return BadRequest(new { message = "This password is not allowed. Choose a unique password." });
             }
@@ -84,7 +90,7 @@ namespace CareHome.Api.Controllers
                 IsActive = true
             };
 
-            var created = await userManager.CreateAsync(user, request.Password);
+            var created = await userManager.CreateAsync(user, password);
             if (!created.Succeeded)
             {
                 return BadRequest(new { message = string.Join(" ", created.Errors.Select(e => e.Description)) });
@@ -152,13 +158,18 @@ namespace CareHome.Api.Controllers
                 return NotFound();
             }
 
-            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(request.NewPassword))
+            if (!loginPasswordCipher.TryResolve(request.NewPasswordCipher, request.NewPassword, out var newPassword))
+            {
+                return BadRequest(new { message = "A new password is required." });
+            }
+
+            if (KnownDevelopmentCredentials.IsForbiddenProductionPassword(newPassword))
             {
                 return BadRequest(new { message = "This password is not allowed. Choose a unique password." });
             }
 
             var token = await userManager.GeneratePasswordResetTokenAsync(user);
-            var result = await userManager.ResetPasswordAsync(user, token, request.NewPassword);
+            var result = await userManager.ResetPasswordAsync(user, token, newPassword);
             if (!result.Succeeded)
             {
                 return BadRequest(new { message = string.Join(" ", result.Errors.Select(e => e.Description)) });

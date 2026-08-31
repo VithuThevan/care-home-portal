@@ -12,7 +12,7 @@ import { CareHomeService } from '../../../care-homes/services/care-home.service'
 
 import { ClientService } from '../../services/client.service';
 
-import { getApiErrorMessage } from '../../../../core/api-error';
+import { getApiErrorMessage, logApiFailure } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -158,7 +158,7 @@ export class ClientForm implements OnInit {
       },
 
       error: (error) => {
-        console.error(error);
+        logApiFailure(error);
 
         this.errorMessage.set(getApiErrorMessage(error, 'Unable to load care homes.'));
       },
@@ -220,7 +220,7 @@ export class ClientForm implements OnInit {
         },
 
         error: (error) => {
-          console.error(error);
+          logApiFailure(error);
 
           this.errorMessage.set(getApiErrorMessage(error, 'Unable to load client.'));
         },
@@ -303,7 +303,7 @@ export class ClientForm implements OnInit {
           },
 
           error: (error) => {
-            console.error(error);
+            logApiFailure(error);
 
             this.errorMessage.set(getApiErrorMessage(
               error,
@@ -328,7 +328,7 @@ export class ClientForm implements OnInit {
       },
 
       error: (error) => {
-        console.error(error);
+        logApiFailure(error);
 
         this.errorMessage.set(getApiErrorMessage(
           error,

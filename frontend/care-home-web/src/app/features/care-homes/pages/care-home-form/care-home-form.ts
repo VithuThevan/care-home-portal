@@ -31,7 +31,7 @@ import {
   CareHomeService
 } from '../../services/care-home.service';
 
-import { getApiErrorMessage } from '../../../../core/api-error';
+import { getApiErrorMessage, logApiFailure } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -214,7 +214,7 @@ export class CareHomeForm implements OnInit {
 
         error: (error) => {
 
-          console.error(error);
+          logApiFailure(error);
 
           this.errorMessage.set(
             getApiErrorMessage(error, 'Unable to load companies.')
@@ -289,7 +289,7 @@ export class CareHomeForm implements OnInit {
 
         error: (error) => {
 
-          console.error(error);
+          logApiFailure(error);
 
           this.errorMessage.set(
             getApiErrorMessage(error, 'Unable to load care home.')
@@ -386,7 +386,7 @@ export class CareHomeForm implements OnInit {
 
           error: (error) => {
 
-            console.error(error);
+            logApiFailure(error);
 
             this.errorMessage.set(
               getApiErrorMessage(
@@ -422,7 +422,7 @@ export class CareHomeForm implements OnInit {
 
         error: (error) => {
 
-          console.error(error);
+          logApiFailure(error);
 
           this.errorMessage.set(
             getApiErrorMessage(

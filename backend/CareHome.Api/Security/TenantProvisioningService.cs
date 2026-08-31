@@ -134,9 +134,8 @@ namespace CareHome.Api.Security
                 {
                     result.TemporaryPassword = temporaryPassword;
                     logger.LogWarning(
-                        "Welcome email simulated for {Email}. Temporary password: {Password}",
-                        adminEmail,
-                        temporaryPassword);
+                        "Welcome email simulated for {Email}. Temporary password omitted from logs.",
+                        adminEmail);
                 }
             }
 
