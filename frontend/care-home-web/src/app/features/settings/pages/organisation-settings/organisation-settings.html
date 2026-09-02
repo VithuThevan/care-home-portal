@@ -46,7 +46,10 @@
           </mat-form-field>
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Email</mat-label>
-            <input matInput formControlName="email" />
+            <input matInput formControlName="email" type="email" />
+            @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+              <mat-error>Enter a valid email address.</mat-error>
+            }
           </mat-form-field>
           <mat-form-field appearance="outline" class="w-full md:col-span-2">
             <mat-label>Website</mat-label>
@@ -112,7 +115,12 @@
           </mat-form-field>
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Email from address</mat-label>
-            <input matInput formControlName="emailFromAddress" />
+            <input matInput formControlName="emailFromAddress" type="email" />
+            @if (
+              form.controls.emailFromAddress.touched && form.controls.emailFromAddress.hasError('email')
+            ) {
+              <mat-error>Enter a valid email address.</mat-error>
+            }
           </mat-form-field>
         </div>
       </section>

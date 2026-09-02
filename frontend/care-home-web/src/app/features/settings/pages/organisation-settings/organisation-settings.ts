@@ -42,7 +42,7 @@ export class OrganisationSettingsPage implements OnInit {
     registrationNumber: [''],
     address: [''],
     phone: [''],
-    email: [''],
+    email: ['', Validators.email],
     website: [''],
     currencyCode: ['GBP', Validators.required],
     currencySymbol: ['£', Validators.required],
@@ -52,7 +52,7 @@ export class OrganisationSettingsPage implements OnInit {
     numberLength: [4, Validators.required],
     paymentTermsDays: [30, Validators.required],
     emailFromName: [''],
-    emailFromAddress: [''],
+    emailFromAddress: ['', Validators.email],
     primaryColour: [''],
   });
 

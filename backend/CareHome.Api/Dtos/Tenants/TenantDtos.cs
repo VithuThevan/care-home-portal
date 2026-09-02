@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace CareHome.Api.Dtos.Tenants
 {
     public class TenantDto
@@ -129,6 +131,7 @@ namespace CareHome.Api.Dtos.Tenants
 
         public string? Phone { get; set; }
 
+        [EmailAddress]
         public string? Email { get; set; }
 
         public string? Website { get; set; }
@@ -149,6 +152,7 @@ namespace CareHome.Api.Dtos.Tenants
 
         public string? EmailFromName { get; set; }
 
+        [EmailAddress]
         public string? EmailFromAddress { get; set; }
 
         public string? PrimaryColour { get; set; }
