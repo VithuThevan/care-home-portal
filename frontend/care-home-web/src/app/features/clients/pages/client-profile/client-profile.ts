@@ -125,6 +125,11 @@ export class ClientProfilePage implements OnInit {
   }
 
   addRate(): void {
+    if (this.newRate.amount <= 0) {
+      this.errorMessage.set('Rate amount must be greater than zero.');
+      return;
+    }
+
     this.http
       .post(`/api/funding-contracts/${this.newRate.contractId}/rates`, {
         effectiveFrom: this.newRate.effectiveFrom,

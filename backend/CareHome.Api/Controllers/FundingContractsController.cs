@@ -209,9 +209,9 @@ namespace CareHome.Api.Controllers
                 return NotFound();
             }
 
-            if (request.Amount < 0)
+            if (request.Amount <= 0)
             {
-                return BadRequest(new { message = "Rate amount cannot be negative." });
+                return BadRequest(new { message = "Rate amount must be greater than zero." });
             }
 
             if (!RateFrequencies.All.Contains(request.Frequency))
