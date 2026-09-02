@@ -1,5 +1,8 @@
 <div class="page">
-  <app-page-header title="Billing Workspace" subtitle="Preview eligible charges, then generate invoices in a single transaction." />
+  <app-page-header
+    title="Billing Workspace"
+    subtitle="Preview eligible charges, then generate invoices in a single transaction."
+  />
 
   <app-api-error [message]="errorMessage()" />
 
@@ -43,7 +46,13 @@
       </mat-form-field>
     </div>
     <div class="mt-2 flex flex-wrap gap-2">
-      <button mat-flat-button color="primary" type="button" (click)="runPreview()" [disabled]="isWorking() || !companyId">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        (click)="runPreview()"
+        [disabled]="isWorking() || !companyId"
+      >
         @if (isWorking()) {
           Previewing...
         } @else {
@@ -69,18 +78,26 @@
   </section>
 
   @if (generateResult(); as generated) {
-    <div class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm text-[var(--app-success)]">
-      Generated {{ generated.invoiceCount }} invoice(s). Total £{{ generated.totalAmount | number: '1.2-2' }}.
+    <div
+      class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm text-[var(--app-success)]"
+    >
+      Generated {{ generated.invoiceCount }} invoice(s). Total £{{
+        generated.totalAmount | number: '1.2-2'
+      }}.
     </div>
   }
 
   @if (preview(); as previewData) {
     @if (previewData.canGenerate) {
-      <div class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm font-semibold text-[var(--app-success)]">
+      <div
+        class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm font-semibold text-[var(--app-success)]"
+      >
         Ready to generate
       </div>
     } @else {
-      <div class="mb-4 rounded-md border border-[#ffe0a3] bg-[#fff6e5] px-4 py-3 text-sm font-semibold text-[var(--app-warning)]">
+      <div
+        class="mb-4 rounded-md border border-[#ffe0a3] bg-[#fff6e5] px-4 py-3 text-sm font-semibold text-[var(--app-warning)]"
+      >
         Generation blocked
       </div>
     }
@@ -104,7 +121,10 @@
               </tr>
             </thead>
             <tbody>
-              @for (item of previewData.coverage; track item.clientId + '-' + item.clientFundingContractId) {
+              @for (
+                item of previewData.coverage;
+                track item.clientId + '-' + item.clientFundingContractId
+              ) {
                 <tr>
                   <td>{{ item.clientName }}</td>
                   <td>
@@ -115,7 +135,10 @@
                     }
                   </td>
                   <td>
-                    @for (range of item.remainingBillablePeriods; track range.start + '-' + range.end) {
+                    @for (
+                      range of item.remainingBillablePeriods;
+                      track range.start + '-' + range.end
+                    ) {
                       <div>{{ range.start }} → {{ range.end }} ({{ range.days }} days)</div>
                     } @empty {
                       None
@@ -135,7 +158,9 @@
       @for (item of previewData.exceptions; track item.code + item.message) {
         <div class="mb-3 rounded-md border border-[#ffe0a3] bg-[#fff6e5] px-4 py-3">
           <div class="font-medium">{{ exceptionLabel(item.code, item.message) }}</div>
-          <div class="mt-1 text-xs text-[var(--app-text-muted)]">{{ item.severity }} · {{ item.code }}</div>
+          <div class="mt-1 text-xs text-[var(--app-text-muted)]">
+            {{ item.severity }} · {{ item.code }}
+          </div>
         </div>
       } @empty {
         <p class="mb-0 text-sm">No exceptions.</p>
@@ -145,7 +170,9 @@
     <section class="panel">
       <h2 class="mt-0 text-lg font-semibold">
         Step 4 — Generate
-        <span class="ml-2 text-base font-normal">£{{ previewData.totalAmount | number: '1.2-2' }}</span>
+        <span class="ml-2 text-base font-normal"
+          >£{{ previewData.totalAmount | number: '1.2-2' }}</span
+        >
       </h2>
       <div class="table-container">
         <table class="data-table">

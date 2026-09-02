@@ -29,57 +29,109 @@
             Dashboard
           </a>
 
-          <button type="button" class="nav-section" (click)="$event.stopPropagation(); operationsOpen.update((v) => !v)">
+          <button
+            type="button"
+            class="nav-section"
+            (click)="$event.stopPropagation(); operationsOpen.update((v) => !v)"
+          >
             Operations
             <mat-icon>{{ operationsOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
           </button>
           @if (operationsOpen()) {
-            <a routerLink="/companies" routerLinkActive="active-link"><mat-icon>business</mat-icon>Companies</a>
-            <a routerLink="/care-homes" routerLinkActive="active-link"><mat-icon>home_work</mat-icon>Care Homes</a>
-            <a routerLink="/clients" routerLinkActive="active-link"><mat-icon>groups</mat-icon>Clients</a>
+            <a routerLink="/companies" routerLinkActive="active-link"
+              ><mat-icon>business</mat-icon>Companies</a
+            >
+            <a routerLink="/care-homes" routerLinkActive="active-link"
+              ><mat-icon>home_work</mat-icon>Care Homes</a
+            >
+            <a routerLink="/clients" routerLinkActive="active-link"
+              ><mat-icon>groups</mat-icon>Clients</a
+            >
           }
 
-          <button type="button" class="nav-section" (click)="$event.stopPropagation(); billingSetupOpen.update((v) => !v)">
+          <button
+            type="button"
+            class="nav-section"
+            (click)="$event.stopPropagation(); billingSetupOpen.update((v) => !v)"
+          >
             Billing Setup
             <mat-icon>{{ billingSetupOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
           </button>
           @if (billingSetupOpen()) {
-            <a routerLink="/funding-authorities" routerLinkActive="active-link"><mat-icon>account_balance</mat-icon>Funding Authorities</a>
-            <a routerLink="/invoice-categories" routerLinkActive="active-link"><mat-icon>category</mat-icon>Invoice Categories</a>
-            <a routerLink="/nominal-codes" routerLinkActive="active-link"><mat-icon>tag</mat-icon>Nominal Codes</a>
-            <a routerLink="/invoice-templates" routerLinkActive="active-link"><mat-icon>description</mat-icon>Invoice Templates</a>
+            <a routerLink="/funding-authorities" routerLinkActive="active-link"
+              ><mat-icon>account_balance</mat-icon>Funding Authorities</a
+            >
+            <a routerLink="/invoice-categories" routerLinkActive="active-link"
+              ><mat-icon>category</mat-icon>Invoice Categories</a
+            >
+            <a routerLink="/nominal-codes" routerLinkActive="active-link"
+              ><mat-icon>tag</mat-icon>Nominal Codes</a
+            >
+            <a routerLink="/invoice-templates" routerLinkActive="active-link"
+              ><mat-icon>description</mat-icon>Invoice Templates</a
+            >
           }
 
-          <button type="button" class="nav-section" (click)="$event.stopPropagation(); billingOpen.update((v) => !v)">
+          <button
+            type="button"
+            class="nav-section"
+            (click)="$event.stopPropagation(); billingOpen.update((v) => !v)"
+          >
             Billing
             <mat-icon>{{ billingOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
           </button>
           @if (billingOpen()) {
-            <a routerLink="/billing" routerLinkActive="active-link"><mat-icon>receipt_long</mat-icon>Billing Workspace</a>
-            <a routerLink="/invoices" routerLinkActive="active-link"><mat-icon>request_quote</mat-icon>Invoices</a>
-            <a routerLink="/credit-notes" routerLinkActive="active-link"><mat-icon>undo</mat-icon>Credit Notes</a>
-            <a routerLink="/misc-charges" routerLinkActive="active-link"><mat-icon>playlist_add</mat-icon>Miscellaneous Charges</a>
+            <a routerLink="/billing" routerLinkActive="active-link"
+              ><mat-icon>receipt_long</mat-icon>Billing Workspace</a
+            >
+            <a routerLink="/invoices" routerLinkActive="active-link"
+              ><mat-icon>request_quote</mat-icon>Invoices</a
+            >
+            <a routerLink="/credit-notes" routerLinkActive="active-link"
+              ><mat-icon>undo</mat-icon>Credit Notes</a
+            >
+            <a routerLink="/misc-charges" routerLinkActive="active-link"
+              ><mat-icon>playlist_add</mat-icon>Miscellaneous Charges</a
+            >
           }
 
-          <button type="button" class="nav-section" (click)="$event.stopPropagation(); reportingOpen.update((v) => !v)">
+          <button
+            type="button"
+            class="nav-section"
+            (click)="$event.stopPropagation(); reportingOpen.update((v) => !v)"
+          >
             Reporting
             <mat-icon>{{ reportingOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
           </button>
           @if (reportingOpen()) {
-            <a routerLink="/reports" routerLinkActive="active-link"><mat-icon>bar_chart</mat-icon>Reports</a>
-            <a routerLink="/sage-exports" routerLinkActive="active-link"><mat-icon>file_download</mat-icon>Sage Export</a>
+            <a routerLink="/reports" routerLinkActive="active-link"
+              ><mat-icon>bar_chart</mat-icon>Reports</a
+            >
+            <a routerLink="/sage-exports" routerLinkActive="active-link"
+              ><mat-icon>file_download</mat-icon>Sage Export</a
+            >
           }
 
           @if (auth.canManageUsers()) {
-            <button type="button" class="nav-section" (click)="$event.stopPropagation(); adminOpen.update((v) => !v)">
+            <button
+              type="button"
+              class="nav-section"
+              (click)="$event.stopPropagation(); adminOpen.update((v) => !v)"
+            >
               Administration
               <mat-icon>{{ adminOpen() ? 'expand_less' : 'expand_more' }}</mat-icon>
             </button>
             @if (adminOpen()) {
-              <a routerLink="/users" routerLinkActive="active-link"><mat-icon>manage_accounts</mat-icon>Users</a>
-              <a routerLink="/audit" routerLinkActive="active-link"><mat-icon>history</mat-icon>Audit</a>
+              <a routerLink="/users" routerLinkActive="active-link"
+                ><mat-icon>manage_accounts</mat-icon>Users</a
+              >
+              <a routerLink="/audit" routerLinkActive="active-link"
+                ><mat-icon>history</mat-icon>Audit</a
+              >
               @if (auth.canManageOrganisation()) {
-                <a routerLink="/settings/organisation" routerLinkActive="active-link"><mat-icon>settings</mat-icon>Organisation Settings</a>
+                <a routerLink="/settings/organisation" routerLinkActive="active-link"
+                  ><mat-icon>settings</mat-icon>Organisation Settings</a
+                >
               }
             }
           }

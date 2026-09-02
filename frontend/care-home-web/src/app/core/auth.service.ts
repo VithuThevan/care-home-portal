@@ -37,7 +37,10 @@ export class AuthService {
   }
 
   isReadOnlyOnly(): boolean {
-    return this.hasRole('ReadOnly') && !this.hasRole('PlatformAdmin', 'SuperAdmin', 'TenantAdmin', 'Administrator');
+    return (
+      this.hasRole('ReadOnly') &&
+      !this.hasRole('PlatformAdmin', 'SuperAdmin', 'TenantAdmin', 'Administrator')
+    );
   }
 
   isPlatformAdmin(): boolean {
@@ -86,15 +89,19 @@ export class AuthService {
   }
 
   encryptSecret(plaintext: string) {
-    return this.http.get<LoginPublicKey>('/api/auth/login-key').pipe(
-      switchMap((key) => from(encryptLoginPassword(key, plaintext))),
-    );
+    return this.http
+      .get<LoginPublicKey>('/api/auth/login-key')
+      .pipe(switchMap((key) => from(encryptLoginPassword(key, plaintext))));
   }
 
   private encryptSecrets(values: string[]) {
-    return this.http.get<LoginPublicKey>('/api/auth/login-key').pipe(
-      switchMap((key) => from(Promise.all(values.map((value) => encryptLoginPassword(key, value))))),
-    );
+    return this.http
+      .get<LoginPublicKey>('/api/auth/login-key')
+      .pipe(
+        switchMap((key) =>
+          from(Promise.all(values.map((value) => encryptLoginPassword(key, value)))),
+        ),
+      );
   }
 
   logout(): void {

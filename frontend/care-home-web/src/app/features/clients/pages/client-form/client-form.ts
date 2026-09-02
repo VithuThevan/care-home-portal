@@ -107,8 +107,7 @@ export class ClientForm implements OnInit {
   get selectableCareHomes(): CareHomeLocation[] {
     return this.careHomes().filter(
       (careHome) =>
-        careHome.isActive ||
-        (this.isEditMode && careHome.id === this.assignedCareHomeId()),
+        careHome.isActive || (this.isEditMode && careHome.id === this.assignedCareHomeId()),
     );
   }
 
@@ -241,9 +240,7 @@ export class ClientForm implements OnInit {
     if (this.isEditMode && value.status !== 'Current' && !value.dischargeDate) {
       this.form.markAllAsTouched();
 
-      this.errorMessage.set(
-        'Discharge date is required when client is no longer current.',
-      );
+      this.errorMessage.set('Discharge date is required when client is no longer current.');
 
       return;
     }
@@ -277,17 +274,15 @@ export class ClientForm implements OnInit {
     };
 
     if (this.isEditMode && this.clientId !== null) {
-        this.clientService
+      this.clientService
         .updateClient(this.clientId, {
           ...baseRequest,
 
           status: value.status,
 
-          dischargeDate:
-            value.status === 'Current' ? null : value.dischargeDate || null,
+          dischargeDate: value.status === 'Current' ? null : value.dischargeDate || null,
 
-          dischargeReason:
-            value.status === 'Current' ? null : value.dischargeReason,
+          dischargeReason: value.status === 'Current' ? null : value.dischargeReason,
 
           isArchived: value.status === 'Current' ? false : value.isArchived,
         })
@@ -305,36 +300,31 @@ export class ClientForm implements OnInit {
           error: (error) => {
             logApiFailure(error);
 
-            this.errorMessage.set(getApiErrorMessage(
-              error,
-              'Unable to update client.',
-            ));
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to update client.'));
           },
         });
 
       return;
     }
 
-    this.clientService.createClient(baseRequest)
+    this.clientService
+      .createClient(baseRequest)
       .pipe(
         finalize(() => {
           this.isSaving.set(false);
         }),
       )
       .subscribe({
-      next: () => {
-        this.toast.success('Client created successfully.');
-        this.router.navigate(['/clients']);
-      },
+        next: () => {
+          this.toast.success('Client created successfully.');
+          this.router.navigate(['/clients']);
+        },
 
-      error: (error) => {
-        logApiFailure(error);
+        error: (error) => {
+          logApiFailure(error);
 
-        this.errorMessage.set(getApiErrorMessage(
-          error,
-          'Unable to create client.',
-        ));
-      },
-    });
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to create client.'));
+        },
+      });
   }
 }

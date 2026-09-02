@@ -35,7 +35,10 @@
   }
 
   @if (!isLoading() && clients().length === 0) {
-    <app-empty-state title="No clients found" message="There are no clients matching the current filters.">
+    <app-empty-state
+      title="No clients found"
+      message="There are no clients matching the current filters."
+    >
       @if (auth.canWrite()) {
         <a mat-flat-button color="primary" routerLink="/clients/new">Add Client</a>
       }
@@ -60,7 +63,9 @@
         <tbody>
           @for (client of clients(); track client.id) {
             <tr>
-              <td class="font-semibold">{{ client.title }} {{ client.firstName }} {{ client.lastName }}</td>
+              <td class="font-semibold">
+                {{ client.title }} {{ client.firstName }} {{ client.lastName }}
+              </td>
               <td>{{ client.referenceNumber }}</td>
               <td>{{ client.sageId }}</td>
               <td>{{ client.careHomeName }}</td>
@@ -77,7 +82,12 @@
                 @if (auth.canWrite()) {
                   <a mat-stroked-button [routerLink]="['/clients', client.id, 'edit']">Edit</a>
                   @if (!client.isArchived && client.status !== 'Current') {
-                    <button mat-stroked-button color="warn" type="button" (click)="archiveClient(client)">
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      type="button"
+                      (click)="archiveClient(client)"
+                    >
                       Archive
                     </button>
                   }

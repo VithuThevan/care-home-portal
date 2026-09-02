@@ -1,9 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -51,7 +47,7 @@ export class NominalCodeForm implements OnInit {
     code: ['', [Validators.required, Validators.maxLength(20)]],
     name: ['', [Validators.required, Validators.maxLength(150)]],
     description: ['', Validators.maxLength(500)],
-    isActive: [true]
+    isActive: [true],
   });
 
   ngOnInit(): void {
@@ -77,7 +73,7 @@ export class NominalCodeForm implements OnInit {
       .pipe(
         finalize(() => {
           this.isLoading.set(false);
-        })
+        }),
       )
       .subscribe({
         next: (nominalCode) => {
@@ -85,18 +81,15 @@ export class NominalCodeForm implements OnInit {
             code: nominalCode.code,
             name: nominalCode.name,
             description: nominalCode.description ?? '',
-            isActive: nominalCode.isActive
+            isActive: nominalCode.isActive,
           });
         },
 
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to load nominal code.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load nominal code.'));
+        },
       });
   }
 
@@ -114,19 +107,19 @@ export class NominalCodeForm implements OnInit {
     const request = {
       code: value.code,
       name: value.name,
-      description: value.description
+      description: value.description,
     };
 
     if (this.isEditMode && this.nominalCodeId !== null) {
       this.nominalCodeService
         .updateNominalCode(this.nominalCodeId, {
           ...request,
-          isActive: value.isActive
+          isActive: value.isActive,
         })
         .pipe(
           finalize(() => {
             this.isSaving.set(false);
-          })
+          }),
         )
         .subscribe({
           next: () => {
@@ -136,11 +129,8 @@ export class NominalCodeForm implements OnInit {
           error: (error) => {
             logApiFailure(error);
 
-            this.errorMessage.set(getApiErrorMessage(
-              error,
-              'Unable to update nominal code.'
-            ));
-          }
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to update nominal code.'));
+          },
         });
 
       return;
@@ -151,7 +141,7 @@ export class NominalCodeForm implements OnInit {
       .pipe(
         finalize(() => {
           this.isSaving.set(false);
-        })
+        }),
       )
       .subscribe({
         next: () => {
@@ -161,11 +151,8 @@ export class NominalCodeForm implements OnInit {
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to create nominal code.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to create nominal code.'));
+        },
       });
   }
 }

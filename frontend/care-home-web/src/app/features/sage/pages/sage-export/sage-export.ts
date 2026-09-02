@@ -35,25 +35,28 @@ export class SageExportPage implements OnInit {
   ngOnInit(): void {
     this.http.get<PagedResult<any>>('/api/sage-exports').subscribe({
       next: (x) => this.batches.set(x.items),
-      error: (error) =>
-        this.errorMessage.set(getApiErrorMessage(error, 'Unable to load exports.')),
+      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Unable to load exports.')),
     });
   }
 
   runPreview(): void {
     this.errorMessage.set(null);
-    this.http.post('/api/sage-exports/preview', { dateFrom: this.dateFrom, dateTo: this.dateTo }).subscribe({
-      next: (preview) => this.preview.set(preview),
-      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Preview failed.')),
-    });
+    this.http
+      .post('/api/sage-exports/preview', { dateFrom: this.dateFrom, dateTo: this.dateTo })
+      .subscribe({
+        next: (preview) => this.preview.set(preview),
+        error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Preview failed.')),
+      });
   }
 
   exportNow(): void {
     this.errorMessage.set(null);
-    this.http.post<any>('/api/sage-exports', { dateFrom: this.dateFrom, dateTo: this.dateTo }).subscribe({
-      next: () => this.ngOnInit(),
-      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Export failed.')),
-    });
+    this.http
+      .post<any>('/api/sage-exports', { dateFrom: this.dateFrom, dateTo: this.dateTo })
+      .subscribe({
+        next: () => this.ngOnInit(),
+        error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Export failed.')),
+      });
   }
 
   download(id: number): void {

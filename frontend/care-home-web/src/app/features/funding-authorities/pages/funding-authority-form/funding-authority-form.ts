@@ -1,9 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -59,7 +55,7 @@ export class FundingAuthorityForm implements OnInit {
     address: ['', Validators.maxLength(300)],
     billingFrequency: ['', Validators.required],
     billingIntervalDays: this.formBuilder.control<number | null>(null),
-    isActive: [true]
+    isActive: [true],
   });
 
   get isCustomDays(): boolean {
@@ -106,7 +102,7 @@ export class FundingAuthorityForm implements OnInit {
       .pipe(
         finalize(() => {
           this.isLoading.set(false);
-        })
+        }),
       )
       .subscribe({
         next: (authority) => {
@@ -121,9 +117,9 @@ export class FundingAuthorityForm implements OnInit {
               address: authority.address ?? '',
               billingFrequency: authority.billingFrequency,
               billingIntervalDays: authority.billingIntervalDays,
-              isActive: authority.isActive
+              isActive: authority.isActive,
             },
-            { emitEvent: false }
+            { emitEvent: false },
           );
 
           this.updateBillingIntervalValidators(authority.billingFrequency);
@@ -132,11 +128,8 @@ export class FundingAuthorityForm implements OnInit {
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to load funding authority.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load funding authority.'));
+        },
       });
   }
 
@@ -161,21 +154,19 @@ export class FundingAuthorityForm implements OnInit {
       address: value.address,
       billingFrequency: value.billingFrequency,
       billingIntervalDays:
-        value.billingFrequency === 'CustomDays'
-          ? value.billingIntervalDays
-          : null
+        value.billingFrequency === 'CustomDays' ? value.billingIntervalDays : null,
     };
 
     if (this.isEditMode && this.fundingAuthorityId !== null) {
       this.fundingAuthorityService
         .updateFundingAuthority(this.fundingAuthorityId, {
           ...request,
-          isActive: value.isActive
+          isActive: value.isActive,
         })
         .pipe(
           finalize(() => {
             this.isSaving.set(false);
-          })
+          }),
         )
         .subscribe({
           next: () => {
@@ -185,11 +176,8 @@ export class FundingAuthorityForm implements OnInit {
           error: (error) => {
             logApiFailure(error);
 
-            this.errorMessage.set(getApiErrorMessage(
-              error,
-              'Unable to update funding authority.'
-            ));
-          }
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to update funding authority.'));
+          },
         });
 
       return;
@@ -200,7 +188,7 @@ export class FundingAuthorityForm implements OnInit {
       .pipe(
         finalize(() => {
           this.isSaving.set(false);
-        })
+        }),
       )
       .subscribe({
         next: () => {
@@ -210,11 +198,8 @@ export class FundingAuthorityForm implements OnInit {
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to create funding authority.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to create funding authority.'));
+        },
       });
   }
 }

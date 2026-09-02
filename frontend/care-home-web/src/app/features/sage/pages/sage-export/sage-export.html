@@ -1,5 +1,8 @@
 <div class="page">
-  <app-page-header title="Sage Export" subtitle="Provisional CSV mapping. Final Sage import layout needs stakeholder confirmation." />
+  <app-page-header
+    title="Sage Export"
+    subtitle="Provisional CSV mapping. Final Sage import layout needs stakeholder confirmation."
+  />
   <app-api-error [message]="errorMessage()" />
   <section class="panel mb-4">
     <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -14,7 +17,13 @@
       <div class="flex flex-wrap items-center gap-2">
         <button mat-stroked-button type="button" (click)="runPreview()">Validate</button>
         @if (auth.canWrite()) {
-          <button mat-flat-button color="primary" type="button" [disabled]="!preview()?.canExport" (click)="exportNow()">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            [disabled]="!preview()?.canExport"
+            (click)="exportNow()"
+          >
             Export CSV
           </button>
         }
@@ -45,7 +54,11 @@
               <td>{{ batch.exportedAt }}</td>
               <td>{{ batch.fileName }}</td>
               <td class="num">{{ batch.recordCount }}</td>
-              <td><button mat-stroked-button type="button" (click)="download(batch.id)">Download</button></td>
+              <td>
+                <button mat-stroked-button type="button" (click)="download(batch.id)">
+                  Download
+                </button>
+              </td>
             </tr>
           }
         </tbody>

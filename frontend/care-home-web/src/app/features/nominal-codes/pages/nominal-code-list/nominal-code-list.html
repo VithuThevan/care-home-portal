@@ -5,11 +5,20 @@
     }
   </app-page-header>
   <app-api-error [message]="errorMessage()" />
-  @if (isLoading()) { <app-loading-state label="Loading nominal codes..." /> }
+  @if (isLoading()) {
+    <app-loading-state label="Loading nominal codes..." />
+  }
   @if (!isLoading()) {
     <div class="table-container">
       <table class="data-table">
-        <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody>
           @for (nominalCode of nominalCodes(); track nominalCode.id) {
             <tr [class.inactive-row]="!nominalCode.isActive">
@@ -18,15 +27,26 @@
               <td><app-status-badge [value]="nominalCode.isActive ? 'Active' : 'Inactive'" /></td>
               <td class="flex flex-wrap gap-2">
                 @if (auth.canWrite()) {
-                  <a mat-stroked-button [routerLink]="['/nominal-codes', nominalCode.id, 'edit']">Edit</a>
+                  <a mat-stroked-button [routerLink]="['/nominal-codes', nominalCode.id, 'edit']"
+                    >Edit</a
+                  >
                   @if (nominalCode.isActive) {
-                    <button mat-stroked-button color="warn" type="button" (click)="deactivateNominalCode(nominalCode)">Deactivate</button>
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      type="button"
+                      (click)="deactivateNominalCode(nominalCode)"
+                    >
+                      Deactivate
+                    </button>
                   }
                 }
               </td>
             </tr>
           } @empty {
-            <tr><td colspan="4">No nominal codes found.</td></tr>
+            <tr>
+              <td colspan="4">No nominal codes found.</td>
+            </tr>
           }
         </tbody>
       </table>

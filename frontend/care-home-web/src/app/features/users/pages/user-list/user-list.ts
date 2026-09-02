@@ -103,7 +103,8 @@ export class UserListPage implements OnInit {
           this.toast.success('User created successfully.');
           this.ngOnInit();
         },
-        error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Unable to create user.')),
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to create user.')),
       });
   }
 

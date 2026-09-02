@@ -1,43 +1,41 @@
 export interface CareHomeLocation {
-    id: number;
-    companyId: number;
-    companyName: string;
+  id: number;
+  companyId: number;
+  companyName: string;
 
-    code: string;
-    name: string;
+  code: string;
+  name: string;
 
-    bedCapacity: number;
+  bedCapacity: number;
 
-    address: string | null;
-    phone: string | null;
-    email: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
 
-    managerName: string | null;
-    managerPhone: string | null;
-    managerEmail: string | null;
+  managerName: string | null;
+  managerPhone: string | null;
+  managerEmail: string | null;
 
-    isActive: boolean;
+  isActive: boolean;
 }
 
 export interface CreateCareHomeRequest {
-    companyId: number;
+  companyId: number;
 
-    code: string;
-    name: string;
+  code: string;
+  name: string;
 
-    bedCapacity: number;
+  bedCapacity: number;
 
-    address?: string;
-    phone?: string;
-    email?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
 
-    managerName?: string;
-    managerPhone?: string;
-    managerEmail?: string;
+  managerName?: string;
+  managerPhone?: string;
+  managerEmail?: string;
 }
 
-export interface UpdateCareHomeRequest
-    extends CreateCareHomeRequest {
-
-    isActive: boolean;
+export interface UpdateCareHomeRequest extends CreateCareHomeRequest {
+  isActive: boolean;
 }

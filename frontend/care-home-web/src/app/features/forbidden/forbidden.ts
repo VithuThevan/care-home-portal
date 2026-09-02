@@ -8,7 +8,9 @@ import { MatButtonModule } from '@angular/material/button';
   template: `
     <div class="page">
       <h1 class="text-2xl font-semibold">Access denied</h1>
-      <p class="text-sm text-[var(--app-text-muted)]">You do not have permission to view this page.</p>
+      <p class="text-sm text-[var(--app-text-muted)]">
+        You do not have permission to view this page.
+      </p>
       <a mat-stroked-button routerLink="/dashboard">Back to dashboard</a>
     </div>
   `,

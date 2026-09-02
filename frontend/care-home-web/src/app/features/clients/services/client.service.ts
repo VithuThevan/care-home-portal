@@ -3,14 +3,10 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { PagedResult } from '../../../core/models';
-import {
-  Client,
-  CreateClientRequest,
-  UpdateClientRequest
-} from '../models/client.model';
+import { Client, CreateClientRequest, UpdateClientRequest } from '../models/client.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ClientService {
   private readonly http = inject(HttpClient);
@@ -27,7 +23,7 @@ export class ClientService {
       status?: string;
       fundingAuthorityId?: number;
       contractStatus?: string;
-    }
+    },
   ): Observable<PagedResult<Client>> {
     let params = new HttpParams()
       .set('page', page)

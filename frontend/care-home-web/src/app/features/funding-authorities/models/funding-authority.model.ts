@@ -29,7 +29,6 @@ export interface CreateFundingAuthorityRequest {
   billingIntervalDays?: number | null;
 }
 
-export interface UpdateFundingAuthorityRequest
-  extends CreateFundingAuthorityRequest {
+export interface UpdateFundingAuthorityRequest extends CreateFundingAuthorityRequest {
   isActive: boolean;
 }

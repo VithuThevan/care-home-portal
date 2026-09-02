@@ -52,7 +52,9 @@
         <div class="kpi-icon"><mat-icon>request_quote</mat-icon></div>
         <div>
           <h3 class="m-0 text-sm font-medium text-[var(--app-text-muted)]">Outstanding</h3>
-          <p class="mt-1 mb-0 text-2xl font-semibold">£{{ data.outstandingAmount | number: '1.2-2' }}</p>
+          <p class="mt-1 mb-0 text-2xl font-semibold">
+            £{{ data.outstandingAmount | number: '1.2-2' }}
+          </p>
           <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">Unpaid invoices</p>
         </div>
       </div>
@@ -83,7 +85,9 @@
           <tbody>
             @for (row of data.recentInvoices; track row.id) {
               <tr>
-                <td><a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a></td>
+                <td>
+                  <a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a>
+                </td>
                 <td class="num">£{{ row.totalAmount | number: '1.2-2' }}</td>
                 <td><app-status-badge [value]="row.status" /></td>
               </tr>

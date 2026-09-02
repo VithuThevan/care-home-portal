@@ -46,7 +46,7 @@ export class CompanyForm implements OnInit {
 
   readonly form = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
-    isActive: [true]
+    isActive: [true],
   });
 
   ngOnInit(): void {
@@ -73,13 +73,13 @@ export class CompanyForm implements OnInit {
         next: (company) => {
           this.form.patchValue({
             name: company.name,
-            isActive: company.isActive
+            isActive: company.isActive,
           });
         },
         error: (error) => {
           logApiFailure(error);
           this.errorMessage.set(getApiErrorMessage(error, 'Unable to load company.'));
-        }
+        },
       });
   }
 
@@ -97,7 +97,7 @@ export class CompanyForm implements OnInit {
       this.companyService
         .updateCompany(this.companyId, {
           name: formValue.name,
-          isActive: formValue.isActive
+          isActive: formValue.isActive,
         })
         .pipe(finalize(() => this.isSaving.set(false)))
         .subscribe({

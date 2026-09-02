@@ -8,8 +8,8 @@
     <section class="panel max-w-3xl">
       <h2 class="mt-0 mb-2 text-lg font-semibold">Organisation created</h2>
       <p class="mt-0 mb-3 text-sm text-[var(--app-text-muted)]">
-        Login details were sent to <strong>{{ notice.email }}</strong>.
-        The administrator must change the temporary password before they can use the system.
+        Login details were sent to <strong>{{ notice.email }}</strong
+        >. The administrator must change the temporary password before they can use the system.
       </p>
       @if (notice.simulated && notice.temporaryPassword) {
         <p class="mb-3 rounded-xl bg-[var(--app-primary-soft)] px-4 py-3 text-sm">
@@ -55,13 +55,16 @@
       @if (!isEditMode) {
         <h2 class="mt-6 text-lg font-semibold">First administrator</h2>
         <p class="mt-0 mb-3 text-sm text-[var(--app-text-muted)]">
-          A temporary password will be emailed to this address. The administrator will not have access until they change it.
+          A temporary password will be emailed to this address. The administrator will not have
+          access until they change it.
         </p>
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Admin email</mat-label>
             <input matInput formControlName="adminEmail" required />
-            @if (form.controls.adminEmail.touched && form.controls.adminEmail.hasError('required')) {
+            @if (
+              form.controls.adminEmail.touched && form.controls.adminEmail.hasError('required')
+            ) {
               <mat-error>Administrator email is required.</mat-error>
             }
             @if (form.controls.adminEmail.touched && form.controls.adminEmail.hasError('email')) {
@@ -77,7 +80,11 @@
       <div class="mt-4 flex flex-wrap gap-2">
         <a mat-stroked-button routerLink="/platform/tenants">Cancel</a>
         <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
-          @if (isSaving()) { Saving... } @else { Save }
+          @if (isSaving()) {
+            Saving...
+          } @else {
+            Save
+          }
         </button>
       </div>
     </form>

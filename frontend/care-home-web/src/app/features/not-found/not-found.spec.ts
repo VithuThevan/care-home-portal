@@ -19,10 +19,7 @@ describe('NotFoundPage', () => {
 
   it('should activate for an unknown SPA path', async () => {
     TestBed.configureTestingModule({
-      providers: [
-        provideRouter([{ path: '**', component: NotFoundPage }]),
-        provideHttpClient(),
-      ],
+      providers: [provideRouter([{ path: '**', component: NotFoundPage }]), provideHttpClient()],
     });
 
     const router = TestBed.inject(Router);

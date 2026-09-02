@@ -5,11 +5,11 @@ import { Observable } from 'rxjs';
 import {
   CreateInvoiceCategoryRequest,
   InvoiceCategory,
-  UpdateInvoiceCategoryRequest
+  UpdateInvoiceCategoryRequest,
 } from '../models/invoice-category.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class InvoiceCategoryService {
   private readonly http = inject(HttpClient);
@@ -24,15 +24,13 @@ export class InvoiceCategoryService {
     return this.http.get<InvoiceCategory>(`${this.apiUrl}/${id}`);
   }
 
-  createInvoiceCategory(
-    request: CreateInvoiceCategoryRequest
-  ): Observable<InvoiceCategory> {
+  createInvoiceCategory(request: CreateInvoiceCategoryRequest): Observable<InvoiceCategory> {
     return this.http.post<InvoiceCategory>(this.apiUrl, request);
   }
 
   updateInvoiceCategory(
     id: number,
-    request: UpdateInvoiceCategoryRequest
+    request: UpdateInvoiceCategoryRequest,
   ): Observable<InvoiceCategory> {
     return this.http.put<InvoiceCategory>(`${this.apiUrl}/${id}`, request);
   }

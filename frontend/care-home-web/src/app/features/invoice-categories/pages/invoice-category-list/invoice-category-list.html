@@ -1,15 +1,27 @@
 <div class="page">
-  <app-page-header title="Invoice Categories" subtitle="Categories used when grouping invoice lines.">
+  <app-page-header
+    title="Invoice Categories"
+    subtitle="Categories used when grouping invoice lines."
+  >
     @if (auth.canWrite()) {
       <a mat-flat-button color="primary" routerLink="/invoice-categories/new">Add Category</a>
     }
   </app-page-header>
   <app-api-error [message]="errorMessage()" />
-  @if (isLoading()) { <app-loading-state label="Loading invoice categories..." /> }
+  @if (isLoading()) {
+    <app-loading-state label="Loading invoice categories..." />
+  }
   @if (!isLoading()) {
     <div class="table-container">
       <table class="data-table">
-        <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody>
           @for (category of invoiceCategories(); track category.id) {
             <tr [class.inactive-row]="!category.isActive">
@@ -18,15 +30,26 @@
               <td><app-status-badge [value]="category.isActive ? 'Active' : 'Inactive'" /></td>
               <td class="flex flex-wrap gap-2">
                 @if (auth.canWrite()) {
-                  <a mat-stroked-button [routerLink]="['/invoice-categories', category.id, 'edit']">Edit</a>
+                  <a mat-stroked-button [routerLink]="['/invoice-categories', category.id, 'edit']"
+                    >Edit</a
+                  >
                   @if (category.isActive) {
-                    <button mat-stroked-button color="warn" type="button" (click)="deactivateInvoiceCategory(category)">Deactivate</button>
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      type="button"
+                      (click)="deactivateInvoiceCategory(category)"
+                    >
+                      Deactivate
+                    </button>
                   }
                 }
               </td>
             </tr>
           } @empty {
-            <tr><td colspan="4">No invoice categories found.</td></tr>
+            <tr>
+              <td colspan="4">No invoice categories found.</td>
+            </tr>
           }
         </tbody>
       </table>

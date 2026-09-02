@@ -1,5 +1,8 @@
 <div class="page">
-  <app-page-header title="Credit Notes" subtitle="Credits cannot exceed remaining invoiced amounts." />
+  <app-page-header
+    title="Credit Notes"
+    subtitle="Credits cannot exceed remaining invoiced amounts."
+  />
 
   <app-api-error [message]="errorMessage()" />
 
@@ -26,7 +29,13 @@
     <div class="flex flex-wrap gap-2">
       <button mat-stroked-button type="button" (click)="runPreview()">Preview</button>
       @if (auth.canWrite()) {
-        <button mat-flat-button color="primary" type="button" [disabled]="!preview()?.canGenerate" (click)="generate()">
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="!preview()?.canGenerate"
+          (click)="generate()"
+        >
           Generate
         </button>
       }

@@ -1,6 +1,13 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, guestGuard, adminGuard, platformGuard, organisationSettingsGuard, passwordChangeGuard } from './core/auth.guard';
+import {
+  authGuard,
+  guestGuard,
+  adminGuard,
+  platformGuard,
+  organisationSettingsGuard,
+  passwordChangeGuard,
+} from './core/auth.guard';
 import { LoginPage } from './features/login/login';
 import { ChangePasswordPage } from './features/login/change-password';
 import { ForbiddenPage } from './features/forbidden/forbidden';
@@ -53,7 +60,11 @@ export const routes: Routes = [
   { path: 'clients/:id', component: ClientProfilePage, canActivate: [authGuard] },
   { path: 'funding-authorities', component: FundingAuthorityList, canActivate: [authGuard] },
   { path: 'funding-authorities/new', component: FundingAuthorityForm, canActivate: [authGuard] },
-  { path: 'funding-authorities/:id/edit', component: FundingAuthorityForm, canActivate: [authGuard] },
+  {
+    path: 'funding-authorities/:id/edit',
+    component: FundingAuthorityForm,
+    canActivate: [authGuard],
+  },
   { path: 'invoice-categories', component: InvoiceCategoryList, canActivate: [authGuard] },
   { path: 'invoice-categories/new', component: InvoiceCategoryForm, canActivate: [authGuard] },
   { path: 'invoice-categories/:id/edit', component: InvoiceCategoryForm, canActivate: [authGuard] },
@@ -70,9 +81,25 @@ export const routes: Routes = [
   { path: 'sage-exports', component: SageExportPage, canActivate: [authGuard] },
   { path: 'users', component: UserListPage, canActivate: [authGuard, adminGuard] },
   { path: 'audit', component: AuditListPage, canActivate: [authGuard, adminGuard] },
-  { path: 'settings/organisation', component: OrganisationSettingsPage, canActivate: [authGuard, organisationSettingsGuard] },
-  { path: 'platform/tenants', component: PlatformTenantListPage, canActivate: [authGuard, platformGuard] },
-  { path: 'platform/tenants/new', component: PlatformTenantFormPage, canActivate: [authGuard, platformGuard] },
-  { path: 'platform/tenants/:id', component: PlatformTenantFormPage, canActivate: [authGuard, platformGuard] },
+  {
+    path: 'settings/organisation',
+    component: OrganisationSettingsPage,
+    canActivate: [authGuard, organisationSettingsGuard],
+  },
+  {
+    path: 'platform/tenants',
+    component: PlatformTenantListPage,
+    canActivate: [authGuard, platformGuard],
+  },
+  {
+    path: 'platform/tenants/new',
+    component: PlatformTenantFormPage,
+    canActivate: [authGuard, platformGuard],
+  },
+  {
+    path: 'platform/tenants/:id',
+    component: PlatformTenantFormPage,
+    canActivate: [authGuard, platformGuard],
+  },
   { path: '**', component: NotFoundPage },
 ];

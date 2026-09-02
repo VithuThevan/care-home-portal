@@ -1,9 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-export function getApiErrorMessage(
-  error: unknown,
-  fallback: string
-): string {
+export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (!isRecord(error)) {
     return fallback;
   }
@@ -26,11 +23,7 @@ export function getApiErrorMessage(
 
   if (isRecord(errors)) {
     for (const value of Object.values(errors)) {
-      if (
-        Array.isArray(value) &&
-        typeof value[0] === 'string' &&
-        value[0].trim()
-      ) {
+      if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) {
         return containsSecretDump(value[0]) ? fallback : value[0];
       }
     }
@@ -53,7 +46,9 @@ export function logApiFailure(error: unknown, context = 'Request failed'): void 
 }
 
 function containsSecretDump(value: string): boolean {
-  return /"(password|currentPassword|newPassword|passwordCipher|token|authorization)"\s*:/i.test(value);
+  return /"(password|currentPassword|newPassword|passwordCipher|token|authorization)"\s*:/i.test(
+    value,
+  );
 }
 
 function sanitizeUrl(url: string | null): string | null {

@@ -1,9 +1,14 @@
 <div class="page">
-  <app-page-header title="Invoices" subtitle="Generated invoices with snapshot history. Void instead of deleting." />
+  <app-page-header
+    title="Invoices"
+    subtitle="Generated invoices with snapshot history. Void instead of deleting."
+  />
 
   <app-api-error [message]="errorMessage()" />
   @if (bulkMessage()) {
-    <div class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm">{{ bulkMessage() }}</div>
+    <div class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm">
+      {{ bulkMessage() }}
+    </div>
   }
 
   <section class="panel mb-4">
@@ -45,7 +50,10 @@
   }
 
   @if (!isLoading() && items().length === 0) {
-    <app-empty-state title="No invoices found" message="There are no invoices matching the current filters." />
+    <app-empty-state
+      title="No invoices found"
+      message="There are no invoices matching the current filters."
+    />
   }
 
   @if (!isLoading() && items().length) {
@@ -67,7 +75,9 @@
           @for (item of items(); track item.id) {
             <tr>
               <td><mat-checkbox (change)="toggle(item.id, $any($event).checked)" /></td>
-              <td><a [routerLink]="['/invoices', item.id]">{{ item.invoiceNumber }}</a></td>
+              <td>
+                <a [routerLink]="['/invoices', item.id]">{{ item.invoiceNumber }}</a>
+              </td>
               <td>{{ item.invoiceDate }}</td>
               <td>{{ item.careHomeName }}</td>
               <td>{{ item.fundingAuthorityName }}</td>

@@ -118,7 +118,12 @@
       </section>
 
       <div>
-        <button mat-flat-button color="primary" type="submit" [disabled]="isSaving() || !auth.canWrite()">
+        <button
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="isSaving() || !auth.canWrite()"
+        >
           @if (isSaving()) {
             Saving...
           } @else {

@@ -15,7 +15,14 @@ import { ConfirmDialogService } from '../../../../shared/ui/confirm-dialog.servi
 
 @Component({
   selector: 'app-invoice-category-list',
-  imports: [RouterLink, MatButtonModule, PageHeaderComponent, ApiErrorComponent, LoadingStateComponent, StatusBadgeComponent],
+  imports: [
+    RouterLink,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './invoice-category-list.html',
 })
 export class InvoiceCategoryList implements OnInit {
@@ -45,11 +52,8 @@ export class InvoiceCategoryList implements OnInit {
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to load invoice categories.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load invoice categories.'));
+        },
       });
   }
 
@@ -67,7 +71,9 @@ export class InvoiceCategoryList implements OnInit {
         this.invoiceCategoryService.deactivateInvoiceCategory(category.id).subscribe({
           next: () => this.loadInvoiceCategories(),
           error: (error) =>
-            this.errorMessage.set(getApiErrorMessage(error, 'Unable to deactivate invoice category.')),
+            this.errorMessage.set(
+              getApiErrorMessage(error, 'Unable to deactivate invoice category.'),
+            ),
         });
       });
   }

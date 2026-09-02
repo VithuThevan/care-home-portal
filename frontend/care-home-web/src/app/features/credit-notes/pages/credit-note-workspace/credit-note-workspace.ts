@@ -53,33 +53,37 @@ export class CreditNoteWorkspacePage {
 
   runPreview(): void {
     this.errorMessage.set(null);
-    this.http.post('/api/credit-notes/preview', {
-      clientId: this.clientId ? Number(this.clientId) : null,
-      periodStart: this.periodStart,
-      periodEnd: this.periodEnd,
-      reason: this.reason,
-      creditNoteDate: this.periodEnd,
-    }).subscribe({
-      next: (preview) => this.preview.set(preview),
-      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Preview failed.')),
-    });
+    this.http
+      .post('/api/credit-notes/preview', {
+        clientId: this.clientId ? Number(this.clientId) : null,
+        periodStart: this.periodStart,
+        periodEnd: this.periodEnd,
+        reason: this.reason,
+        creditNoteDate: this.periodEnd,
+      })
+      .subscribe({
+        next: (preview) => this.preview.set(preview),
+        error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Preview failed.')),
+      });
   }
 
   generate(): void {
     this.errorMessage.set(null);
-    this.http.post('/api/credit-notes/generate', {
-      clientId: this.clientId ? Number(this.clientId) : null,
-      periodStart: this.periodStart,
-      periodEnd: this.periodEnd,
-      reason: this.reason,
-      creditNoteDate: this.periodEnd,
-    }).subscribe({
-      next: () => {
-        this.toast.success('Credit note generated successfully.');
-        this.loadNotes();
-      },
-      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Generate failed.')),
-    });
+    this.http
+      .post('/api/credit-notes/generate', {
+        clientId: this.clientId ? Number(this.clientId) : null,
+        periodStart: this.periodStart,
+        periodEnd: this.periodEnd,
+        reason: this.reason,
+        creditNoteDate: this.periodEnd,
+      })
+      .subscribe({
+        next: () => {
+          this.toast.success('Credit note generated successfully.');
+          this.loadNotes();
+        },
+        error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Generate failed.')),
+      });
   }
 
   pdf(id: number): void {

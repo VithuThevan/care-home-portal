@@ -6,7 +6,10 @@
   }
 
   @if (client(); as client) {
-    <app-page-header [title]="client.firstName + ' ' + client.lastName" [subtitle]="client.referenceNumber + ' · ' + client.sageId + ' · ' + client.careHomeName">
+    <app-page-header
+      [title]="client.firstName + ' ' + client.lastName"
+      [subtitle]="client.referenceNumber + ' · ' + client.sageId + ' · ' + client.careHomeName"
+    >
       @if (auth.canWrite()) {
         <a mat-stroked-button [routerLink]="['/clients', client.id, 'edit']">Edit details</a>
       }
@@ -17,8 +20,18 @@
     </div>
 
     <div class="mb-4 flex flex-wrap gap-2">
-      <button mat-stroked-button type="button" [class.mat-mdc-button-base]="true" [color]="tab === 'details' ? 'primary' : undefined" (click)="tab = 'details'">Details</button>
-      <button mat-stroked-button type="button" (click)="tab = 'contracts'">Funding contracts</button>
+      <button
+        mat-stroked-button
+        type="button"
+        [class.mat-mdc-button-base]="true"
+        [color]="tab === 'details' ? 'primary' : undefined"
+        (click)="tab = 'details'"
+      >
+        Details
+      </button>
+      <button mat-stroked-button type="button" (click)="tab = 'contracts'">
+        Funding contracts
+      </button>
       <button mat-stroked-button type="button" (click)="tab = 'rates'">Rate history</button>
       <button mat-stroked-button type="button" (click)="tab = 'invoices'">Invoices</button>
     </div>
@@ -27,13 +40,19 @@
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <section class="panel">
           <h2 class="mt-0 text-lg font-semibold">Personal information</h2>
-          <p class="mb-1 text-sm">{{ client.title }} {{ client.firstName }} {{ client.lastName }}</p>
-          <p class="mb-0 text-sm text-[var(--app-text-muted)]">DOB: {{ client.dateOfBirth || '—' }}</p>
+          <p class="mb-1 text-sm">
+            {{ client.title }} {{ client.firstName }} {{ client.lastName }}
+          </p>
+          <p class="mb-0 text-sm text-[var(--app-text-muted)]">
+            DOB: {{ client.dateOfBirth || '—' }}
+          </p>
         </section>
         <section class="panel">
           <h2 class="mt-0 text-lg font-semibold">Care information</h2>
           <p class="mb-1 text-sm">{{ client.careType }}</p>
-          <p class="mb-0 text-sm text-[var(--app-text-muted)]">Admitted: {{ client.admissionDate }}</p>
+          <p class="mb-0 text-sm text-[var(--app-text-muted)]">
+            Admitted: {{ client.admissionDate }}
+          </p>
         </section>
         <section class="panel">
           <h2 class="mt-0 text-lg font-semibold">Contact information</h2>
@@ -111,7 +130,9 @@
               <input matInput type="date" [(ngModel)]="newContract.contractEndDate" />
             </mat-form-field>
           </div>
-          <button mat-flat-button color="primary" type="button" (click)="saveContract()">Save contract</button>
+          <button mat-flat-button color="primary" type="button" (click)="saveContract()">
+            Save contract
+          </button>
         }
       </section>
     }
@@ -120,7 +141,9 @@
       <section class="panel">
         <h2 class="mt-0 text-lg font-semibold">Funding rates</h2>
         @for (contract of contracts(); track contract.id) {
-          <h3 class="text-base font-medium">{{ contract.fundingAuthorityName }} / {{ contract.invoiceCategoryName }}</h3>
+          <h3 class="text-base font-medium">
+            {{ contract.fundingAuthorityName }} / {{ contract.invoiceCategoryName }}
+          </h3>
           <div class="table-container mb-4">
             <table class="data-table">
               <thead>
@@ -179,7 +202,9 @@
               <input matInput type="number" step="0.01" [(ngModel)]="newRate.amount" />
             </mat-form-field>
           </div>
-          <button mat-flat-button color="primary" type="button" (click)="addRate()">Add rate</button>
+          <button mat-flat-button color="primary" type="button" (click)="addRate()">
+            Add rate
+          </button>
         }
       </section>
     }
@@ -200,7 +225,9 @@
             <tbody>
               @for (invoice of invoices(); track invoice.id) {
                 <tr>
-                  <td><a [routerLink]="['/invoices', invoice.id]">{{ invoice.invoiceNumber }}</a></td>
+                  <td>
+                    <a [routerLink]="['/invoices', invoice.id]">{{ invoice.invoiceNumber }}</a>
+                  </td>
                   <td>{{ invoice.invoiceDate }}</td>
                   <td class="num">£{{ invoice.totalAmount | number: '1.2-2' }}</td>
                   <td>

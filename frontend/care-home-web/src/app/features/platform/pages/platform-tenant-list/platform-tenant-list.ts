@@ -19,7 +19,13 @@ interface TenantRow {
 
 @Component({
   selector: 'app-platform-tenant-list',
-  imports: [RouterLink, MatButtonModule, PageHeaderComponent, ApiErrorComponent, StatusBadgeComponent],
+  imports: [
+    RouterLink,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './platform-tenant-list.html',
 })
 export class PlatformTenantListPage implements OnInit {

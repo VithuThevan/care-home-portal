@@ -15,7 +15,14 @@ import { ConfirmDialogService } from '../../../../shared/ui/confirm-dialog.servi
 
 @Component({
   selector: 'app-nominal-code-list',
-  imports: [RouterLink, MatButtonModule, PageHeaderComponent, ApiErrorComponent, LoadingStateComponent, StatusBadgeComponent],
+  imports: [
+    RouterLink,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './nominal-code-list.html',
 })
 export class NominalCodeList implements OnInit {
@@ -45,11 +52,8 @@ export class NominalCodeList implements OnInit {
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to load nominal codes.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load nominal codes.'));
+        },
       });
   }
 

@@ -1,5 +1,8 @@
 <div class="page">
-  <app-page-header title="Funding Authorities" subtitle="Manage organisations and people that fund client care.">
+  <app-page-header
+    title="Funding Authorities"
+    subtitle="Manage organisations and people that fund client care."
+  >
     @if (auth.canWrite()) {
       <a mat-flat-button color="primary" routerLink="/funding-authorities/new">Add Authority</a>
     }
@@ -13,7 +16,13 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Code</th><th>Name</th><th>Type</th><th>Billing Frequency</th><th>Contact</th><th>Status</th><th>Actions</th>
+            <th>Code</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Billing Frequency</th>
+            <th>Contact</th>
+            <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -27,15 +36,28 @@
               <td><app-status-badge [value]="authority.isActive ? 'Active' : 'Inactive'" /></td>
               <td class="flex flex-wrap gap-2">
                 @if (auth.canWrite()) {
-                  <a mat-stroked-button [routerLink]="['/funding-authorities', authority.id, 'edit']">Edit</a>
+                  <a
+                    mat-stroked-button
+                    [routerLink]="['/funding-authorities', authority.id, 'edit']"
+                    >Edit</a
+                  >
                   @if (authority.isActive) {
-                    <button mat-stroked-button color="warn" type="button" (click)="deactivateFundingAuthority(authority)">Deactivate</button>
+                    <button
+                      mat-stroked-button
+                      color="warn"
+                      type="button"
+                      (click)="deactivateFundingAuthority(authority)"
+                    >
+                      Deactivate
+                    </button>
                   }
                 }
               </td>
             </tr>
           } @empty {
-            <tr><td colspan="7">No funding authorities found.</td></tr>
+            <tr>
+              <td colspan="7">No funding authorities found.</td>
+            </tr>
           }
         </tbody>
       </table>

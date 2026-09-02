@@ -21,10 +21,26 @@ interface DashboardDto {
   outstandingInvoices: number;
   outstandingAmount: number;
   invoicesGenerated: number;
-  occupancyByHome: { careHomeId: number; careHomeName: string; capacity: number; occupied: number; available: number }[];
-  recentInvoices: { id: number; invoiceNumber: string; careHomeName: string; totalAmount: number; status: string }[];
+  occupancyByHome: {
+    careHomeId: number;
+    careHomeName: string;
+    capacity: number;
+    occupied: number;
+    available: number;
+  }[];
+  recentInvoices: {
+    id: number;
+    invoiceNumber: string;
+    careHomeName: string;
+    totalAmount: number;
+    status: string;
+  }[];
   billingExceptions: string[];
-  upcomingInvoices: { careHomeName: string; fundingAuthorityName: string; billingFrequency: string }[];
+  upcomingInvoices: {
+    careHomeName: string;
+    fundingAuthorityName: string;
+    billingFrequency: string;
+  }[];
   setupHints: string[];
 }
 

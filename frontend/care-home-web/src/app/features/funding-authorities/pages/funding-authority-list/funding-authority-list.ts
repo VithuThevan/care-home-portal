@@ -15,7 +15,14 @@ import { ConfirmDialogService } from '../../../../shared/ui/confirm-dialog.servi
 
 @Component({
   selector: 'app-funding-authority-list',
-  imports: [RouterLink, MatButtonModule, PageHeaderComponent, ApiErrorComponent, LoadingStateComponent, StatusBadgeComponent],
+  imports: [
+    RouterLink,
+    MatButtonModule,
+    PageHeaderComponent,
+    ApiErrorComponent,
+    LoadingStateComponent,
+    StatusBadgeComponent,
+  ],
   templateUrl: './funding-authority-list.html',
 })
 export class FundingAuthorityList implements OnInit {
@@ -45,11 +52,8 @@ export class FundingAuthorityList implements OnInit {
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to load funding authorities.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load funding authorities.'));
+        },
       });
   }
 
@@ -67,7 +71,9 @@ export class FundingAuthorityList implements OnInit {
         this.fundingAuthorityService.deactivateFundingAuthority(authority.id).subscribe({
           next: () => this.loadFundingAuthorities(),
           error: (error) =>
-            this.errorMessage.set(getApiErrorMessage(error, 'Unable to deactivate funding authority.')),
+            this.errorMessage.set(
+              getApiErrorMessage(error, 'Unable to deactivate funding authority.'),
+            ),
         });
       });
   }

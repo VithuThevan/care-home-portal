@@ -30,9 +30,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     }
   }
 
-  const authorized = (token
+  const authorized = token
     ? req.clone({ params, setHeaders: { Authorization: `Bearer ${token}` } })
-    : req.clone({ params }));
+    : req.clone({ params });
 
   return next(authorized).pipe(
     catchError((error: HttpErrorResponse) => {

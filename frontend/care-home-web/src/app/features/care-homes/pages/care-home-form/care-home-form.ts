@@ -1,35 +1,16 @@
-import {
-  Component,
-  inject,
-  OnInit,
-  signal
-} from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
-import {
-  ActivatedRoute,
-  Router,
-  RouterLink
-} from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { finalize } from 'rxjs';
 
-import {
-  Company
-} from '../../../companies/models/company.model';
+import { Company } from '../../../companies/models/company.model';
 
-import {
-  CompanyService
-} from '../../../companies/services/company.service';
+import { CompanyService } from '../../../companies/services/company.service';
 
-import {
-  CareHomeService
-} from '../../services/care-home.service';
+import { CareHomeService } from '../../services/care-home.service';
 
 import { getApiErrorMessage, logApiFailure } from '../../../../core/api-error';
 import { AuthService } from '../../../../core/auth.service';
@@ -42,7 +23,6 @@ import { PageHeaderComponent } from '../../../../shared/ui/page-header';
 import { ApiErrorComponent } from '../../../../shared/ui/api-error';
 import { LoadingStateComponent } from '../../../../shared/ui/loading-state';
 import { ToastService } from '../../../../shared/ui/toast.service';
-
 
 @Component({
   selector: 'app-care-home-form',
@@ -63,25 +43,18 @@ import { ToastService } from '../../../../shared/ui/toast.service';
   templateUrl: './care-home-form.html',
 })
 export class CareHomeForm implements OnInit {
+  private readonly formBuilder = inject(FormBuilder);
 
-  private readonly formBuilder =
-    inject(FormBuilder);
+  private readonly careHomeService = inject(CareHomeService);
 
-  private readonly careHomeService =
-    inject(CareHomeService);
+  private readonly companyService = inject(CompanyService);
 
-  private readonly companyService =
-    inject(CompanyService);
+  private readonly route = inject(ActivatedRoute);
 
-  private readonly route =
-    inject(ActivatedRoute);
-
-  private readonly router =
-    inject(Router);
+  private readonly router = inject(Router);
 
   readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
-
 
   careHomeId: number | null = null;
 
@@ -97,136 +70,65 @@ export class CareHomeForm implements OnInit {
 
   readonly errorMessage = signal<string | null>(null);
 
+  readonly form = this.formBuilder.nonNullable.group({
+    companyId: [0, [Validators.required, Validators.min(1)]],
 
-  readonly form =
-    this.formBuilder.nonNullable.group({
+    code: ['', [Validators.required, Validators.maxLength(30)]],
 
-      companyId: [
-        0,
-        [
-          Validators.required,
-          Validators.min(1)
-        ]
-      ],
+    name: ['', [Validators.required, Validators.maxLength(150)]],
 
-      code: [
-        '',
-        [
-          Validators.required,
-          Validators.maxLength(30)
-        ]
-      ],
+    bedCapacity: [0, [Validators.required, Validators.min(0)]],
 
-      name: [
-        '',
-        [
-          Validators.required,
-          Validators.maxLength(150)
-        ]
-      ],
+    address: ['', Validators.maxLength(200)],
 
-      bedCapacity: [
-        0,
-        [
-          Validators.required,
-          Validators.min(0)
-        ]
-      ],
+    phone: ['', Validators.maxLength(30)],
 
-      address: [
-        '',
-        Validators.maxLength(200)
-      ],
+    email: ['', [Validators.email, Validators.maxLength(150)]],
 
-      phone: [
-        '',
-        Validators.maxLength(30)
-      ],
+    managerName: ['', Validators.maxLength(150)],
 
-      email: [
-        '',
-        [
-          Validators.email,
-          Validators.maxLength(150)
-        ]
-      ],
+    managerPhone: ['', Validators.maxLength(30)],
 
-      managerName: [
-        '',
-        Validators.maxLength(150)
-      ],
+    managerEmail: ['', [Validators.email, Validators.maxLength(150)]],
 
-      managerPhone: [
-        '',
-        Validators.maxLength(30)
-      ],
-
-      managerEmail: [
-        '',
-        [
-          Validators.email,
-          Validators.maxLength(150)
-        ]
-      ],
-
-      isActive: [true]
-
-    });
+    isActive: [true],
+  });
 
   get selectableCompanies(): Company[] {
     return this.companies().filter(
-      (company) =>
-        company.isActive ||
-        (this.isEditMode && company.id === this.assignedCompanyId())
+      (company) => company.isActive || (this.isEditMode && company.id === this.assignedCompanyId()),
     );
   }
 
   ngOnInit(): void {
-
     this.loadCompanies();
 
-    const id =
-      this.route.snapshot.paramMap.get('id');
+    const id = this.route.snapshot.paramMap.get('id');
 
     if (id) {
-
       this.careHomeId = Number(id);
 
       this.isEditMode = true;
 
       this.loadCareHome();
     }
-
   }
-
 
   private loadCompanies(): void {
+    this.companyService.getCompanies().subscribe({
+      next: (companies) => {
+        this.companies.set(companies);
+      },
 
-    this.companyService
-      .getCompanies()
-      .subscribe({
+      error: (error) => {
+        logApiFailure(error);
 
-        next: (companies) => {
-
-          this.companies.set(companies);
-
-        },
-
-        error: (error) => {
-
-          logApiFailure(error);
-
-          this.errorMessage.set(
-            getApiErrorMessage(error, 'Unable to load companies.')
-          );
-        }
-
-      });
+        this.errorMessage.set(getApiErrorMessage(error, 'Unable to load companies.'));
+      },
+    });
   }
 
-
   private loadCareHome(): void {
-
     if (this.careHomeId === null) {
       return;
     }
@@ -234,207 +136,130 @@ export class CareHomeForm implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-
     this.careHomeService
       .getCareHome(this.careHomeId)
       .pipe(
         finalize(() => {
           this.isLoading.set(false);
-        })
+        }),
       )
       .subscribe({
-
         next: (careHome) => {
-
           this.assignedCompanyId.set(careHome.companyId);
 
           this.form.patchValue({
+            companyId: careHome.companyId,
 
-            companyId:
-              careHome.companyId,
+            code: careHome.code,
 
-            code:
-              careHome.code,
+            name: careHome.name,
 
-            name:
-              careHome.name,
+            bedCapacity: careHome.bedCapacity,
 
-            bedCapacity:
-              careHome.bedCapacity,
+            address: careHome.address ?? '',
 
-            address:
-              careHome.address ?? '',
+            phone: careHome.phone ?? '',
 
-            phone:
-              careHome.phone ?? '',
+            email: careHome.email ?? '',
 
-            email:
-              careHome.email ?? '',
+            managerName: careHome.managerName ?? '',
 
-            managerName:
-              careHome.managerName ?? '',
+            managerPhone: careHome.managerPhone ?? '',
 
-            managerPhone:
-              careHome.managerPhone ?? '',
+            managerEmail: careHome.managerEmail ?? '',
 
-            managerEmail:
-              careHome.managerEmail ?? '',
-
-            isActive:
-              careHome.isActive
-
+            isActive: careHome.isActive,
           });
-
         },
 
         error: (error) => {
-
           logApiFailure(error);
 
-          this.errorMessage.set(
-            getApiErrorMessage(error, 'Unable to load care home.')
-          );
-        }
-
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load care home.'));
+        },
       });
-
   }
 
-
   save(): void {
-
     if (this.form.invalid) {
-
       this.form.markAllAsTouched();
 
       return;
     }
 
-
     this.isSaving.set(true);
 
     this.errorMessage.set(null);
 
-
-    const value =
-      this.form.getRawValue();
-
+    const value = this.form.getRawValue();
 
     const request = {
+      companyId: value.companyId,
 
-      companyId:
-        value.companyId,
+      code: value.code,
 
-      code:
-        value.code,
+      name: value.name,
 
-      name:
-        value.name,
+      bedCapacity: value.bedCapacity,
 
-      bedCapacity:
-        value.bedCapacity,
+      address: value.address,
 
-      address:
-        value.address,
+      phone: value.phone,
 
-      phone:
-        value.phone,
+      email: value.email,
 
-      email:
-        value.email,
+      managerName: value.managerName,
 
-      managerName:
-        value.managerName,
+      managerPhone: value.managerPhone,
 
-      managerPhone:
-        value.managerPhone,
-
-      managerEmail:
-        value.managerEmail
-
+      managerEmail: value.managerEmail,
     };
 
-
-    if (
-      this.isEditMode &&
-      this.careHomeId !== null
-    ) {
-
+    if (this.isEditMode && this.careHomeId !== null) {
       this.careHomeService
-        .updateCareHome(
-          this.careHomeId,
-          {
-            ...request,
-            isActive:
-              value.isActive
-          }
-        )
+        .updateCareHome(this.careHomeId, {
+          ...request,
+          isActive: value.isActive,
+        })
         .pipe(
           finalize(() => {
             this.isSaving.set(false);
-          })
+          }),
         )
         .subscribe({
-
           next: () => {
             this.toast.success('Care home updated successfully.');
-            this.router.navigate([
-              '/care-homes'
-            ]);
-
+            this.router.navigate(['/care-homes']);
           },
 
           error: (error) => {
-
             logApiFailure(error);
 
-            this.errorMessage.set(
-              getApiErrorMessage(
-                error,
-                'Unable to update care home.'
-              )
-            );
-
-          }
-
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to update care home.'));
+          },
         });
 
       return;
     }
-
 
     this.careHomeService
       .createCareHome(request)
       .pipe(
         finalize(() => {
           this.isSaving.set(false);
-        })
+        }),
       )
       .subscribe({
-
         next: () => {
           this.toast.success('Care home created successfully.');
-          this.router.navigate([
-            '/care-homes'
-          ]);
-
+          this.router.navigate(['/care-homes']);
         },
 
         error: (error) => {
-
           logApiFailure(error);
 
-          this.errorMessage.set(
-            getApiErrorMessage(
-              error,
-              'Unable to create care home.'
-            )
-          );
-
-        }
-
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to create care home.'));
+        },
       });
-
   }
-
 }

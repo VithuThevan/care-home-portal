@@ -12,7 +12,6 @@ export interface CreateInvoiceCategoryRequest {
   description?: string;
 }
 
-export interface UpdateInvoiceCategoryRequest
-  extends CreateInvoiceCategoryRequest {
+export interface UpdateInvoiceCategoryRequest extends CreateInvoiceCategoryRequest {
   isActive: boolean;
 }

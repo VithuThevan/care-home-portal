@@ -5,11 +5,11 @@ import { Observable } from 'rxjs';
 import {
   CreateNominalCodeRequest,
   NominalCode,
-  UpdateNominalCodeRequest
+  UpdateNominalCodeRequest,
 } from '../models/nominal-code.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class NominalCodeService {
   private readonly http = inject(HttpClient);
@@ -24,16 +24,11 @@ export class NominalCodeService {
     return this.http.get<NominalCode>(`${this.apiUrl}/${id}`);
   }
 
-  createNominalCode(
-    request: CreateNominalCodeRequest
-  ): Observable<NominalCode> {
+  createNominalCode(request: CreateNominalCodeRequest): Observable<NominalCode> {
     return this.http.post<NominalCode>(this.apiUrl, request);
   }
 
-  updateNominalCode(
-    id: number,
-    request: UpdateNominalCodeRequest
-  ): Observable<NominalCode> {
+  updateNominalCode(id: number, request: UpdateNominalCodeRequest): Observable<NominalCode> {
     return this.http.put<NominalCode>(`${this.apiUrl}/${id}`, request);
   }
 

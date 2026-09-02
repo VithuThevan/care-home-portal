@@ -72,8 +72,7 @@ export class InvoiceDetailPage implements OnInit {
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
       },
-      error: (error) =>
-        this.errorMessage.set(getApiErrorMessage(error, 'Unable to download PDF.')),
+      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Unable to download PDF.')),
     });
   }
 
@@ -88,7 +87,8 @@ export class InvoiceDetailPage implements OnInit {
         this.info.set('Send completed (or simulated in development).');
         this.toast.success('Email queued/sent successfully.');
       },
-      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Email could not be sent.')),
+      error: (error) =>
+        this.errorMessage.set(getApiErrorMessage(error, 'Email could not be sent.')),
     });
   }
 
@@ -98,13 +98,16 @@ export class InvoiceDetailPage implements OnInit {
       return;
     }
 
-    this.http.post(`/api/invoices/${current.id}/payment-status`, { paymentStatus: status }).subscribe({
-      next: () => {
-        this.invoice.set({ ...current, paymentStatus: status });
-        this.toast.success('Payment status updated.');
-      },
-      error: (error) => this.errorMessage.set(getApiErrorMessage(error, 'Payment update failed.')),
-    });
+    this.http
+      .post(`/api/invoices/${current.id}/payment-status`, { paymentStatus: status })
+      .subscribe({
+        next: () => {
+          this.invoice.set({ ...current, paymentStatus: status });
+          this.toast.success('Payment status updated.');
+        },
+        error: (error) =>
+          this.errorMessage.set(getApiErrorMessage(error, 'Payment update failed.')),
+      });
   }
 
   voidInvoice(): void {

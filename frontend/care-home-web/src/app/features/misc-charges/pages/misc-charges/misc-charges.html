@@ -1,8 +1,13 @@
 <div class="page">
-  <app-page-header title="Miscellaneous Charges" subtitle="CSV columns: ClientReference, UsedDate, Description, Amount, NominalCode" />
+  <app-page-header
+    title="Miscellaneous Charges"
+    subtitle="CSV columns: ClientReference, UsedDate, Description, Amount, NominalCode"
+  />
   <app-api-error [message]="errorMessage()" />
   @if (info()) {
-    <div class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm">{{ info() }}</div>
+    <div class="mb-4 rounded-md border border-[#c8e6c9] bg-[#e8f5e9] px-4 py-3 text-sm">
+      {{ info() }}
+    </div>
   }
   @if (auth.canWrite()) {
     <section class="panel mb-4">
@@ -35,7 +40,13 @@
         </table>
       </div>
       @if (auth.canWrite()) {
-        <button mat-flat-button color="primary" type="button" [disabled]="preview.invalidCount > 0" (click)="confirm()">
+        <button
+          mat-flat-button
+          color="primary"
+          type="button"
+          [disabled]="preview.invalidCount > 0"
+          (click)="confirm()"
+        >
           Confirm import
         </button>
       }

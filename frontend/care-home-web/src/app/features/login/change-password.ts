@@ -1,5 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +19,13 @@ import { ToastService } from '../../shared/ui/toast.service';
 
 @Component({
   selector: 'app-change-password',
-  imports: [ReactiveFormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, ApiErrorComponent],
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    ApiErrorComponent,
+  ],
   templateUrl: './change-password.html',
 })
 export class ChangePasswordPage {

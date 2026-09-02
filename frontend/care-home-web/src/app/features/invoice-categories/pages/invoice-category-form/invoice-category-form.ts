@@ -1,9 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -51,7 +47,7 @@ export class InvoiceCategoryForm implements OnInit {
     code: ['', [Validators.required, Validators.maxLength(30)]],
     name: ['', [Validators.required, Validators.maxLength(100)]],
     description: ['', Validators.maxLength(500)],
-    isActive: [true]
+    isActive: [true],
   });
 
   ngOnInit(): void {
@@ -77,7 +73,7 @@ export class InvoiceCategoryForm implements OnInit {
       .pipe(
         finalize(() => {
           this.isLoading.set(false);
-        })
+        }),
       )
       .subscribe({
         next: (category) => {
@@ -85,18 +81,15 @@ export class InvoiceCategoryForm implements OnInit {
             code: category.code,
             name: category.name,
             description: category.description ?? '',
-            isActive: category.isActive
+            isActive: category.isActive,
           });
         },
 
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to load invoice category.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to load invoice category.'));
+        },
       });
   }
 
@@ -114,19 +107,19 @@ export class InvoiceCategoryForm implements OnInit {
     const request = {
       code: value.code,
       name: value.name,
-      description: value.description
+      description: value.description,
     };
 
     if (this.isEditMode && this.invoiceCategoryId !== null) {
       this.invoiceCategoryService
         .updateInvoiceCategory(this.invoiceCategoryId, {
           ...request,
-          isActive: value.isActive
+          isActive: value.isActive,
         })
         .pipe(
           finalize(() => {
             this.isSaving.set(false);
-          })
+          }),
         )
         .subscribe({
           next: () => {
@@ -136,11 +129,8 @@ export class InvoiceCategoryForm implements OnInit {
           error: (error) => {
             logApiFailure(error);
 
-            this.errorMessage.set(getApiErrorMessage(
-              error,
-              'Unable to update invoice category.'
-            ));
-          }
+            this.errorMessage.set(getApiErrorMessage(error, 'Unable to update invoice category.'));
+          },
         });
 
       return;
@@ -151,7 +141,7 @@ export class InvoiceCategoryForm implements OnInit {
       .pipe(
         finalize(() => {
           this.isSaving.set(false);
-        })
+        }),
       )
       .subscribe({
         next: () => {
@@ -161,11 +151,8 @@ export class InvoiceCategoryForm implements OnInit {
         error: (error) => {
           logApiFailure(error);
 
-          this.errorMessage.set(getApiErrorMessage(
-            error,
-            'Unable to create invoice category.'
-          ));
-        }
+          this.errorMessage.set(getApiErrorMessage(error, 'Unable to create invoice category.'));
+        },
       });
   }
 }

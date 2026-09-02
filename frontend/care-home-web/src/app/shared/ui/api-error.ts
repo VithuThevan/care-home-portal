@@ -4,7 +4,10 @@ import { Component, input } from '@angular/core';
   selector: 'app-api-error',
   template: `
     @if (message()) {
-      <div class="mb-4 rounded-md border border-[#f5c2c0] bg-[#fdecea] px-4 py-3 text-sm text-[var(--app-danger)]" role="alert">
+      <div
+        class="mb-4 rounded-md border border-[#f5c2c0] bg-[#fdecea] px-4 py-3 text-sm text-[var(--app-danger)]"
+        role="alert"
+      >
         {{ message() }}
       </div>
     }

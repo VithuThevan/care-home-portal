@@ -44,7 +44,9 @@
         <div>
           <h3 class="m-0 text-sm font-medium text-[var(--app-text-muted)]">Outstanding Invoices</h3>
           <p class="mt-1 mb-0 text-2xl font-semibold">{{ data.outstandingInvoices }}</p>
-          <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">£{{ data.outstandingAmount | number: '1.2-2' }} unpaid</p>
+          <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">
+            £{{ data.outstandingAmount | number: '1.2-2' }} unpaid
+          </p>
         </div>
       </div>
       <div class="panel kpi-card">
@@ -52,7 +54,9 @@
         <div>
           <h3 class="m-0 text-sm font-medium text-[var(--app-text-muted)]">Upcoming Billing</h3>
           <p class="mt-1 mb-0 text-2xl font-semibold">{{ data.upcomingBillingCount }}</p>
-          <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">Periods approaching generation</p>
+          <p class="mt-1 mb-0 text-xs text-[var(--app-text-muted)]">
+            Periods approaching generation
+          </p>
         </div>
       </div>
       <div class="panel kpi-card">
@@ -84,7 +88,9 @@
             <tbody>
               @for (row of data.recentInvoices; track row.id) {
                 <tr>
-                  <td><a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a></td>
+                  <td>
+                    <a [routerLink]="['/invoices', row.id]">{{ row.invoiceNumber }}</a>
+                  </td>
                   <td>{{ row.careHomeName }}</td>
                   <td class="num">£{{ row.totalAmount | number: '1.2-2' }}</td>
                   <td><app-status-badge [value]="row.status" /></td>
@@ -101,7 +107,9 @@
 
       <section class="panel" id="setup-checklist">
         <h2 class="mt-0 mb-1 text-lg font-semibold">Setup checklist</h2>
-        <p class="mt-0 mb-4 text-sm text-[var(--app-text-muted)]">Outstanding organisation setup items.</p>
+        <p class="mt-0 mb-4 text-sm text-[var(--app-text-muted)]">
+          Outstanding organisation setup items.
+        </p>
         <ul class="m-0 list-none p-0 text-sm">
           @for (item of data.setupHints; track item) {
             <li class="mb-3 flex gap-2">
@@ -145,7 +153,10 @@
               </tr>
             </thead>
             <tbody>
-              @for (row of data.upcomingInvoices; track row.careHomeName + row.fundingAuthorityName) {
+              @for (
+                row of data.upcomingInvoices;
+                track row.careHomeName + row.fundingAuthorityName
+              ) {
                 <tr>
                   <td>{{ row.careHomeName }}</td>
                   <td>{{ row.fundingAuthorityName }}</td>

@@ -5,11 +5,11 @@ import { Observable } from 'rxjs';
 import {
   CreateFundingAuthorityRequest,
   FundingAuthority,
-  UpdateFundingAuthorityRequest
+  UpdateFundingAuthorityRequest,
 } from '../models/funding-authority.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FundingAuthorityService {
   private readonly http = inject(HttpClient);
@@ -24,15 +24,13 @@ export class FundingAuthorityService {
     return this.http.get<FundingAuthority>(`${this.apiUrl}/${id}`);
   }
 
-  createFundingAuthority(
-    request: CreateFundingAuthorityRequest
-  ): Observable<FundingAuthority> {
+  createFundingAuthority(request: CreateFundingAuthorityRequest): Observable<FundingAuthority> {
     return this.http.post<FundingAuthority>(this.apiUrl, request);
   }
 
   updateFundingAuthority(
     id: number,
-    request: UpdateFundingAuthorityRequest
+    request: UpdateFundingAuthorityRequest,
   ): Observable<FundingAuthority> {
     return this.http.put<FundingAuthority>(`${this.apiUrl}/${id}`, request);
   }
